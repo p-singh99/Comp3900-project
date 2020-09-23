@@ -7,7 +7,7 @@ Scrum Master: Nicholas
 Developers: Justin, Pawanjot, Michael, Tom 
 
 ### Table of Contents
-1...XXXX
+1...XXXX  
 2...XXXX
 
 ### Submission Date
@@ -23,4 +23,9 @@ dd/mm/yyyy
 
 ---------------------
 
+## Interface & Flow Diagrams
+
+---------------------
+
+## System Architecture
 
