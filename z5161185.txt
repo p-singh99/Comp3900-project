@@ -1,0 +1,5 @@
+Week 1
+The group was formed on Thursday. The same day we formulated some preliminary user stories. All team members participated.
+
+Week 2
+On wednesday following the lecture we set up the Jira & github pages. The user stories from week 1 were added and acceptance criteria were specified for each.
