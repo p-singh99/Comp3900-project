@@ -1,0 +1,7 @@
+Week 1
+The group was formed on Thursday. We then held a meeting at around 6 and made an initial set of user stories that covered all the base requirements of the 
+project (UltraCast). We then also scheduled a meeting to take place on the night after the lecture.
+
+Week 2
+After watching the lectures we got into a meeting together and then transferred all of the user stories into Jira and made acceptance criteria which we all
+collaborated upon.
