@@ -1,1 +1,6 @@
 
+**Week 1**
+Formed group on Thursday and held meeting. Chose UltraCast as project. Discussed technologies, planning to probably do Python/Flask backend and React frontend. Pawanjot made a lot of user stories for the base requirements, and the rest of us tweaked and added more.
+
+**Week 2**
+jira user stories, github
