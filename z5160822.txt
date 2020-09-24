@@ -3,4 +3,4 @@
 Formed group on Thursday and held meeting. Chose UltraCast as project. Discussed technologies, planning to probably do Python/Flask backend and React frontend. Pawanjot made a lot of user stories for the base requirements, and the rest of us tweaked and added more.
 
 **Week 2**
-jira user stories, github
+We met on Wednesday and in the tutorial on Thursday. We set up Jira and Github. We split up the epics and each added the user stories (with acceptance criteria) of our epic/s to Jira. I did user authorisation stories. We reviewed each other's stories as a group and made changes.
