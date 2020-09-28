@@ -131,17 +131,18 @@ The frontend code which creates the user interface in the user's web browser, by
 Business layer:  RESTful API something something. JSON.
 
 API structure:
-| HTTP Method |  Endpoint | Action |
-|-------------|-----------|--------|
-| GET         | `/api/podcasts/<podcastID>/details` | Returns podcast details | 
-| GET         | `api/podcasts/<podcastID>/episodes?n=<num>` | Return the episode IDs (and names etc. ??) of the `num` most recent episodes of the podcast, or all episodes if n is not set.
-| GET         | `/api/podcasts/<podcastID>/episodes/<episodeID>/details` OR `/api/episode/<episodeID>/details` | Returns episode details |
-| GET         | `/api/episodes/<episodeID>/sound` | Returns sound file for an episode | 
-| GET         | `/api/podcasts?q=<query>&count=<startNum>` or `/search`? | Returns one page of search results, starting at result number startNum (default 0) ? |
-| ...         |                         | |
-| POST        | `/api/users/<userID>/changepassword` | maybe not? |
-| POST        | `/api/users/<userID>/changeemail` | maybe not? |
-| POST        | `/api/users/<userID>/resetpassword` | maybe not? |
+| HTTP Method |  Endpoint | Request body | Action |
+|-------------|-----------|--------------|--------|
+| GET         | `/api/podcasts/<podcastID>/details` | | Returns podcast details
+| GET         | `api/podcasts/<podcastID>/episodes?n=<num>` | | Return the episode IDs (and names etc. ??) of the `num` most recent episodes of the podcast, or all episodes if n is not set.
+| GET         | `/api/podcasts/<podcastID>/episodes/<episodeID>/details` OR `/api/episode/<episodeID>/details` | | Returns episode detail
+| GET         | `/api/episodes/<episodeID>/sound` | | Returns sound file for an episode. Or maybe do it as the details endpoint returns a URL to the file?
+| GET         | `/api/podcasts?q=<query>&count=<startNum>` or `/search`? | | Returns one page of search results, starting at result number startNum (default 0) ? |
+| ...         |                         |         |
+| POST        | `/api/users/<userID>/changepassword` | `{"oldpassword": <oldpassword>, "newpassword": <newpassword>}`| maybe not?
+| POST        | `/api/users/<userID>/changeemail` | `{"password": <password>, "newemail": <email>}`| maybe not?
+| POST        | `/api/users/passwordreset` | `{"email": <emailaddress>}` | maybe not? (email address is in request body bc apparently security issues with being in query and logs)
+| ...         |                            |      |
 ! do we need stuff for content creators to add podcasts?
 
 ! Which should we do for the user subscriptions etc. API?: 
