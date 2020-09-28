@@ -75,8 +75,8 @@ Google Podcasts is a web app and mobile app that is dedicated to podcasts.
 ### User stories
 
 ### Sprint timeline
-| Sprint # / Event |  Week | Dates |            |
-|------------------|-------|-------|------------|
+| Sprint # / Event |  Week | Dates              |
+|------------------|-------|--------------------|
 | 1             | 3-5 | Thu Oct 1 - Wed Oct 14  | 
 | Demo          | 5   | Thu Oct 15              |
 | 2             | 5-7 | Thu Oct 15 - Wed Oct 28 |
