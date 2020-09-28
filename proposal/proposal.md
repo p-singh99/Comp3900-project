@@ -75,8 +75,8 @@ Google Podcasts is a web app and mobile app that is dedicated to podcasts.
 ### User stories
 
 ### Sprint timeline
-| Sprint # / Event |  Week | Dates |
-|------------------|-------|-------|---------------------|--------------|
+| Sprint # / Event |  Week | Dates |            |
+|------------------|-------|-------|------------|
 | 1             | 3-5 | Thu Oct 1 - Wed Oct 14  | 
 | Demo          | 5   | Thu Oct 15              |
 | 2             | 5-7 | Thu Oct 15 - Wed Oct 28 |
@@ -128,20 +128,25 @@ Presentation layer:
 The frontend code which creates the user interface in the user's web browser, by running in the end-user's browser. This code interacts with the backend APIs by sending requests such as search queries, requests for a particular podcast's details, and music files for a particular podcast episode. The frontend code then interprets the data in these responses to decide on interface changes and display messages, formats the data to display within the interface, and plays the music if relevant.
 - Technologies: HTML, CSS, React JS.
 
-Business layer:  RESTful API something something.
+Business layer:  RESTful API something something. JSON.
 
 API structure:
-GET endpoint.com/api/podcast/\<podcastID>/details
 | HTTP Method |  Endpoint | Action |
-|--------0----|-----------|-----------------|
-| 1             | 3-5 | Thu Oct 1 - Wed Oct 14  | 
-| Demo          | 5   | Thu Oct 15              |
-| 2             | 5-7 | Thu Oct 15 - Wed Oct 28 |
-| Retrospective | 7   | Thu Oct 29              |
-| 3             | 7-9 | Thu Oct 29 - Wed Nov 11 |
-| Demo          | 8   | Thu Nov 5               |
-| Retrospective | 9   | Thu Nov 12              |
-| Submission    | 10  | Mon Nov 16              |
+|-------------|-----------|--------|
+| GET         | `/api/podcasts/<podcastID>/details` | Returns podcast details | 
+| GET         | `api/podcasts/<podcastID>/episodes?n=<num>` | Return the episode IDs (and names etc. ??) of the `num` most recent episodes of the podcast, or all episodes if n is not set.
+| GET         | `/api/podcasts/<podcastID>/episodes/<episodeID>/details` OR `/api/episode/<episodeID>/details` | Returns episode details |
+| GET         | `/api/episodes/<episodeID>/sound` | Returns sound file for an episode | 
+| GET         | `/api/podcasts?q=<query>&count=<startNum>` or `/search`? | Returns one page of search results, starting at result number startNum (default 0) ? |
+| ...         |                         | |
+| POST        | `/api/users/<userID>/changepassword` | maybe not? |
+| POST        | `/api/users/<userID>/changeemail` | maybe not? |
+| POST        | `/api/users/<userID>/resetpassword` | maybe not? |
+! do we need stuff for content creators to add podcasts?
+
+! Which should we do for the user subscriptions etc. API?: 
+a) a public facing API with provides/changes the subscription details of a user with a certain ID (with correct authentication) b) API is hidden a bit more - i.e. the frontend doesn't know the userID but just sends the session cookie with a generic 'subscriptions' request, and the backend indexes the sessions database to get the userID and make the changes.
+c) ???
 
 - Technologies: Python/Flask
 
@@ -154,7 +159,4 @@ Data layer:
 - Podcast owners: Podcast owners want to add their podcast to the database, and monitor listener numbers and ratings.
 - ?
 
-frontend: react/javascript?
-backend: python, flask, PostgreSQL
-ER diagram
 
