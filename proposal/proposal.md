@@ -139,19 +139,17 @@ Partial Overview of API structure, first sprint:
 | HTTP Method |  Endpoint | Request body | Action |
 |-------------|-----------|--------------|--------|
 | GET         | `/podcasts/<podcastID>/details` | | Returns podcast details
-| GET         | `/podcasts/<podcastID>/episodes?n=<num>` | | Return the episode IDs, names and release dates (etc. ??) of the `num` most recent episodes of the podcast, or all episodes if n is not set.
-| GET         | `/episodes/<episodeID>/details` | | Returns episode details - name, release date, description, length
+| GET         | `/podcasts/<podcastID>/episodes?n=<num>&q=<query>` | | Return the episode IDs, names and release dates (etc. ??) of the `num` most recent episodes of the podcast, or all episodes if n is not set. If q is set, returns only those that match the search query.
+| GET         | `/episodes/<episodeID>/details` | | Returns episode details - name, release date, description, length. Should also return the user's timepoint in the episode - by indexing their session cookie into database or ?
 | GET         | `/episodes/<episodeID>/sound` | | Returns sound file for an episode. Or maybe do it as the details endpoint returns a URL to the file?
-| GET         | `/podcasts?q=<query>&count=<startNum>` or `/search`? | | Returns one page of search results, starting at result number startNum (default 0) ? |
-| ...         |                         |         |
-| POST        | `/users/<userID>/changepassword` | `{"oldpassword": <oldpassword>, "newpassword": <newpassword>}`| maybe not?
-| POST        | `/users/<userID>/changeemail` | `{"password": <password>, "newemail": <email>}`| maybe not?
+| GET         | `/podcasts?q=<query>&count=<startNum>` or `/search`? | | Returns one page of podcast search results, starting at result number startNum (default 0) ? |
+| GET         | `/episodes?q=<query>&count=<startNum>` or `/search`? | | Returns one page of episode search results, starting at result number startNum (default 0) ? |
+| ...         |          
+| POST        | `/users` | | Make an account
+| DELETE      | `/users/<userID>` OR `/users/self` | | Delete account               |         |
+| PUT        | `/users/self/password` | `{"oldpassword": <oldpassword>, "newpassword": <newpassword>}`| maybe not?
+| PUT/POST    | `/users/self/email` | `{"password": <password>, "newemail": <email>}`| maybe not?
 | POST        | `/users/passwordreset` | `{"email": <emailaddress>}` | maybe not? (email address is in request body bc apparently security issues with being in query and logs)
-| ...         |                            |      |
-! do we need stuff for content creators to add podcasts?  
-! Which should we do for the user subscriptions etc. API?:  
-a) public facing API with requires userID like `/users/<userID>/subscriptions`  
-b) public facing API which takes session cookie and indexes it into session database to get the userID and then make the changes. i.e. the frontend never knows the userID
 
 **Data layer:**  
 The data layer contains the database and its communication services. It stores the data and provides services for storing and retrieving data. It sits on a server, in our case likely the same server as the business layer.
