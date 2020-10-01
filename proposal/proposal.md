@@ -75,16 +75,16 @@ Google Podcasts is a web app and mobile app that is dedicated to podcasts.
 ### User stories
 
 ### Sprint timeline
-| Sprint # / Event |  Week | Dates |            |
-|------------------|-------|-------|------------|
-| 1             | 3-5 | Thu Oct 1 - Wed Oct 14  | 
-| Demo          | 5   | Thu Oct 15              |
-| 2             | 5-7 | Thu Oct 15 - Wed Oct 28 |
-| Retrospective | 7   | Thu Oct 29              |
-| 3             | 7-9 | Thu Oct 29 - Wed Nov 11 |
-| Demo          | 8   | Thu Nov 5               |
-| Retrospective | 9   | Thu Nov 12              |
-| Submission    | 10  | Mon Nov 16              |
+| Sprint # / Event |  Week | Dates                   |
+|------------------|-------|-------------------------|
+| 1                | 3-5   | Thu Oct 1 - Wed Oct 14  | 
+| Demo             | 5     | Thu Oct 15              |
+| 2                | 5-7   | Thu Oct 15 - Wed Oct 28 |
+| Retrospective    | 7     | Thu Oct 29              |
+| 3                | 7-9   | Thu Oct 29 - Wed Nov 11 |
+| Demo             | 8     | Thu Nov 5               |
+| Retrospective    | 9     | Thu Nov 12              |
+| Submission       | 10    | Mon Nov 16              |
 
 
 ### First sprint user stories
@@ -124,8 +124,11 @@ Given our analysis of existing services above, we highlight the following featur
 ---------------------
 
 ## System Architecture
+
+![Software Architecture Diagram](images/arch.png)
+
 **Presentation layer:**   
-The frontend code which creates the user interface in the user's web browser, by running in the end-user's browser. This code interacts with the backend APIs by sending requests such as search queries, requests for a particular podcast's details, and music files for a particular podcast episode. The frontend code then interprets the data in these responses to decide on interface changes and display messages, formats the data to display within the interface, and plays the music if relevant.
+The frontend code which creates the user interface in the user's web browser, by running in the end-user's browser. This code interacts with the backend APIs by sending requests such as search queries, requests for a particular podcast's details, and music files for a particular podcast episode. The frontend code then interprets the data in these responses to decide on interface changes and display messages, formats the data to display within the interface, and plays the music if relevant. Our intention is for this to be a single-page web application. The web application is delivered by a Python/Flask server backend.
 - Technologies: HTML, CSS, React JS.
 
 **Business layer:**  
@@ -135,17 +138,20 @@ The business layer code runs on the server and implements a RESTful API. It rece
 Partial Overview of API structure, first sprint:
 | HTTP Method |  Endpoint | Request body | Action |
 |-------------|-----------|--------------|--------|
-| GET         | `/api/podcasts/<podcastID>/details` | | Returns podcast details
-| GET         | `/api/podcasts/<podcastID>/episodes?n=<num>` | | Return the episode IDs (and names etc. ??) of the `num` most recent episodes of the podcast, or all episodes if n is not set.
-| GET         | `/api/episode/<episodeID>/details` | | Returns episode detail
-| GET         | `/api/episodes/<episodeID>/sound` | | Returns sound file for an episode. Or maybe do it as the details endpoint returns a URL to the file?
-| GET         | `/api/podcasts?q=<query>&count=<startNum>` or `/search`? | | Returns one page of search results, starting at result number startNum (default 0) ? |
+| GET         | `/podcasts/<podcastID>/details` | | Returns podcast details
+| GET         | `/podcasts/<podcastID>/episodes?n=<num>` | | Return the episode IDs, names and release dates (etc. ??) of the `num` most recent episodes of the podcast, or all episodes if n is not set.
+| GET         | `/episodes/<episodeID>/details` | | Returns episode details - name, release date, description, length
+| GET         | `/episodes/<episodeID>/sound` | | Returns sound file for an episode. Or maybe do it as the details endpoint returns a URL to the file?
+| GET         | `/podcasts?q=<query>&count=<startNum>` or `/search`? | | Returns one page of search results, starting at result number startNum (default 0) ? |
 | ...         |                         |         |
-| POST        | `/api/users/<userID>/changepassword` | `{"oldpassword": <oldpassword>, "newpassword": <newpassword>}`| maybe not?
-| POST        | `/api/users/<userID>/changeemail` | `{"password": <password>, "newemail": <email>}`| maybe not?
-| POST        | `/api/users/passwordreset` | `{"email": <emailaddress>}` | maybe not? (email address is in request body bc apparently security issues with being in query and logs)
+| POST        | `/users/<userID>/changepassword` | `{"oldpassword": <oldpassword>, "newpassword": <newpassword>}`| maybe not?
+| POST        | `/users/<userID>/changeemail` | `{"password": <password>, "newemail": <email>}`| maybe not?
+| POST        | `/users/passwordreset` | `{"email": <emailaddress>}` | maybe not? (email address is in request body bc apparently security issues with being in query and logs)
 | ...         |                            |      |
-! do we need stuff for content creators to add podcasts?
+! do we need stuff for content creators to add podcasts?  
+! Which should we do for the user subscriptions etc. API?:  
+a) public facing API with requires userID like `/users/<userID>/subscriptions`  
+b) public facing API which takes session cookie and indexes it into session database to get the userID and then make the changes. i.e. the frontend never knows the userID
 
 **Data layer:**  
 The data layer contains the database and its communication services. It stores the data and provides services for storing and retrieving data. It sits on a server, in our case likely the same server as the business layer.
@@ -157,5 +163,12 @@ The data layer contains the database and its communication services. It stores t
 - Listeners: Listeners want to find, browse, discover, listen to, download and rate podcasts. Subscriptions make it easier for them to keep track of their podcasts.
 - Podcast owners: Podcast owners want to add their podcast to the database, and monitor listener numbers and ratings.
 - ?
+
+## Team Information
+### Members, Structure
+### Weekly meetings
+
+## References
+
 
 
