@@ -3,4 +3,7 @@
 Formed group on Thursday and held meeting. Chose UltraCast as project. Discussed technologies, planning to probably do Python/Flask backend and React frontend. Pawanjot made a lot of user stories for the base requirements, and the rest of us tweaked and added more.
 
 **Week 2**
-We met on Wednesday and in the tutorial on Thursday. We set up Jira and Github. We split up the epics and each added the user stories (with acceptance criteria) of our epic/s to Jira. I did user authorisation stories. We reviewed each other's stories as a group and made changes.
+We met on Wednesday and in the tutorial on Thursday. We set up Jira and Github. We split up the epics and each added the user stories (with acceptance criteria) of our epic/s to Jira. I did user authorisation stories. We reviewed each other's stories as a group and made changes. I learned/reviewed some HTML & CSS so I can contribute to the frontend.
+
+**Week 3**
+We met on Monday and worked on storyboards, made some user story changes and worked on the proposal. I worked on the Sprints and the System Architecture sections. I learned some new CSS and browser JS to hopefully be useful for the frontend. In the tutorial on Thursday, we worked on various proposal sections and I did some on the system architecture section. In another meeting after, we reviewed and modified user stories and developed user story points planning-poker-style. In the process, we clarified some more aspects of our design and implementation plans.
