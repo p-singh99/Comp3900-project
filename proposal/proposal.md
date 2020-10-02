@@ -148,7 +148,7 @@ Overview of API plan:
 | GET         | `/podcasts?q=<query>&offset=<startNum>&limit=<limitNum>`     |              | Search. Request `limitNum` results starting at result number `startNum` |
 | POST        | `/podcasts`                                                  | `{"rss": <rsslink>}` | Add a podcast   |
 | GET         | `/users/self/podcasts/<podcastID>/episodes/<episodeID>/time` |              | Return time progress in episode |
-| PUT         | `/users/self/podcasts/<podcastID>/episodes/<episodeID>/time` |              | Update time progress in episode, and also listening history |
+| PUT         | `/users/self/podcasts/<podcastID>/episodes/<episodeID>/time` | `{"time": <time>}` | Update time progress in episode, and also listening history |
 | PUT         | `/users/self/podcasts/<podcastID>/rating`                    | `{"rating": <rating>}`              | Update rating for podcast |
 | GET         | `/users/self/podcasts/<podcastID>`                           |              | Get user's podcast rating, whether subscribed |
 | POST        | `/users`                                                     | `{"email": <email>, "username": <username>, "password": <password>}`              | Create account |
