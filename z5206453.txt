@@ -1,0 +1,11 @@
+Week 1
+
+Formed group. Helped write up general user stories.
+
+Week 2
+
+Refined user stories. Did an overview of all user stories and helped write them up on Jira.
+
+Week 3
+
+Made storyboards and added missing epic and user stories.

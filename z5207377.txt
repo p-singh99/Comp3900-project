@@ -1,0 +1,5 @@
+Week 1
+Team was created on Thursday. Ultracast was selected as the project and the project specs were discussed. We had a chat about what each of us is more familiar with (backend or frontend) and what technology we would use, probably flask for backend and javascript for frontend. Created some user stories as well.
+
+Week 2
+Jira and Github pages were set up and the previously created user stories were tweaked and added to jira. We also worked on adding more user stories and went over them as a team, discussing any modifications.
