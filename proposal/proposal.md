@@ -23,11 +23,11 @@ Listening to podcasts is popular with many people. We aim to make listening to p
 Many solutions for listening to podcasts exist, notably Spotify, Pocketcasts, the ABC Listen App, Google Podcasts, and Soundcloud. Each of these have a number of strength as well as drawbacks.  
 Many of the podcast solutions require users to sign up to their platform before users can listen to podcasts. We aim to allow users to be able to access their podcasts without having to sign in, however we also aim to offer account functionality so the user's place in podcasts and tastes in podcasts can be tracked.  
 We also aim to offer users the ability to access podcasts on a web app, since many of the other solutions listed below are for mobile only, or focus more on mobile.  
-
-Finally we aim to provide users with all of the information available about the podcasts they listen to such as descriptions and show notes.
+Since podcasts are almost universally distributed through RSS feeds hosted on various platforms on the internet, we will use these RSS feeds to allow listeners to enjoy podcasts from many sources. In addition this will allow us to easily let listeners or podcast creators add RSS feeds to our platform if it isn't already on the platform.
+Finally we aim to provide users with all of the information available about the podcasts they listen to such as descriptions, authors, and show notes.
 
 ### Spotify
-Spotify is available primarily as a phone app, as well as a desktop applications, and a web app. It requires users sign up to the app, and offers podcasts as a secondary feature to its core use; music.  
+Spotify is available primarily as a phone app, as well as a desktop applications, and a web app. It requires users sign up to the app, and offers podcasts as a secondary feature to its core use; music. (Spotify)
 
 #### Drawbacks
 
@@ -38,7 +38,7 @@ Spotify is available primarily as a phone app, as well as a desktop applications
 * On the desktop and web apps, users cannot download podcasts
 
 ### Pocketcasts
-Pocketcasts is primarily a phone app that is dedicated to podcasts.
+Pocketcasts is primarily a phone app that is dedicated to podcasts. (Pocketcasts)
 
 #### Drawbacks
 
@@ -46,7 +46,7 @@ Pocketcasts is primarily a phone app that is dedicated to podcasts.
 * Pocketcasts restricts use of their web app to paying customers
 
 ### ABC Listen App
-The ABC Listen App is a mobile app that allows users to listen to ABC produced radio shows and podcasts.
+The ABC Listen App is a mobile app that allows users to listen to ABC produced radio shows and podcasts. (ABC)
 
 #### Drawbacks
 
@@ -55,7 +55,7 @@ The ABC Listen App is a mobile app that allows users to listen to ABC produced r
 
 ### Google Podcasts
 
-Google Podcasts is a web app and mobile app that is dedicated to podcasts.
+Google Podcasts is a web app and mobile app that is dedicated to podcasts. (Google)
 
 #### Drawbacks
 
@@ -63,6 +63,8 @@ Google Podcasts is a web app and mobile app that is dedicated to podcasts.
 * The Google Podcasts web app does not allow users to download episodes
 
 ### Soundcloud
+
+Soundcloud is a web and mobile application designed for listening to music. It does not require users to sign up. (Soundcloud)
 
 #### Drawbacks
 
@@ -178,5 +180,9 @@ The data layer contains the database and its communication services. It stores t
 
 ## References
 
-
+ABC. ***ABC listen - ABC Radio*** https://www.abc.net.au/radio/listen/  
+Google. ***Google Podcasts*** https://podcasts.google.com/  
+Pocketcasts. ***Listen to podcasts with the best free podcasting app - built by listeners, for listeners.*** https://www.pocketcasts.com/  
+SoundCloud. ***SoundCloud - Listen to free music and podcasts on SoundCloud*** https://soundcloud.com/  
+Spotify. ***Music for everyone - Spotify*** https://www.spotify.com/au/  
 
