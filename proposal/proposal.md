@@ -102,6 +102,8 @@ CHB-35: As a listener, I want to be able to log out so that other computer users
 **Podcast download:**  
 CHB-20: As a listener, I want to be able to download podcasts for offline listening.  
 
+#### Allocation
+
 ### Project objectives
 > "Clearly communicates how all project objectives are satisfied by user stories that are defined." 
 
@@ -128,28 +130,36 @@ Given our analysis of existing services above, we highlight the following featur
 ![Software Architecture Diagram](images/arch.png)
 
 **Presentation layer:**   
-The frontend code which creates the user interface in the user's web browser, by running in the end-user's browser. This code interacts with the backend APIs by sending requests such as search queries, requests for a particular podcast's details, and music files for a particular podcast episode. The frontend code then interprets the data in these responses to decide on interface changes and display messages, formats the data to display within the interface, and plays the music if relevant. Our intention is for this to be a single-page web application. The web application is delivered by a Python/Flask server backend.
+The frontend code which creates the user interface in the user's web browser, by running in the end-user's browser. This code interacts with the backend APIs by sending requests such as search queries and requests for a particular podcast's details. The frontend code then interprets the data in these responses to decide on interface changes and display messages, formats the data to display within the interface, and plays the music if relevant. 
+Our intention is for this to be a single-page web application. The web application is delivered by a Python/Flask server backend.
 - Technologies: HTML, CSS, React JS.
 
 **Business layer:**  
-The business layer code runs on the server and implements a RESTful API. It receives requests from the frontend, communicates with the data layer to store data and retrieve results according to database rules, and returns results to the frontend in (probably) JSON format. It also performs data layer and server maintenance independent of API requests.
+The business layer code runs on the server and implements a RESTful API. It receives requests from the frontend, communicates with the data layer to store data and retrieve results according to database rules, and returns results to the frontend in (probably) JSON format. In many cases, the business layer will return the RSS feed link for a podcast, and the presentation layer code will interpret this rss feed to find episode names and music files.
+It also performs data layer and server maintenance independent of API requests.
 - Technologies: Python with Flask, Psycopg
 
-Partial Overview of API structure, first sprint:
-| HTTP Method |  Endpoint | Request body | Action |
-|-------------|-----------|--------------|--------|
-| GET         | `/podcasts/<podcastID>/details` | | Returns podcast details
-| GET         | `/podcasts/<podcastID>/episodes?n=<num>&q=<query>` | | Return the episode IDs, names and release dates (etc. ??) of the `num` most recent episodes of the podcast, or all episodes if n is not set. If q is set, returns only those that match the search query.
-| GET         | `/episodes/<episodeID>/details` | | Returns episode details - name, release date, description, length. Should also return the user's timepoint in the episode - by indexing their session cookie into database or ?
-| GET         | `/episodes/<episodeID>/sound` | | Returns sound file for an episode. Or maybe do it as the details endpoint returns a URL to the file?
-| GET         | `/podcasts?q=<query>&count=<startNum>` or `/search`? | | Returns one page of podcast search results, starting at result number startNum (default 0) ? |
-| GET         | `/episodes?q=<query>&count=<startNum>` or `/search`? | | Returns one page of episode search results, starting at result number startNum (default 0) ? |
-| ...         |          
-| POST        | `/users` | | Make an account
-| DELETE      | `/users/<userID>` OR `/users/self` | | Delete account               |         |
-| PUT        | `/users/self/password` | `{"oldpassword": <oldpassword>, "newpassword": <newpassword>}`| maybe not?
-| PUT/POST    | `/users/self/email` | `{"password": <password>, "newemail": <email>}`| maybe not?
-| POST        | `/users/passwordreset` | `{"email": <emailaddress>}` | maybe not? (email address is in request body bc apparently security issues with being in query and logs)
+Overview of API plan:
+| HTTP Method |  Endpoint                                                    | Request body | Action                  |
+|-------------|--------------------------------------------------------------|--------------|-------------------------|
+| GET         | `/podcasts/<podcastID>`                                      |              | Returns podcast details - RSS feed URL, rating |
+| GET         | `/podcasts?q=<query>&offset=<startNum>&limit=<limitNum>`     |              | Search. Request `limitNum` results starting at result number `startNum` |
+| POST        | `/podcasts`                                                  | `{"rss": <rsslink>}` | Add a podcast   |
+| GET         | `/users/self/podcasts/<podcastID>/episodes/<episodeID>/time` |              | Return time progress in episode |
+| PUT         | `/users/self/podcasts/<podcastID>/episodes/<episodeID>/time` |              | Update time progress in episode, and also listening history |
+| PUT         | `/users/self/podcasts/<podcastID>/rating`                    | `{"rating": <rating>}`              | Update rating for podcast |
+| GET         | `/users/self/podcasts/<podcastID>`                           |              | Get user's podcast rating, whether subscribed |
+| POST        | `/users`                                                     | `{"email": <email>, "username": <username>, "password": <password>}`              | Create account |
+| DELETE      | `/users/self`                                                |              | Delete account |
+| PUT         | `/users/self/password`                                       | `{"oldpassword": <oldpassword>, "newpassword": <newpassword>}`                                                                             | Change password  |
+| PUT         | `/users/self/email`                                          | `{"password": <password>, "newemail": <email>}`                                                                                           | Change email address |
+| POST        | `/users/passwordreset`                                       | `{"email": <emailaddress>}`                                                                                           | Request password reset |
+| POST        | `/users/self/subscriptions`                                  | `{"id": <podcastID>}`           | Subscribe to a podcast |
+| DELETE      | `/users/self/subscriptions/<podcastID>`                      |              | Unsubscribe from a podcast |
+| GET         | `/users/self/subscriptions`                                  |              | Get list of subscribed podcasts - IDs and maybe the actual podcast info as well, to save an RTT from follow up requests? |
+| GET         | `/users/self/rejectedrecommendations`                        |              | Get list of rejected podcast recommendations |
+| POST        | `/users/self/rejectedrecommendations`                        | `{"id": <podcastID>}` | Add rejected recommendation |
+| GET         | `/users/self/history?offset=<startNum>&limit=<limitNum>&podcast=<podcastID>`     |              | Get listening history. With podcast set, returns listening history for a particular podcast. |
 
 **Data layer:**  
 The data layer contains the database and its communication services. It stores the data and provides services for storing and retrieving data. It sits on a server, in our case likely the same server as the business layer.
