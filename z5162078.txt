@@ -5,3 +5,14 @@ project (UltraCast). We then also scheduled a meeting to take place on the night
 Week 2
 After watching the lectures we got into a meeting together and then transferred all of the user stories into Jira and made acceptance criteria which we all
 collaborated upon.
+
+Week 3
+We had a meeting on Monday to discuss where we are with the project proposal. After that we started on the storyboarding. I had to leave mid-way urgently but
+came back at the end to discuss our next meeting and and what our plans are.
+We met again during our tutorial slot where we again discussed what aspects of the project proposal we are still missing and assigned people to complete them.
+I made a start on an ER diagram and a UML diagram. That night we went through all of our user stories and did scrum poker to assign story points.
+On Friday, we met again to finally grab all the diagrams and documents and then I went on putting them all together and into the project proposal. I wrote up
+all the user stories in a readable format for the proposal and also answered things like how the user stories answered the project objectives and any novelty
+functions we had in the user stories.
+We met up on final time on Saturday to confirm everything on the proposal
+I submitted the documents after some edits from the team members submitted on Sunday morning and afternoon.
