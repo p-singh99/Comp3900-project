@@ -3,3 +3,6 @@ The group was formed on Thursday. The same day we formulated some preliminary us
 
 Week 2
 On wednesday following the lecture we set up the Jira & github pages. The user stories from week 1 were added and acceptance criteria were specified for each.
+
+Week 3
+User stories were revised and all acceptance criteria were added. We worked on the various diagrams. I contributed to the storyboard and ER Diagram mostly. We used scrum poker to determine user story points. I added references to and finalised the background section of the proposal. The first sprint was created. Finally the proposal was submitted.
