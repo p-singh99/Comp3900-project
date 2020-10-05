@@ -9,3 +9,7 @@ Refined user stories. Did an overview of all user stories and helped write them 
 Week 3
 
 Made storyboards and added missing epic and user stories.
+
+Week 4
+
+First sprint is starting this week. The roles have been delegated and the actual coding has started. Installed postgres and connected to database
