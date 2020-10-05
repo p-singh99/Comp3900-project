@@ -1,1 +1,21 @@
 .history/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Dependency directories
+node_modules/
+jspm_packages/
+
+# Distribution directories
+dist/
+
+# npm cache directory
+.npm
+
+# Output of 'npm pack'
+*.tgz
+
+# Environment variables
+.env
