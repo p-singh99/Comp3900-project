@@ -113,7 +113,7 @@ begin
 end;
 $$ language plpgsql;
 
--- match_category_and_podcast helps for inserting into categories when a parent is required
+-- match_category_and_parent helps for inserting into categories when a parent is required
 create or replace function match_category_and_parent(_category text, _parent text)
 returns table (id bigint, name text, parentCategory integer)
 as $$

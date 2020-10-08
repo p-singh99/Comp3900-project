@@ -19,7 +19,7 @@ Then enter password as above
 
 ### Connecting with psycopg2
 
-```
+```python3
 import psycopg2
 
 conn = psycopg2.connect(dbname="ultracast", user="brojogan", password="GbB8j6Op", host="polybius.bowdens.me", port=5432)
@@ -137,3 +137,30 @@ userId      | integer   | references Users (id)
 podcastId   | integer   | references Podcasts (id)
 
 **Primary Key** is (userId, podcastId)
+
+### Functions
+#### match\_category\_and\_podcast(\_podcast text, \_category text)
+This function is intended to be used to easily insert tuples into the podcastCategories table. For instance, ```insert into podcastCategories select * from match_category_and_podcast('podcast', 'category');``` would insert a tuple with the id of the podcast named 'podcast' and the id of a category named 'category'.
+
+**Returns**: A query that contains a podcastId associated with the podcast name and a categoryId associated with the category name. If either don't exist, nothing is returned.  
+**Usage**: ```select * from match_category_and_podcast('podcast name', 'category name');```
+**Return example**:
+```
+podcastId  |  categoryId 
+-----------+------------
+     5     |     3
+```
+
+#### match\_category\_and\_parent(\_category text, \_parent text)
+This function is intended to be used to easily insret tuples into the categories table when a parent of the category being inserted is needed. For instance, ```insert into categories select * from match_category_and_parent('new category', 'parent category');``` would insert a tuple with the name 'new category' and the id of the category with the name 'parent category' as the parentCategory. The new id for the category is also automatically generated in the function.
+
+**Returns**: A query that contains a new valid id for the new category, the name of the new category, and the id of the parent category.  
+**Usage**: ```select * from match_category_and_parent('new category', 'parent category');```  
+**Return example**: 
+```
+id |  name   | parentCategory
+---+---------+---------------
+ 3 | 'Books' | 2
+```
+
+ 
