@@ -47,6 +47,12 @@ insert into Podcasts values (
 	'Presented by CGP Grey and Dr. Brady Haran.'
 );
 
+insert into Episodes values (
+	1,
+	1
+);
+
+
 -- Hardcore History
 
 insert into Podcasts values (
@@ -126,4 +132,13 @@ insert into Episodes values (
 	1541
 );
 
+-- Categories --
+insert into Categories values (default, 'Technology');
+insert into Categories values (default, 'Society & Culture');
+insert into Categories select * from match_category_and_parent('Documentary', 'Society & Culture');
+insert into Categories values (default, 'Arts');
+insert into Categories select * from match_category_and_parent('Design', 'Arts');
 
+insert into PodcastCategories select * from match_category_and_podcast('Reply All', 'Technology');
+insert into PodcastCategories select * from match_category_and_podcast('Reply All', 'Society & Culture');
+insert into PodcastCategories select * from match_category_and_podcast('Reply All', 'Documentary');
