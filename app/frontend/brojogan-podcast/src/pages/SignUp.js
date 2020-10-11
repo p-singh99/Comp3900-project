@@ -18,27 +18,23 @@ function SignUp() {
             BroJogan <br /> Podcast
           </p>
         </div>
-        <div id='signUp-form'>
+        <div id='signUp-div-2'>
           <h1>Sign Up</h1>
-          <div id="username-div">
-            <p id="username-text">Username</p>
-            <form>
+          <form id="signUp-form">
+            <div id="username-div">
+              <p id="username-text">Username</p>
               <input type="text" id="username-input"/>
-            </form>
-          </div>
-          <div id="password-div">
-            <p id="password-text">Password</p>
-            <form>
+            </div>
+            <div>
+              <p id="password-text">Password</p>
               <input type="text" id="password-input"/>
-            </form>
-          </div>
-          <div id="password-div">
-            <p id="password-text">Confirm Password</p>
-            <form>
+            </div>
+            <div>
+              <p id="password-text">Confirm Password</p>
               <input type="text" id="password-input"/>
-            </form>
-          </div>
-          <button id="signUp-btn-2" type="button">Sign Up</button>
+            </div>
+            <button id="signUp-btn-2" type="button">Sign Up</button>
+          </form>
         </div>
       </div>
     </div>
