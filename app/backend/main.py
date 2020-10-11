@@ -13,6 +13,9 @@ api = Api(app)
 #CHANGE SECRET KEY
 app.config['SECRET_KEY'] = 'secret_key'
 
+def create_token(username):
+	return jwt.encode({'user' : username, 'exp' : datetime.datetime.utcnow() + datetime.timedelta(minutes=20)}, app.config['SECRET_KEY'])
+
 def get_db():
 	# conn = psycopg2.connect(host="localhost", database="pod", user="postgres", password="m")
 	conn = psycopg2.connect(dbname="ultracast", user="brojogan", password="GbB8j6Op", host="polybius.bowdens.me", port=5432)
@@ -54,7 +57,7 @@ class Login(Resource):
 		if cur.fetchone() is None:
 			cur.close()
 			conn.close()
-			return {"data" : "Username does not exist"}
+			return {"data" : "Login Failed"}, 401
 		cur.execute("SELECT hashedpassword FROM users WHERE username='%s'" % username)
 		pw = cur.fetchone()[0].strip()
 		pw = pw.encode('UTF-8')
@@ -65,26 +68,15 @@ class Login(Resource):
 		hashed = bcrypt.hashpw(b"name", bcrypt.gensalt())
 		# print(hashed)
 		if bcrypt.checkpw(password.encode('UTF-8'), pw):
-			token = jwt.encode({'user' : username, 'exp' : datetime.datetime.utcnow() + datetime.timedelta(minutes=20)}, app.config['SECRET_KEY'])
-			return token, 200
+			return create_token(username), 200
 		return {"data" : "Login Failed"}, 401
 		
 
-	@token_required
-	def delete(self):
-		if request.headers.get('token'):
-			token = request.headers['token']
-		data = jwt.decode(token, app.config['SECRET_KEY'])
-		sql = "DELETE FROM users WHERE username='%s';" % data['user']
-		conn, cur = get_db()
-		cur.execute(sql)
-		conn.commit()
-		cur.close()
-		conn.close()
-		return {"data": "Account Deleted"}
+
 		
 
-class SignUp(Resource):
+class Users(Resource):
+	#signup
 	def post(self):
 		conn, cur = get_db()
 		user = request.form.get('username')
@@ -99,35 +91,48 @@ class SignUp(Resource):
 		# check if username exists in database
 		cur.execute("SELECT * FROM users WHERE username='%s'" % user)
 		if cur.fetchone():
-			exists = True;
-			errors.append({"error" : "Username already exists"})
+			error = True;
+			error_msg.append({"error" : "Username already exists"})
 		# check if email exists in database
 		cur.execute("SELECT * FROM users WHERE username='%s'" % email)
 		if cur.fetchone():
-			exists = True;
-			errors.append({"error" : "Email already exists"})
-		if exists:
+			error = True;
+			error_msg.append({"error" : "Email already exists"})
+		if error:
 			cur.close()
 			conn.close()
-			return errors, 409
+			return error_msg, 409
 		# get next unique id number
 		cur.execute("select count(*) from users");
 		count = cur.fetchone()[0] + 1
 		# create entry for username/email/pass
-		hashed = hashed.decode('UTF-8')
-		cur.execute("insert into users (id, username, email, hashedpassword) values ('%s',%s, %s, %s)", (count, user, email, hashed))
+		cur.execute("insert into users (id, username, email, hashedpassword) values ('%s',%s, %s, %s)", (count, user, email, hashed.decode("UTF-8")))
 		conn.commit()
-		# return token
 		cur.close()
 		conn.close()
-		token = jwt.encode({'user' : user, 'exp' : datetime.datetime.utcnow() + datetime.timedelta(minutes=5)}, app.config['SECRET_KEY'])
-		return jsonify({'token' : token.decode('UTF-8')}), 201
+		# return token	
+		return get_token(user), 201	
+
+
+	@token_required
+	def delete(self):
+		if not request.headers.get('token'):
+			return {"error" : "FAILED"}, 401
+		token = request.headers['token']
+		data = jwt.decode(token, app.config['SECRET_KEY'])
+		sql = "DELETE FROM users WHERE username='%s';" % data['user']
+		conn, cur = get_db()
+		cur.execute(sql)
+		conn.commit()
+		cur.close()
+		conn.close()
+		return {"data": "Account Deleted"}, 200
 
 
 api.add_resource(Unprotected, "/unprotected")
 api.add_resource(Protected, "/protected")
 api.add_resource(Login, "/login")
-api.add_resource(SignUp, "/users")
+api.add_resource(Users, "/users")
 
 
 if __name__ == '__main__':
