@@ -3,19 +3,29 @@ import './../css/SignUp.css';
 import logo from './../images/logo.png';
 import { API_URL } from './../constants';
 
+// General error eg network error
+function displayError(error) {
+  alert(error);
+}
+
+// sign up fail eg email already exists
+function displaySignupError(error) {
+  alert(error);
+}
+
+function usernameValid(username) {
+  return true;
+}
+function passwordValid(password) {
+  return true;
+}
+
 function signupHandler() {
   const form = document.forms['signUp-form'];
   const username = form.elements.username.value;
   const email = form.elements.email.value;
   const password1 = form.elements.password1.value;
   const password2 = form.elements.password2.value;
-
-  function usernameValid(username) {
-    return true;
-  }
-  function passwordValid(password) {
-    return true;
-  }
 
   // put username validity and password requirements in the html?
   if (username && password1 && password2 && email) {
@@ -34,15 +44,15 @@ function signupHandler() {
         .then(resp => {
           resp.json().then(data => {
             if (resp.status === 201) {
-              document.cookie = data.token;
+              document.cookie = `token=${data.token}`;
               // redirect to homepage
             } else {
-              alert(data.error);
+              displaySignupError(data.error);
             }
           })
         })
         .catch(error => { // will this catch error from resp.json()?
-          alert(error);
+          displayError(error);
         });
     }
   }

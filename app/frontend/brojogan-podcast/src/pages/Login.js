@@ -3,6 +3,14 @@ import './../css/Login.css';
 import logo from './../images/logo.png';
 import {API_URL} from './../constants';
 
+function displayError(error) {
+  alert(error);
+}
+
+function displayLoginError() {
+  alert("Login failed");
+}
+
 function loginHandler() {
   const form = document.forms['login-form'];
   const username = form.elements.username.value;
@@ -21,19 +29,33 @@ function loginHandler() {
     let formData = new FormData(form);
     fetch(`${API_URL}/login`, {method: 'post', body: formData})
       .then(resp => {
-        if (resp.ok) {
-          return resp.json();
-        } else {
-          throw new Error('Login failed');
-        }
+        resp.json().then(data => {
+          if (resp.status === 200) {
+            document.cookie = `token=${data.token}`; // maybe localstorage not cookie
+            // redirect to homepage
+          } else {
+            displayLoginError();
+          }
+        })
       })
-      .then(json => {
-        document.cookie = `token=${json.token}`; // maybe localstorage not cookie
-        // redirect to homepage
-      })
-      .catch(error => {
-        alert(error);
+      .catch(error => { // will this catch error from resp.json()?
+        displayError(error);
       });
+
+      // .then(resp => {
+      //   if (resp.ok) {
+      //     return resp.json();
+      //   } else {
+      //     throw new Error('Login failed');
+      //   }
+      // })
+      // .then(json => {
+      //   document.cookie = `token=${json.token}`; // maybe localstorage not cookie
+      //   // redirect to homepage
+      // })
+      // .catch(error => {
+      //   alert(error);
+      // });
   }
 }
 
