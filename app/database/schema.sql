@@ -42,19 +42,19 @@ CREATE TABLE PodcastCategories (
 
 CREATE TABLE Episodes (
     podcastId           integer not null,
-    sequence            integer check (sequence > 0),
+    guid                text unique not null,
     FOREIGN KEY (podcastId) references Podcasts (id),
-    PRIMARY KEY (podcastId, sequence)
+    PRIMARY KEY (podcastId, guid)
 );
 
 CREATE TABLE Listens (
     userId              integer not null,
     podcastId           integer not null,
-    episodeSequence     integer,
+    episodeGuid         text,
     listenDate          timestamp not null,
     timestamp           integer not null,
     FOREIGN KEY (userId) references Users (id),
-    FOREIGN KEY (podcastId, episodeSequence) references Episodes (podcastId, sequence),
+    FOREIGN KEY (podcastId, episodeGuid) references Episodes (podcastId, guid),
     PRIMARY KEY (userId, podcastId, episodeSequence)
 );
 
@@ -78,11 +78,11 @@ CREATE TABLE PodcastRatings (
 CREATE TABLE EpisodeRatings (
     userId              integer not null,
     podcastId           integer not null,
-    episodeSequence     integer not null,
+    episodeGuid         integer not null,
     rating              integer not null check (rating >= 1 and rating <= 5),
     FOREIGN KEY (userId) references Users (id),
-    FOREIGN KEY (podcastId, episodeSequence) references Episodes (podcastId, sequence),
-    PRIMARY KEY (userId, podcastId, episodeSequence)
+    FOREIGN KEY (podcastId, episodeSequence) references Episodes (podcastId, guid),
+    PRIMARY KEY (userId, podcastId, episodeGuid)
 );
 
 CREATE TABLE RejectedRecommendations (
@@ -119,7 +119,7 @@ returns table (id integer, name text, parentCategory integer)
 as $$
 begin
  return query
- select nextval(pg_get_serial_sequence('categories','id')) as id,
+ select cast(nextval(pg_get_serial_sequence('categories','id')) as integer) as id,
  sname as name, bar.id as parentCategory from (
   select * from categories
   inner join (
