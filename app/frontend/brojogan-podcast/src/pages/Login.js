@@ -9,6 +9,15 @@ function loginHandler() {
   const password = form.elements.password.value;
   // check for maximum length? check that they don't violate some constraints?
   if (username && password) {
+    // fetch('http://jsonplaceholder.typicode.com/todos/1')
+    // .then(response => response.json())
+    // .then(json => console.log(json));
+
+    // let body = {"userId": 1, "title": "", "body": ""};
+    // fetch('http://jsonplaceholder.typicode.com/posts', {method: 'post', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)})
+    //   .then(response => response.json())
+    //   .then(json => console.log(json));
+
     let formData = new FormData(form);
     fetch(`${API_URL}/login`, {method: 'post', body: formData})
       .then(resp => {
@@ -19,7 +28,7 @@ function loginHandler() {
         }
       })
       .then(json => {
-        document.cookie = `token={json.token}`;
+        document.cookie = `token=${json.token}`; // maybe localstorage not cookie
         // redirect to homepage
       })
       .catch(error => {

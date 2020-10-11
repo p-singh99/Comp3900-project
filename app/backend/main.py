@@ -56,8 +56,9 @@ class Login(Resource):
 		#Check if username exists
 		# cur.execute("SELECT password FROM users WHERE username='%s'" % username)
 		cur.execute("SELECT hashedpassword FROM users WHERE username='%s'" % username)
-		if cur.fetchone():		
-			pw = cur.fetchone()[0].strip()
+		res = cur.fetchone()
+		if res:
+			pw = res[0].strip()
 			pw = pw.encode('UTF-8')
 			cur.close()
 			conn.close()
@@ -80,27 +81,27 @@ class Users(Resource):
 		# cur = conn.cursor()
 		error = False
 		error_msg = []
-		data = request.headers['token']
+		# data = request.headers['token']
 		# check if username exists in database
-		cur.execute("SELECT * FROM users WHERE username='%s'" % user)
+		cur.execute("SELECT * FROM users WHERE username='%s'" % username)
 		if cur.fetchone():
-			error = True;
+			error = True
 			error_msg.append({"error" : "Username already exists"})
 		# check if email exists in database
 		cur.execute("SELECT * FROM users WHERE username='%s'" % email)
 		if cur.fetchone():
-			error = True;
+			error = True
 			error_msg.append({"error" : "Email already exists"})
 		if error:
 			cur.close()
 			conn.close()
 			return error_msg, 409
 		# get next unique id number
-		cur.execute("select count(*) from users");
+		cur.execute("select count(*) from users")
 		count = cur.fetchone()[0] + 1
 		# create entry for username/email/pass
 		# cur.execute("insert into users (id, username, email, password) values ('%s',%s, %s, %s)", (count, username, email, hashed.decode("UTF-8")))
-		cur.execute("insert into users (id, username, email, hashedpassword) values ('%s',%s, %s, %s)", (count, user, email, hashed.decode("UTF-8")))
+		cur.execute("insert into users (id, username, email, hashedpassword) values ('%s',%s, %s, %s)", (count, username, email, hashed.decode("UTF-8")))
 		conn.commit()
 		cur.close()
 		conn.close()
