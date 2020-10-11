@@ -1,13 +1,13 @@
 -- USERS --
 insert into users values (
-	1,
+	default,
 	'Tom',
 	'tom@example.com',
 	'$2b$12$vo5q.Bpwl5myC3qTww44EOrqYVE1qZTCM1oJIhhFb6Vq8X0U2KTCm' 	-- hello123
 );
 
 insert into users values (
-	2,
+	default,
 	'Pawanjot',
 	'pawanjot@example.com',
 	'$2b$12$mEXlUC8n0wJH8blt26KeVujn4aga3NJX7RV4M9Vx3yrPJu3YlV8rW'  -- password123
@@ -15,21 +15,21 @@ insert into users values (
 
 
 insert into users values (
-	3,
+	default,
 	'Justin',
 	'justin@example.com',
 	'$2b$12$b0QdZw3lLRjUI3nTKnmNyu5OUTvmjZb1eIvo9hdVbzY1G8Nxgx75y'  -- reallysecure
 );
 
 insert into users values (
-	4,
+	default,
 	'Nich',
 	'nich@example.com',
 	'$2b$12$SfoSQ3Pq1vt24QKHtsCIWONJ39C9W1/yWJWclAA8Y43aMldi1q1Jq'  -- h4xx0r
 );
 
 insert into users values (
-	5,
+	default,
 	'Michael',
 	'mc@example.com',
 	'$2b$12$HGJribFoHIx53aCxqkr1I.efHZfYfpx44zk59huIWQ.mfWMh/z75K'  -- 'This Password Is Really Long For No Reason
@@ -40,7 +40,7 @@ insert into users values (
 
 -- Hello Internet
 insert into Podcasts values (
-	1,
+	default,
 	'http://www.hellointernet.fm/podcast?format=rss',
 	'Hello Internet',
 	'CGP Grey and Brady Haran',
@@ -56,7 +56,7 @@ insert into Episodes values (
 -- Hardcore History
 
 insert into Podcasts values (
-	2,
+	default,
 	'http://feeds.feedburner.com/dancarlin/history',
 	'Hardcore History',
 	'Dan Carlin',
@@ -66,7 +66,7 @@ insert into Podcasts values (
 -- Chapo Trap House
 
 insert into Podcasts values (
-	3,
+	default,
 	'http://feeds.soundcloud.com/users/soundcloud:users:211911700/sounds.rss',
 	'Chapo Trap House',
 	'Chapo Trap House',
@@ -76,7 +76,7 @@ insert into Podcasts values (
 -- 99% Invisible
 
 insert into Podcasts values (
-	4,
+	default,
 	'http://feeds.99percentinvisible.org/99percentinvisible',
 	'99% Invisible',
 	'Roman Mars',
@@ -86,7 +86,7 @@ insert into Podcasts values (
 -- Reply All
 
 insert into Podcasts values (
-	5,
+	default,
 	'https://feeds.megaphone.fm/replyall',
 	'Reply All',
 	'Gimlet',
@@ -107,7 +107,7 @@ insert into Episodes values (
 -- Joe Rogan
 
 insert into Podcasts values (
-	6,
+	default,
 	'http://podcasts.joerogan.net/feed/rss',
 	'Joe Rogan (Podcast Site)'
 );
