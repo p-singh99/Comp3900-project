@@ -14,12 +14,12 @@ conn = psycopg2.connect(dbname="ultracast", user="brojogan", password="GbB8j6Op"
 
 cur = conn.cursor()
 
-cur.execute("SELECT count(*), podcasts.title, podcasts.author, podcasts.description
+cur.execute("""SELECT count(*), podcasts.title, podcasts.author, podcasts.description
              FROM   Subscriptions
              FULL OUTER JOIN Podcasts
                 ON Subscriptions.podcastId = Podcasts.id
              WHERE  to_tsvector(podcasts.title || ' ' || podcasts.author || ' ' || podcasts.description) @@ plainto_tsquery('Chapo')
-             GROUP BY podcasts.id;"
+             GROUP BY podcasts.id;"""
            );
            
 #   Subscriber Count | Podcast Title | Podcast Author | Podcast Description
