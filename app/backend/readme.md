@@ -1,3 +1,13 @@
+## How to run
+```bash
+python3 -m venv .env  
+source .env/bin/activate
+python3 -m pip install -r requirements.txt
+FLASK_APP=main.py flask run
+```
+
+## API Documentation
+
 ### Sprint 1
 | HTTP Method |  Endpoint                                                    | Request body                          | Response body | Action                  |
 |-------------|--------------------------------------------------------------|---------------------------------------|---------------|-------------------------|
