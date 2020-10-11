@@ -1,96 +1,96 @@
 CREATE TABLE Users (
-	id 		integer,
-	username	text not null unique check (username ~ '^[A-Za-z0-9_-]{3,}$'),
-	email 		text not null unique,
-	hashedPassword 	text not null,
-	PRIMARY KEY (id)
+    id                  serial,
+    username            text not null unique check (username ~ '^[A-Za-z0-9_-]{3,}$'),
+    email               text not null unique,
+    hashedPassword      text not null,
+    PRIMARY KEY (id)
 );
 
 CREATE TABLE SearchQueries (
-	userId 		integer not null,
-	query 		text not null,
-    searchDate  timestamp not null,
- 	FOREIGN KEY (userId) references Users (id),
+    userId              bigint not null,
+    query               text not null,
+    searchDate          timestamp not null,
+    FOREIGN KEY (userId) references Users (id),
     PRIMARY KEY (userId, query, searchDate)
 );
 
 CREATE TABLE Categories (
-	id		serial,
-	name 		text unique not null,
-    parentCategory integer,
+    id                  serial,
+    name                text unique not null,
+    parentCategory      bigint,
     FOREIGN KEY (parentCategory) references Categories (id),
-	PRIMARY KEY (id)
+    PRIMARY KEY (id)
 );
-
+:x
 CREATE TABLE Podcasts (
-	id 		integer,
-	rssFeed 	text unique not null,
-	title		text not null,
-	author		text,
-	description	text,
-    thumbnail   text,
-	PRIMARY KEY (id)
+    id                  serial,
+    rssFeed             text unique not null,
+    title               text not null,
+    author              text,
+    description         text,
+    thumbnail           text,
+    PRIMARY KEY (id)
 );
 
 CREATE TABLE PodcastCategories (
-	podcastId 	integer not null,
-	categoryId	integer not null,
-	FOREIGN KEY (podcastId) references Podcasts,
-	FOREIGN KEY (categoryId) references Categories,
-	PRIMARY KEY (podcastId, categoryId)
+    podcastId           bigint not null,
+    categoryId          bigint not null,
+    FOREIGN KEY (podcastId) references Podcasts,
+    FOREIGN KEY (categoryId) references Categories,
+    PRIMARY KEY (podcastId, categoryId)
 );
 
 CREATE TABLE Episodes (
-	podcastId 	integer not null,
-	sequence	integer check (sequence > 0),
-	FOREIGN KEY (podcastId) references Podcasts (id),
-	PRIMARY KEY (podcastId, sequence)
+    podcastId           bigint not null,
+    sequence            integer check (sequence > 0),
+    FOREIGN KEY (podcastId) references Podcasts (id),
+    PRIMARY KEY (podcastId, sequence)
 );
 
 CREATE TABLE Listens (
-	userId 		integer not null,
-	podcastId	integer not null,
-	episodeSequence	integer,
-	listenDate	timestamp not null,
-	timestamp	integer not null,
-	FOREIGN KEY (userId) references Users (id),
-	FOREIGN KEY (podcastId, episodeSequence) references Episodes (podcastId, sequence),
-	PRIMARY KEY (userId, podcastId, episodeSequence)
+    userId              bigint not null,
+    podcastId           bigint not null,
+    episodeSequence     integer,
+    listenDate          timestamp not null,
+    timestamp           integer not null,
+    FOREIGN KEY (userId) references Users (id),
+    FOREIGN KEY (podcastId, episodeSequence) references Episodes (podcastId, sequence),
+    PRIMARY KEY (userId, podcastId, episodeSequence)
 );
 
 CREATE TABLE Subscriptions (
-	userId 		integer not null,
-	podcastId	integer not null,
-	FOREIGN KEY (userId) references Users (id),
-	FOREIGN KEY (podcastId) references Podcasts (id),
-	PRIMARY KEY (userId, podcastId)
+    userId              bigint not null,
+    podcastId           bigint not null,
+    FOREIGN KEY (userId) references Users (id),
+    FOREIGN KEY (podcastId) references Podcasts (id),
+    PRIMARY KEY (userId, podcastId)
 );
 
 CREATE TABLE PodcastRatings (
-	userId 		integer not null,
-	podcastId	integer not null,
-	rating		integer not null check (rating >= 1 and rating <= 5),
-	FOREIGN KEY (userId) references Users (id),
-	FOREIGN KEY (podcastId) references Podcasts (id),
-	PRIMARY KEY (userId, podcastId)
+    userId              integer not null,
+    podcastId           integer not null,
+    rating              integer not null check (rating >= 1 and rating <= 5),
+    FOREIGN KEY (userId) references Users (id),
+    FOREIGN KEY (podcastId) references Podcasts (id),
+    PRIMARY KEY (userId, podcastId)
 );
 
 CREATE TABLE EpisodeRatings (
-	userId 		integer not null,
-	podcastId	integer not null,
-	episodeSequence integer not null,
-	rating		integer not null check (rating >= 1 and rating <= 5),
-	FOREIGN KEY (userId) references Users (id),
-	FOREIGN KEY (podcastId, episodeSequence) references Episodes (podcastId, sequence),
-	PRIMARY KEY (userId, podcastId, episodeSequence)
+    userId              bigint not null,
+    podcastId           bigint not null,
+    episodeSequence     integer not null,
+    rating              integer not null check (rating >= 1 and rating <= 5),
+    FOREIGN KEY (userId) references Users (id),
+    FOREIGN KEY (podcastId, episodeSequence) references Episodes (podcastId, sequence),
+    PRIMARY KEY (userId, podcastId, episodeSequence)
 );
 
 CREATE TABLE RejectedRecommendations (
-	userId		integer not null,
-	podcastId	integer not null,
-	FOREIGN KEY (userId) references Users (id),
-	FOREIGN KEY (podcastId) references Podcasts (id),
-	PRIMARY KEY (userId, podcastId)
+    userId              bigint not null,
+    podcastId           bigint not null,
+    FOREIGN KEY (userId) references Users (id),
+    FOREIGN KEY (podcastId) references Podcasts (id),
+    PRIMARY KEY (userId, podcastId)
 );
 
 
@@ -100,7 +100,7 @@ CREATE TABLE RejectedRecommendations (
 
 -- match_category_and_podcast helps for inserting into podcastCategories
 create or replace function match_category_and_podcast(_podcast text, _category text)
-returns table (podcastId integer, categoryId integer)
+returns table (podcastId bigint, categoryId bigint)
 as $$
 begin
     return query
@@ -115,7 +115,7 @@ $$ language plpgsql;
 
 -- match_category_and_parent helps for inserting into categories when a parent is required
 create or replace function match_category_and_parent(_category text, _parent text)
-returns table (id bigint, name text, parentCategory integer)
+returns table (id bigint, name text, parentCategory bigint)
 as $$
 begin
  return query
