@@ -60,6 +60,7 @@ Column      |   Type    |   Details
 ------------|-----------|----------
 id          | serial    | Auto generated primary key.
 name        | text      | Name of the category. Cannot be null
+parentCateogry | integer | id of the parent category. May be null. Must be a valid id from the categories table.
 
 The categories table exists to keep track of all known podcast categories. When a new podcast is added to the app by RSS Feed, the application must check if any of its categories are new and if so, add them to the categories table.
 
