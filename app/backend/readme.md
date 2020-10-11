@@ -12,7 +12,7 @@
 | POST        | `/podcasts`                                                  | `{"rss": <rsslink>}` |               | Add a podcast   |
 | GET         | `/users/self/podcasts/<podcastID>/episodes/<episodeID>/time` |                      |               | Return time progress in episode |
 | PUT         | `/users/self/podcasts/<podcastID>/episodes/<episodeID>/time` | `{"time": <time>}`   |               | Update time progress in episode, and also listening history |
-| PUT         | `/users/self/podcasts/<podcastID>/rating`                    | `{"rating": <rating>}`               | Update rating for podcast |
+| PUT         | `/users/self/podcasts/<podcastID>/rating`                    | `{"rating": <rating>}` |             | Update rating for podcast |
 | GET         | `/users/self/podcasts/<podcastID>`                           |                      |               | Get user's podcast rating, whether subscribed |
 | POST        | `/users`                                                     | `{"email": <email>, "username": <username>, "password": <password>}` | | Create account |
 | DELETE      | `/users/self`                                                |                      |               | Delete account |
@@ -24,4 +24,4 @@
 | GET         | `/users/self/subscriptions`                                  |                       | | Get list of subscribed podcasts - IDs and maybe the actual podcast info as well, to save an RTT from follow up requests? |
 | GET         | `/users/self/rejectedrecommendations`                        |                       | | Get list of rejected podcast recommendations |
 | POST        | `/users/self/rejectedrecommendations`                        | `{"id": <podcastID>}` | | Add rejected recommendation |
-| GET         | `/users/self/history?offset=<startNum>&limit=<limitNum>&podcast=<podcastID>`     |              | Get listening history. With podcast set, returns listening history for a particular podcast. |
+| GET         | `/users/self/history?offset=<startNum>&limit=<limitNum>&podcast=<podcastID>` |       | | Get listening history. With podcast set, returns listening history for a particular podcast. |
