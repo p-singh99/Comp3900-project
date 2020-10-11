@@ -56,20 +56,15 @@ class Login(Resource):
 		#Check if username exists
 		# cur.execute("SELECT password FROM users WHERE username='%s'" % username)
 		cur.execute("SELECT hashedpassword FROM users WHERE username='%s'" % username)
-		if cur.fetchone() is None:
+		if cur.fetchone():		
+			pw = cur.fetchone()[0].strip()
+			pw = pw.encode('UTF-8')
 			cur.close()
 			conn.close()
-			return {"data" : "Login Failed"}, 401
-		pw = cur.fetchone()[0].strip()
-		pw = pw.encode('UTF-8')
-		cur.close()
-		conn.close()
-		# pw = pw.encode('UTF-8')
-		password = request.form.get('password')
-		hashed = bcrypt.hashpw(b"name", bcrypt.gensalt())
-		# print(hashed)
-		if bcrypt.checkpw(password.encode('UTF-8'), pw):
-			return {'token' : create_token(username)}, 200
+			password = request.form.get('password')
+			hashed = bcrypt.hashpw(b"name", bcrypt.gensalt())
+			if bcrypt.checkpw(password.encode('UTF-8'), pw):
+				return {'token' : create_token(username)}, 200
 		return {"data" : "Login Failed"}, 401
 				
 
