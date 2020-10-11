@@ -7,7 +7,7 @@ CREATE TABLE Users (
 );
 
 CREATE TABLE SearchQueries (
-    userId              bigint not null,
+    userId              integer not null,
     query               text not null,
     searchDate          timestamp not null,
     FOREIGN KEY (userId) references Users (id),
@@ -17,11 +17,11 @@ CREATE TABLE SearchQueries (
 CREATE TABLE Categories (
     id                  serial,
     name                text unique not null,
-    parentCategory      bigint,
+    parentCategory      integer,
     FOREIGN KEY (parentCategory) references Categories (id),
     PRIMARY KEY (id)
 );
-:x
+
 CREATE TABLE Podcasts (
     id                  serial,
     rssFeed             text unique not null,
@@ -33,23 +33,23 @@ CREATE TABLE Podcasts (
 );
 
 CREATE TABLE PodcastCategories (
-    podcastId           bigint not null,
-    categoryId          bigint not null,
+    podcastId           integer not null,
+    categoryId          integer not null,
     FOREIGN KEY (podcastId) references Podcasts,
     FOREIGN KEY (categoryId) references Categories,
     PRIMARY KEY (podcastId, categoryId)
 );
 
 CREATE TABLE Episodes (
-    podcastId           bigint not null,
+    podcastId           integer not null,
     sequence            integer check (sequence > 0),
     FOREIGN KEY (podcastId) references Podcasts (id),
     PRIMARY KEY (podcastId, sequence)
 );
 
 CREATE TABLE Listens (
-    userId              bigint not null,
-    podcastId           bigint not null,
+    userId              integer not null,
+    podcastId           integer not null,
     episodeSequence     integer,
     listenDate          timestamp not null,
     timestamp           integer not null,
@@ -59,8 +59,8 @@ CREATE TABLE Listens (
 );
 
 CREATE TABLE Subscriptions (
-    userId              bigint not null,
-    podcastId           bigint not null,
+    userId              integer not null,
+    podcastId           integer not null,
     FOREIGN KEY (userId) references Users (id),
     FOREIGN KEY (podcastId) references Podcasts (id),
     PRIMARY KEY (userId, podcastId)
@@ -76,8 +76,8 @@ CREATE TABLE PodcastRatings (
 );
 
 CREATE TABLE EpisodeRatings (
-    userId              bigint not null,
-    podcastId           bigint not null,
+    userId              integer not null,
+    podcastId           integer not null,
     episodeSequence     integer not null,
     rating              integer not null check (rating >= 1 and rating <= 5),
     FOREIGN KEY (userId) references Users (id),
@@ -86,8 +86,8 @@ CREATE TABLE EpisodeRatings (
 );
 
 CREATE TABLE RejectedRecommendations (
-    userId              bigint not null,
-    podcastId           bigint not null,
+    userId              integer not null,
+    podcastId           integer not null,
     FOREIGN KEY (userId) references Users (id),
     FOREIGN KEY (podcastId) references Podcasts (id),
     PRIMARY KEY (userId, podcastId)
@@ -100,7 +100,7 @@ CREATE TABLE RejectedRecommendations (
 
 -- match_category_and_podcast helps for inserting into podcastCategories
 create or replace function match_category_and_podcast(_podcast text, _category text)
-returns table (podcastId bigint, categoryId bigint)
+returns table (podcastId integer, categoryId integer)
 as $$
 begin
     return query
@@ -115,7 +115,7 @@ $$ language plpgsql;
 
 -- match_category_and_parent helps for inserting into categories when a parent is required
 create or replace function match_category_and_parent(_category text, _parent text)
-returns table (id bigint, name text, parentCategory bigint)
+returns table (id integer, name text, parentCategory integer)
 as $$
 begin
  return query
