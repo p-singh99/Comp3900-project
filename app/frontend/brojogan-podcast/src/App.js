@@ -1,25 +1,30 @@
 import React from 'react';
-import logo from './logo.svg';
+import {BrowserRouter as Router, Route, Switch} from 'react-router-dom';
 import './App.css';
+import Header from './components/Header';
+import NavBar from './components/NavBar';
+import Footer from './components/Footer';
+import Login from './pages/Login';
+import SignUp from './pages/SignUp';
 
 function App() {
+  const defaultComponents = () => (
+    <React.Fragment>
+      <Header />
+      <NavBar />
+      <Footer />
+    </React.Fragment>
+  )
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <Router>
+      <div className="App">
+        <Switch>
+          <Route path="/login" component={Login} exact />
+          <Route path="/signup" component={SignUp} exact/>
+          <Route component={defaultComponents}/>
+        </Switch>
+      </div>
+    </Router>
   );
 }
 
