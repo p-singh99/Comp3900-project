@@ -14,7 +14,8 @@ api = Api(app)
 app.config['SECRET_KEY'] = 'secret_key'
 
 def create_token(username):
-	return jwt.encode({'user' : username, 'exp' : datetime.datetime.utcnow() + datetime.timedelta(minutes=20)}, app.config['SECRET_KEY'])
+	token = jwt.encode({'user' : username, 'exp' : datetime.datetime.utcnow() + datetime.timedelta(minutes=20)}, app.config['SECRET_KEY'])
+	return token.decode('UTF-8')
 
 def get_db():
 	# conn = psycopg2.connect(host="localhost", database="pod", user="postgres", password="m")
@@ -26,7 +27,7 @@ def get_db():
 def token_required(f):
 	@wraps(f)
 	def decorated(*args, **kwargs):
-		token = request.args.get('token')
+		token = request.headers.get('token')
 		if not token:
 			return {'message' : 'token is missing'}, 401
 		try:
@@ -53,6 +54,7 @@ class Login(Resource):
 		# Check if username or email
 		conn, cur = get_db()
 		#Check if username exists
+		# cur.execute("SELECT password FROM users WHERE username='%s'" % username)
 		cur.execute("SELECT hashedpassword FROM users WHERE username='%s'" % username)
 		if cur.fetchone() is None:
 			cur.close()
@@ -67,7 +69,7 @@ class Login(Resource):
 		hashed = bcrypt.hashpw(b"name", bcrypt.gensalt())
 		# print(hashed)
 		if bcrypt.checkpw(password.encode('UTF-8'), pw):
-			return create_token(username), 200
+			return {'token' : create_token(username)}, 200
 		return {"data" : "Login Failed"}, 401
 				
 
@@ -75,14 +77,14 @@ class Users(Resource):
 	#signup
 	def post(self):
 		conn, cur = get_db()
-		user = request.form.get('username')
+		username = request.form.get('username')
 		email = request.form.get('email')
 		passw = request.form.get('password')
 		pw = passw.encode('UTF-8')
 		hashed = bcrypt.hashpw(pw, bcrypt.gensalt())
 		# cur = conn.cursor()
-		exists = False
-		errors = []
+		error = False
+		error_msg = []
 		data = request.headers['token']
 		# check if username exists in database
 		cur.execute("SELECT * FROM users WHERE username='%s'" % user)
@@ -102,13 +104,13 @@ class Users(Resource):
 		cur.execute("select count(*) from users");
 		count = cur.fetchone()[0] + 1
 		# create entry for username/email/pass
+		# cur.execute("insert into users (id, username, email, password) values ('%s',%s, %s, %s)", (count, username, email, hashed.decode("UTF-8")))
 		cur.execute("insert into users (id, username, email, hashedpassword) values ('%s',%s, %s, %s)", (count, user, email, hashed.decode("UTF-8")))
 		conn.commit()
 		cur.close()
 		conn.close()
 		# return token	
-		return get_token(user), 201	
-
+		return {'token' : create_token(username)}, 201
 
 	@token_required
 	def delete(self):
