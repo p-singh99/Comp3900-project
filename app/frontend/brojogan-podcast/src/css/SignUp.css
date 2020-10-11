@@ -17,7 +17,7 @@
   float: left;
 }
 
-#signUp-form {
+#signUp-div-2 {
   border-left: 3px solid  #221F2E;
   padding: 20px 0px 20px 0px;
   display: flex;
@@ -27,8 +27,8 @@
   color: #221F2E;
 }
 
-#username-div {
-  margin: 0px 40px px 40px;
+#signUp-form {
+  margin: 0px 40px 0px 40px;
 }
 
 #username-text, #password-text {
@@ -45,7 +45,8 @@
 
 #signUp-btn-2 {
   width: 150px;
-  margin-top: 10%;
+  margin-top: 20%;
+  margin-left: 25px;
   height: 30px;
   background-color: #6E59D6; 
   border-radius: 50px;

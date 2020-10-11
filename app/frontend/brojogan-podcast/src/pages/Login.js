@@ -3,6 +3,9 @@ import './../css/Login.css';
 import logo from './../images/logo.png';
 
 function Login() {
+  function handler() {
+    console.log('!yo');
+  }
   return (
     <div id="wrapper">
       <div id='login-div'>
@@ -18,24 +21,18 @@ function Login() {
             BroJogan <br /> Podcast
           </p>
         </div>
-        <div id="login-form">
+        <div id="login-div-2">
           <h1>Log In</h1>
-          <div id="username-div">
+          <form id="login-form">
             <p id="username-text">Username</p>
-            <form>
-              <input type="text" id="username-input"/>
-            </form>
-          </div>
-          <div id="password-div">
+            <input type="text" id="username-input"/>
             <p id="password-text">Password</p>
-            <form>
-              <input type="text" id="password-input"/>
-            </form>
-          </div>
-          <div id="form-btns">
-            <button id="logIn-btn" type="button">Log In</button>
-            <button id="signUp-btn" type="button">Sign Up</button> 
-          </div>
+            <input type="text" id="password-input"/>
+            <div id="form-btns">
+              <button id="logIn-btn" type="button" onClick={handler}>Log In</button>
+              <button id="signUp-btn" type="button">Sign Up</button> 
+            </div>
+          </form>
         </div>
       </div>
     </div>
