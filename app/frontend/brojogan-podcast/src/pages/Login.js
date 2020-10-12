@@ -31,7 +31,8 @@ function loginHandler() {
       .then(resp => {
         resp.json().then(data => {
           if (resp.status === 200) {
-            document.cookie = `token=${data.token}`; // maybe localstorage not cookie
+            // document.cookie = `token=${data.token}`; // maybe localstorage not cookie
+            window.localStorage.setItem('token', data.token);
             // redirect to homepage
           } else {
             displayLoginError();
