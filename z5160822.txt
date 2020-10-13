@@ -12,4 +12,4 @@ We met on Monday and worked on storyboards, made some user story changes and wor
 Pawanjot and I were allocated to frontend - Pawanjot the parts directly reacted to React and me the parts focused on form/data processing and api interaction. I connected the frontend and backend and started the event handlers for login and signup.
 
 **Week 5**
-I finished the form validation, processing and api interaction of the login and signup pages.
+I finished the form validation, processing and api interaction of the login and signup pages. I debugged and fixed parts of frontend/backend to make it all work properly.
