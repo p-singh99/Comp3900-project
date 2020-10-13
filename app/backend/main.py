@@ -120,12 +120,42 @@ class Users(Resource):
 		cur.close()
 		conn.close()
 		return {"data": "Account Deleted"}, 200
+	
+
+class Podcasts(Resource):
+	def get(self):
+		search = request.form.get('search-input')
+		conn, cur = get_db()
+		cur.execute("""SELECT count(s.userid), p.title, p.author, p.description
+             			FROM   Subscriptions s
+             				FULL OUTER JOIN Podcasts p
+                		ON s.podcastId = p.id
+             			WHERE  to_tsvector(p.title || ' ' || p.author || ' ' || p.description) @@ plainto_tsquery('%s')
+             			GROUP BY p.id;""", % search
+           		   );
+
+		podcasts = cur.fetchall()
+		if cur.rowcount = 0:
+			cur.close()
+			conn.close()
+			return [], 200
+		cur.close()
+		conn.close()
+		results = []
+		for p in podcasts:		
+			subscribers = p[0]
+			title = p[1]
+			author = p[2]
+			description = p[3]
+			results.append({"subscribers" : subscribers, "title" : title, "author" : author, "description" : description})
+		return results, 200
 
 
 api.add_resource(Unprotected, "/unprotected")
 api.add_resource(Protected, "/protected")
 api.add_resource(Login, "/login")
 api.add_resource(Users, "/users")
+api.add_resource(Podcasts, "/podcasts")
 
 
 if __name__ == '__main__':
