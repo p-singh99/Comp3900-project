@@ -76,12 +76,11 @@ class Users(Resource):
 	#signup
 	def post(self):
 		conn, cur = get_db()
-		username = request.form.get('username')
-		email = request.form.get('email')
-		passw = request.form.get('password')
+		username = lower(request.form.get('username'))
+		email = lower(request.form.get('email'))
+		passw = lower(request.form.get('password'))
 		pw = passw.encode('UTF-8')
 		hashed = bcrypt.hashpw(pw, bcrypt.gensalt())
-		# cur = conn.cursor()
 		error = False
 		error_msg = []
 		# data = request.headers['token']
@@ -128,7 +127,10 @@ class Users(Resource):
 
 class Podcasts(Resource):
 	def get(self):
-		search = request.form.get('search-input')
+		search = request.args.get('search_query')
+		if search is None:
+			return {"data": "Bad Request"}, 400
+		# search = request.form.get('search-input')
 		conn, cur = get_db()
 		cur.execute("""SELECT count(s.userid), p.title, p.author, p.description
              			FROM   Subscriptions s
