@@ -1,6 +1,6 @@
 from flask import Flask, jsonify, request, make_response
 from flask_restful import Api, Resource
-from flask_cors import CORS
+from flask_cors import CORS, cross_origin
 import psycopg2
 import jwt
 import bcrypt
@@ -14,6 +14,7 @@ CORS(app)
 
 #CHANGE SECRET KEY
 app.config['SECRET_KEY'] = 'secret_key'
+
 
 def create_token(username):
 	token = jwt.encode({'user' : username, 'exp' : datetime.datetime.utcnow() + datetime.timedelta(minutes=20)}, app.config['SECRET_KEY'])
@@ -88,16 +89,16 @@ class Users(Resource):
 		cur.execute("SELECT * FROM users WHERE username='%s'" % username)
 		if cur.fetchone():
 			error = True
-			error_msg.append({"error" : "Username already exists"})
+			error_msg.append("Username already exists")
 		# check if email exists in database
-		cur.execute("SELECT * FROM users WHERE username='%s'" % email)
+		cur.execute("SELECT * FROM users WHERE email='%s'" % email)
 		if cur.fetchone():
 			error = True
-			error_msg.append({"error" : "Email already exists"})
+			error_msg.append("Email already exists")
 		if error:
 			cur.close()
 			conn.close()
-			return error_msg, 409
+			return {"error": error_msg}, 409
 		# get next unique id number
 		cur.execute("select count(*) from users")
 		count = cur.fetchone()[0] + 1
