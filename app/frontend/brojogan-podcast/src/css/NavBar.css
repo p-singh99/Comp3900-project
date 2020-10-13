@@ -9,10 +9,28 @@
 
 #navBar-div ul {
   list-style: none;
-  margin: 40px 0px 0px -20px;
+  margin: 0px 0px 0px -40px;
+  padding-top: 50px;
 }
 
 #navBar-div li {
   margin: 0px 0px 20px 0px;
-  padding: 5px;
+  padding: 5px 0px 0px 20px;
+}
+
+#navBar-div li:hover {
+  border-left: 5px solid #64CFEB;
+}
+
+
+.nav-item {
+  /* color: #90C1CE; */
+  color:  #90C1CE;;
+  /* font-style: italic; */
+  text-decoration: none;
+}
+
+.active {
+  color:  #64CFEB;
+  font-weight: bold;
 }
