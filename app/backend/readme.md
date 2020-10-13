@@ -14,7 +14,7 @@ FLASK_APP=main.py flask run
 | POST        | `/users`                                                     | Form: “username”, “email”, "password” | {“token : “”}, 201<br>{“error “ :  “Username already exists”}, {“error “ :  “Email already exists”}, 409 | Sign up |
 | POST        | `/login`                                                     | Form: "username", "password"          | {“token : “”}, 201<br>{“error” : “Login Failed”}, 401 | Login |
 | GET         | `/podcasts/<podcastID>`                                      |                                       |               | Returns podcast details - RSS feed URL, rating |
-| GET         | `/podcasts?q=<query>&offset=<startNum>&limit=<limitNum>`     |                                       |               | Search. Request `limitNum` results starting at result number `startNum` |  
+| GET         | `/podcasts?q=<query>&offset=<startNum>&limit=<limitNum>`     | Form: "search-input"                  | [{"subscribers": subs, "title": title, "author" : author, "description" : desc}, #], 200<br> [],200              | Search. Request `limitNum` results starting at result number `startNum` |  
 
 ### Future endpoints, subject to change
 | HTTP Method |  Endpoint                                                    | Request body         | Response body | Action                  |
