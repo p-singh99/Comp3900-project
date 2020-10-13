@@ -1,5 +1,6 @@
 from flask import Flask, jsonify, request, make_response
 from flask_restful import Api, Resource
+from flask_cors import CORS, cross_origin
 import psycopg2
 import jwt
 import bcrypt
@@ -9,9 +10,11 @@ from functools import wraps
 
 app = Flask(__name__)
 api = Api(app) 
+CORS(app)
 
 #CHANGE SECRET KEY
 app.config['SECRET_KEY'] = 'secret_key'
+
 
 def create_token(username):
 	token = jwt.encode({'user' : username, 'exp' : datetime.datetime.utcnow() + datetime.timedelta(minutes=20)}, app.config['SECRET_KEY'])
@@ -81,8 +84,8 @@ class Users(Resource):
 		# cur = conn.cursor()
 		error = False
 		error_msg = []
-		# data = request.headers['token']
-		# check if username exists in database
+		data = request.headers['token']
+		check if username exists in database
 		cur.execute("SELECT * FROM users WHERE username='%s'" % username)
 		if cur.fetchone():
 			error = True
