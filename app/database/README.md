@@ -164,4 +164,16 @@ id |  name   | parentCategory
  3 | 'Books' | 2
 ```
 
- 
+## Test Data (populate.py and depopulate.py)
+### populate.py
+**[populate.py](populate.py)** is a python script that connects to the database and adds test data. The data is sourced from actual podcast RSS feeds so it should be representative of what will actually be in the database. The script does a sanity check that the database is empty by checking there is nothing in the Users table before it executes. The script currently has test data for:
+* Users (5 users)
+* Podcasts (6 podcasts)
+* Categories (6 categories [2 of whom are subcategories])
+* PodcastCategories (relating categories to podcasts)
+* Episode (2 episodes per podcast)
+* Subscriptions (relating podcasts to users, a varying number of subscriptions per user and users per podcast)
+
+**[depopulate.py](depopulate.py)** is a python script that connects to the database and deletes everything from all of the tables that populate.py touches. It prompts the user for confirmation that they actually want to delete everything in the database before it executes anything.
+
+**Suggested Usage**: ```$ python3 depopulate.py && python3 populate.py```

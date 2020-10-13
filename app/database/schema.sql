@@ -55,7 +55,7 @@ CREATE TABLE Listens (
     timestamp           integer not null,
     FOREIGN KEY (userId) references Users (id),
     FOREIGN KEY (podcastId, episodeGuid) references Episodes (podcastId, guid),
-    PRIMARY KEY (userId, podcastId, episodeSequence)
+    PRIMARY KEY (userId, podcastId, episodeGuid)
 );
 
 CREATE TABLE Subscriptions (

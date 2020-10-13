@@ -1,6 +1,6 @@
 import React from 'react';
 import './../css/NavBar.css';
-import logo from './../images/logo.png';
+import {NavLink, withRouter} from 'react-router-dom';
 
 function NavBar() {
 
@@ -11,11 +11,11 @@ function NavBar() {
   return (
     <div id='navBar-div' style={divStyle}>
       <ul>
-        <li><a href="#" />Home</li>
-        <li><a href="#" />History</li>
-        <li><a href="#" />Recommended</li>
-        <li><a href="#" />Subscriptions</li>
-        <li><a href="#" />About</li>
+        <li><NavLink className="nav-item" exact to="/" activeClassName="active">Home</NavLink></li>
+        <li><NavLink className="nav-item" exact to="/history" activeClassName="active">History</NavLink></li>
+        <li><NavLink className="nav-item" exact to="/recommended" activeClassName="active">Recommended</NavLink></li>
+        <li><NavLink className="nav-item" exact to="/subscriptions" activeClassName="active">Subscriptions</NavLink></li>
+        <li><NavLink className="nav-item" exact to="/about" activeClassName="active">About</NavLink></li>
       </ul>
     </div>
   )
