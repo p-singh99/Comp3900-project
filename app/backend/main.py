@@ -1,5 +1,6 @@
 from flask import Flask, jsonify, request, make_response
 from flask_restful import Api, Resource
+from flask_cors import CORS
 import psycopg2
 import jwt
 import bcrypt
@@ -9,6 +10,7 @@ from functools import wraps
 
 app = Flask(__name__)
 api = Api(app) 
+CORS(app)
 
 #CHANGE SECRET KEY
 app.config['SECRET_KEY'] = 'secret_key'
@@ -121,12 +123,74 @@ class Users(Resource):
 		cur.close()
 		conn.close()
 		return {"data": "Account Deleted"}, 200
+	
 
+class Podcasts(Resource):
+	def get(self):
+		search = request.form.get('search-input')
+		conn, cur = get_db()
+		cur.execute("""SELECT count(s.userid), p.title, p.author, p.description
+             			FROM   Subscriptions s
+             				FULL OUTER JOIN Podcasts p
+                		ON s.podcastId = p.id
+             			WHERE  to_tsvector(p.title || ' ' || p.author || ' ' || p.description) @@ plainto_tsquery('%s')
+             			GROUP BY p.id;""", % search
+           		   );
+
+		podcasts = cur.fetchall()
+		if cur.rowcount = 0:
+			cur.close()
+			conn.close()
+			return [], 200
+		cur.close()
+		conn.close()
+		results = []
+		for p in podcasts:		
+			subscribers = p[0]
+			title = p[1]
+			author = p[2]
+			description = p[3]
+			results.append({"subscribers" : subscribers, "title" : title, "author" : author, "description" : description})
+		return results, 200
+
+class Delete(Resource):
+	#@token_required
+	def delete(self):
+		if not request.headers.get('token'):
+			return {"error" : "FAILED"}, 401
+		token = request.headers['token']
+		data = jwt.decode(token, app.config['SECRET_KEY'])
+		sql = "DELETE FROM users WHERE username='%s';" % data['user']
+		conn, cur = get_db()
+		cur.execute(sql)
+		conn.commit()
+		cur.close()
+		conn.close()
+		return {"data": "Account Deleted"}, 200
+
+class Settings(Resource):
+
+	def post(self, name):
+		return {"data": f"{name}"}
+
+	def put(self, name):
+		if name == "password":
+			# change password
+			return {"data" : f"{name}"}
+
+		elif name == "email":
+			# change email
+			return {"data" : f"{name}"}
+
+		return {"data" : "Failed"}
 
 api.add_resource(Unprotected, "/unprotected")
 api.add_resource(Protected, "/protected")
 api.add_resource(Login, "/login")
 api.add_resource(Users, "/users")
+api.add_resource(Delete, "/users/self")
+api.add_resource(Settings, "/users/self/<string:name>")
+api.add_resource(Podcasts, "/podcasts")
 
 
 if __name__ == '__main__':

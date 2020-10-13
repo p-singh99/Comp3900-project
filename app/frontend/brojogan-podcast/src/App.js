@@ -6,14 +6,28 @@ import NavBar from './components/NavBar';
 import Footer from './components/Footer';
 import Login from './pages/Login';
 import SignUp from './pages/SignUp';
+import Home from './pages/Home';
+import Description from './pages/Description';
+import History from './pages/History';
+import Recommended from './pages/Recommended';
+import Subscriptions from './pages/Subscriptions';
+import About from './pages/About';
 
 function App() {
   const defaultComponents = () => (
-    <React.Fragment>
+    <div id='main'>
       <Header />
-      <NavBar />
+      <div id='middle'>
+        <NavBar />
+        <Route path="/" component={Home} exact />
+        <Route path="/history" component={History} exact />
+        <Route path="/description" component={Description} exact />
+        <Route path="/recommended" component={Recommended} exact />
+        <Route path="/subscriptions" component={Subscriptions} exact />
+        <Route path="/about" component={About} exact />
+      </div>    
       <Footer />
-    </React.Fragment>
+    </div>
   )
   return (
     <Router>
