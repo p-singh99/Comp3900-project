@@ -40,8 +40,8 @@ conn.close()
 Column      |   Type    |   Details
 ------------|-----------|------
 id          | serial    | Primary key. Use 'default' when inserting to auto generate
-username    |   text    | Can only contain the characters A-Z, a-z, 0-9, _, and -. Must contain 3 or more characters. Must be unique. Must not be null.
-email       |   text    | Must be unique. Must not be null. Application should check that the email is valid becuase the database does not.
+username    |   text    | Can only contain the characters a-z, 0-9, _, and -. Must contain 3 or more characters. Must be unique. Must not be null. The frontend and/or backend must convert uppercase characters to lowercase characters.
+email       |   text    | Must be unique. Must not be null. Must be an (approximately) valid email with only lowercase characters. The frontend and/or backend must convert uppercase characters to lowercase characters.
 hashedPassword |    text    | Intended for storing the hashed password of the user with salt. Must not be null.
 
 ### SearchQueries
@@ -163,6 +163,36 @@ id |  name   | parentCategory
 ---+---------+---------------
  3 | 'Books' | 2
 ```
+
+#### subscribed\_podcasts\_for\_user(\_userId integer)
+A function that returns a table of all the podcasts a particular user is subscribed to.
+**Returns**: A query that contains all of the podcasts that a user is susbcribed to (all of the columns associated with podcasts, not just its id)
+**Usage**: ```select * from subscribed_podcasts_for_user((select id from users where username='Tom'));```
+**Return example**:
+```
+id | rssfeed | title | author | description | thumbnail
+---+---------+-------+--------+-------------+----------
+		... podcasts ...
+```
+
+#### count\_subscriptions\_for\_podcast(\_podcastId integer)
+A function that returns a table simply containing the number of subscribers for a particular podcast
+**Returns**: A query that contains only 1 row and column: an integer of the number of subscribers
+**Usage**: ```select * from count_subscriptions_for_podcast((select id from podcasts where title='Chapo Trap House'));```
+**Return example**:
+```
+subscribers
+-----------
+         2
+```
+
+
+### Views
+#### NumSubscribersPerPodcast
+Column      |   Type    |   Details
+------------|-----------|----------
+podcastId   | integer   | references Podcasts (id)
+subscribers | integer   | the number of users who are subscribed to the podcast
 
 ## Test Data (populate.py and depopulate.py)
 ### populate.py

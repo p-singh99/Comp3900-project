@@ -1,7 +1,7 @@
 CREATE TABLE Users (
     id                  serial,
-    username            text not null unique check (username ~ '^[A-Za-z0-9_-]{3,}$'),
-    email               text not null unique,
+    username            text not null unique check (username ~ '^[a-z0-9_-]{3,}$'),
+    email               text not null unique check (email ~ '^[a-z0-9!#$%&\'*+-/=?^_`{|}~.]+@[a-z0-9.-]+$'),   -- pretty close to the email spec, only doesn't allow for quote marks and backslashes
     hashedPassword      text not null,
     PRIMARY KEY (id)
 );
@@ -81,7 +81,7 @@ CREATE TABLE EpisodeRatings (
     episodeGuid         integer not null,
     rating              integer not null check (rating >= 1 and rating <= 5),
     FOREIGN KEY (userId) references Users (id),
-    FOREIGN KEY (podcastId, episodeSequence) references Episodes (podcastId, guid),
+    FOREIGN KEY (podcastId, episodeGuid) references Episodes (podcastId, guid),
     PRIMARY KEY (userId, podcastId, episodeGuid)
 );
 
