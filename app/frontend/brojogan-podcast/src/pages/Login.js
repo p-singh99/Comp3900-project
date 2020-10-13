@@ -25,6 +25,7 @@ function loginHandler() {
             // document.cookie = `token=${data.token}`; // maybe localstorage not cookie
             window.localStorage.setItem('token', data.token);
             // redirect to homepage
+            alert('Log in successful');
           } else {
             displayLoginError();
           }

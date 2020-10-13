@@ -76,9 +76,9 @@ class Users(Resource):
 	#signup
 	def post(self):
 		conn, cur = get_db()
-		username = lower(request.form.get('username'))
-		email = lower(request.form.get('email'))
-		passw = lower(request.form.get('password'))
+		username = request.form.get('username').lower()
+		email = request.form.get('email').lower()
+		passw = request.form.get('password')
 		pw = passw.encode('UTF-8')
 		hashed = bcrypt.hashpw(pw, bcrypt.gensalt())
 		error = False

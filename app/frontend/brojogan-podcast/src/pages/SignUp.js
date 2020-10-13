@@ -8,12 +8,21 @@ function displayError(error) {
   alert(error);
 }
 
+function displaySignupError(msg) {
+  let errorElem = document.getElementById("signup-error");
+  errorElem.textContent = msg;
+  errorElem.style.visibility = 'visible'
+}
+
 // sign up fail eg email already exists
-function displaySignupError(errors) {
-  document.getElementById("signup-error").textContent = '';
+// takes a list
+function displaySignupErrors(errors) {
+  let errorElem = document.getElementById("signup-error");
+  errorElem.textContent = '';
   for (let msg of errors) {
-    document.getElementById("signup-error").textContent += msg + '.\n';
+    errorElem.textContent += msg + '.\n';
   }
+  errorElem.style.visibility = 'visible';
 }
 
 // change
@@ -25,14 +34,6 @@ function displayPasswordError(msg) {
 function removePasswordError() {
   document.getElementById("password-error").style.visibility = 'hidden';
 }
-
-function usernameValid(username) {
-  return true;
-}
-function passwordValid(password) {
-  return true;
-}
-
 
 // if we can add password2change() as a once event listener, can do it this way - only display doesn't match message after password2 is changed once
 // function password2change() {
@@ -84,19 +85,19 @@ function checkPasswordsMatch() {
   }
 }
 
-// username must be ...
-// email must be a valid email address
-// password must be 
-
-function checkUsername(event) {
-  let username = event.target;
+function checkField(event) {
+  let field = event.target;
   // let correct = /^([a-zA-z0-9_-]{3,64})$/.test(username);
-  if (username.validity.valid) {
+  let errorElem = field.nextSibling;
+  if (field.validity.valid) {
     // document.getElementById("username-error").textContent = "";
-    document.getElementById("username-error").style.visibility = "hidden";
+    // errorID = `${field.id.split("-")[0]}-error`;
+    // document.getElementById(errorID).style.visibility = "hidden";
+    errorElem.style.visibility = 'hidden';
   } else {
     // document.getElementById("username-error").textContent = "Invalid username";
-    document.getElementById("username-error").style.visibility = "visible";
+    // document.getElementById(errorID).style.visibility = "visible";
+    errorElem.style.visibility = 'visible';
   }
 }
 
@@ -104,40 +105,36 @@ function signupHandler(event) {
   event.preventDefault();
 
   const form = document.forms['signUp-form'];
-  const username = form.elements.username.value;
-  const email = form.elements.email.value;
-  const password1 = form.elements.password1.value;
-  const password2 = form.elements.password2.value;
+  const username = form.elements.username;
+  const email = form.elements.email;
+  const password1 = form.elements.password1;
+  const password2 = form.elements.password2;
 
-  // put username validity and password requirements in the html?
-  if (username && password1 && password2 && email) {
-    if (!usernameValid(username)) {
-      alert('Invalid username');
-    } else if (!passwordValid(password1)) {
-      alert('Invalid password');
-    } else if (password1 !== password2) {
-      alert('Passwords not matching')
-    } else {
-      let formData = new FormData();
-      formData.append("username", username);
-      formData.append("password", password1);
-      formData.append("email", email);
-      fetch(`${API_URL}/users`, { method: 'post', body: formData })
-        .then(resp => {
-          resp.json().then(data => {
-            if (resp.status === 201) {
-              // document.cookie = `token=${data.token}`;
-              window.localStorage.setItem('token', data.token);
-              // redirect to homepage
-            } else {
-              displaySignupError(data.error);
-            }
-          })
+  if (!username.value || !password1.value || !password2.value || !email.value
+      || ! username.validity.valid || ! password1.validity.valid || ! email.validity.valid
+      || password1.value !== password2.value) {
+        console.log("errors");
+        displaySignupError("Please enter all fields correctly.");
+  } else {
+    let formData = new FormData();
+    formData.append("username", username.value);
+    formData.append("password", password1.value);
+    formData.append("email", email.value);
+    fetch(`${API_URL}/users`, { method: 'post', body: formData })
+      .then(resp => {
+        resp.json().then(data => {
+          if (resp.status === 201) {
+            window.localStorage.setItem('token', data.token);
+            // redirect to homepage
+            alert(`Sign up successful, ${username.value}`);
+          } else {
+            displaySignupErrors(data.error);
+          }
         })
-        .catch(error => { // will this catch error from resp.json()?
-          displayError(error);
-        });
-    }
+      })
+      .catch(error => { // will this catch error from resp.json()?
+        displayError([error]);
+      });
   }
 }
 
@@ -163,26 +160,27 @@ function SignUp() {
           <form id="signUp-form">
             <div id="username-div">
               <p id="username-text">Username</p>
-              <p class="form-info">3-64 characters. May contain lowercase letters, numbers, - and _</p>
+              <p className="form-info">3-64 characters. May contain lowercase letters, numbers, - and _</p>
               {/* <input type="text" id="username-input" name="username" required onChange={checkUsername} minlength="3" maxlength="64" pattern="[a-zA-z0-9_-]+" title="3-64 characters. May contain uppercase and lowercase letters, numbers, - and _"/> */}
-              <input type="text" id="username-input" name="username" required onChange={checkUsername} minlength="3" maxlength="64" pattern="[a-zA-z0-9_-]{3,64}" title="3-64 characters. May contain uppercase and lowercase letters, numbers, - and _"/>
-              <p id="username-error" class="error">Invalid username</p>
+              <input type="text" id="username-input" name="username" onChange={checkField} minLength="3" maxLength="64" pattern="[a-zA-z0-9_-]{3,64}" title="3-64 characters. May contain uppercase and lowercase letters, numbers, - and _"/>
+              <p id="username-error" className="error">Invalid username</p>
             </div>
             <div>
               <p id="email-text">Email</p>
-              <input type="email" id="email-input" name="email" required pattern="[a-zA-Z0-9%+_.-]+@[a-zA-Z0-9.-]+\.[A-Za-z0-9]+" maxlength="100"/>
+              <input type="email" id="email-input" name="email" onChange={checkField} pattern="[a-zA-Z0-9%+_.-]+@[a-zA-Z0-9.-]+\.[A-Za-z0-9]+" maxLength="100"/>
+              <p id="username-error" className="error">Invalid email address</p>
             </div>
             <div>
-              <p id="password-text">Password</p>
-              <p class="form-info">10-64 characters. Must contain a lower case letter and at least one number, uppercase letter or symbol (!@#$%^&amp;*()_-+={}]:;'&quot;&lt;&#44;&gt;.?/|\~`).</p>
-              <input type="password" id="password-input" name="password1" onInput={checkPassword} required minlength="10" maxlength="64" pattern="(?=.*[a-z])((?=.*\d)|(?=.*[A-Z])|(?=.*[!@#$%^&amp;*()_\-+=\{}\]:;'&quot;<,>.?\/|\\~`])).{0,}"/>
+              <p className="password-text">Password</p>
+              <p className="form-info">10-64 characters. Must contain a lower case letter and at least one number, uppercase letter or symbol (!@#$%^&amp;*()_-+={}]:;'&quot;&lt;&#44;&gt;.?/|\~`).</p>
+              <input type="password" className="password-input" name="password1" onInput={checkPassword} required minLength="10" maxLength="64" pattern="(?=.*[a-z])((?=.*\d)|(?=.*[A-Z])|(?=.*[!@#$%^&amp;*()_\-+=\{}\]:;'&quot;<,>.?\/|\\~`])).{0,}"/>
             </div>
             <div>
-              <p id="password-text">Confirm Password</p> {/* two have the same id */}
-              <input type="password" id="password-input" name="password2" required onInput={checkPasswordsMatch}/> {/* should use once attribute */}
+              <p className="password-text">Confirm Password</p> {/* two have the same id */}
+              <input type="password" className="password-input" name="password2" onInput={checkPasswordsMatch}/> {/* should use once attribute */}
+              <p id="password-error" className="error">Placeholder</p>
             </div>
-            <p id="password-error" class="error"></p>
-            <pre id="signup-error"></pre> { /* pre so that can add new line in textContent*/}
+            <pre id="signup-error" className="error">Placeholder</pre> { /* pre so that can add new line in textContent*/}
             <button id="signUp-btn-2" type="button" onClick={signupHandler}>Sign Up</button>
           </form>
         </div>
