@@ -135,13 +135,13 @@ class Podcasts(Resource):
                 		ON s.podcastId = p.id
              			WHERE  to_tsvector(p.title || ' ' || p.author || ' ' || p.description) @@ plainto_tsquery('%s')
              			GROUP BY p.id;""" % search
-           		   )
+           		   );
 
 		podcasts = cur.fetchall()
-		if cur.rowcount == 0:
-			cur.close()
-			conn.close()
-			return [], 200
+		# if cur.rowcount == 0:
+		# 	cur.close()
+		# 	conn.close()
+		# 	return [], 200
 		cur.close()
 		conn.close()
 		results = []
