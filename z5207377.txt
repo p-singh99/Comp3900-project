@@ -3,3 +3,7 @@ Team was created on Thursday. Ultracast was selected as the project and the proj
 
 Week 2
 Jira and Github pages were set up and the previously created user stories were tweaked and added to jira. We also worked on adding more user stories and went over them as a team, discussing any modifications.
+
+Week 3
+
+Discussed the project proposal and storyboards. We used scrum poker to discuss the user stories and assign user story points. On Friday, we had a meeting again to discuss about the proposal. We had some diagrams that we were working on and we discussed those as a team. I worked on the Class Diagram. Nicholas put everything together into the final proposal and submitted it.
