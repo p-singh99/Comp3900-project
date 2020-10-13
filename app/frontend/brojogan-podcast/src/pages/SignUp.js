@@ -9,8 +9,10 @@ function displayError(error) {
 }
 
 // sign up fail eg email already exists
-function displaySignupError(error) {
-  alert(error);
+function displaySignupError(errors) {
+  for (let msg of errors) {
+    alert(msg);
+  }
 }
 
 // change
