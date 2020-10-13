@@ -8,7 +8,7 @@ function displayError(error) {
 }
 
 function displayLoginError() {
-  alert("Login failed");
+  document.getElementById("login-error").textContent = "Login failed. Username or password incorrect.";
 }
 
 function loginHandler() {
@@ -17,15 +17,6 @@ function loginHandler() {
   const password = form.elements.password.value;
   // check for maximum length? check that they don't violate some constraints?
   if (username && password) {
-    // fetch('http://jsonplaceholder.typicode.com/todos/1')
-    // .then(response => response.json())
-    // .then(json => console.log(json));
-
-    // let body = {"userId": 1, "title": "", "body": ""};
-    // fetch('http://jsonplaceholder.typicode.com/posts', {method: 'post', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)})
-    //   .then(response => response.json())
-    //   .then(json => console.log(json));
-
     let formData = new FormData(form);
     fetch(`${API_URL}/login`, {method: 'post', body: formData})
       .then(resp => {
@@ -83,9 +74,11 @@ function Login() {
             <input type="text" id="username-input" name="username"/>
             <p id="password-text">Password</p>
             <input type="password" id="password-input" name="password"/>
+            <p id="login-error"></p>
             <div id="form-btns">
               <button id="logIn-btn" type="button" onClick={loginHandler}>Log In</button>
-              <button id="signUp-btn" type="button">Sign Up</button> 
+              {/* <button id="signUp-btn" type="button">Sign Up</button>  */}
+              <a href="/signup">Sign up</a>
             </div>
           </form>
         </div>

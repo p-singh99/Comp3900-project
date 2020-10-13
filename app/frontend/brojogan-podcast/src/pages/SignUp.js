@@ -10,14 +10,20 @@ function displayError(error) {
 
 // sign up fail eg email already exists
 function displaySignupError(errors) {
+  document.getElementById("signup-error").textContent = '';
   for (let msg of errors) {
-    alert(msg);
+    document.getElementById("signup-error").textContent += msg + '.\n';
   }
 }
 
 // change
 function displayPasswordError(msg) {
-  document.getElementsByClassName("password-info")[0].textContent = msg;
+  document.getElementById("password-error").textContent = msg;
+  document.getElementById("password-error").style.visibility = 'visible';
+}
+
+function removePasswordError() {
+  document.getElementById("password-error").style.visibility = 'hidden';
 }
 
 function usernameValid(username) {
@@ -39,16 +45,58 @@ function passwordValid(password) {
 //   checkPasswordsMatch();
 // }
 
+// function validPassword(pw) {
+//   if (pw.length < 10 || pw.length > 64) {
+//     return false;
+//   }
+//   lower = false;
+//   upper = false;
+//   number = false;
+//   symbol = false;
+//   count = 0;
+//   for (let c of pw) {
+//     if ()
+//   }
+// }
+
+function checkPassword() {
+  const form = document.forms['signUp-form'];
+  const password1Elem = form.elements.password1;
+  if (password1Elem.validity.tooShort) {
+    displayPasswordError("Password too short");
+  } else if (password1Elem.validity.tooLong) {
+    displayPasswordError("Password too long");
+  } else if (! password1Elem.validity.valid) {
+    displayPasswordError("Password missing requirements")
+  } else {
+    checkPasswordsMatch();
+  }
+}
 
 function checkPasswordsMatch() {
-  console.log('check');
   const form = document.forms['signUp-form'];
   const password1 = form.elements.password1.value;
   const password2 = form.elements.password2.value;
   if (password1 !== password2) {
     displayPasswordError("Passwords don't match");
   } else {
-    displayPasswordError("");
+    removePasswordError();
+  }
+}
+
+// username must be ...
+// email must be a valid email address
+// password must be 
+
+function checkUsername(event) {
+  let username = event.target;
+  // let correct = /^([a-zA-z0-9_-]{3,64})$/.test(username);
+  if (username.validity.valid) {
+    // document.getElementById("username-error").textContent = "";
+    document.getElementById("username-error").style.visibility = "hidden";
+  } else {
+    // document.getElementById("username-error").textContent = "Invalid username";
+    document.getElementById("username-error").style.visibility = "visible";
   }
 }
 
@@ -115,24 +163,27 @@ function SignUp() {
           <form id="signUp-form">
             <div id="username-div">
               <p id="username-text">Username</p>
-              <p class="form-info">3-64 characters. May contain uppercase and lowercase letters, numbers, - and _</p>
-              <input type="text" id="username-input" name="username" required minlength="3" maxlength="64" pattern="[a-zA-z0-9_-]+" title="3-64 characters. May contain uppercase and lowercase letters, numbers, - and _"/>
+              <p class="form-info">3-64 characters. May contain lowercase letters, numbers, - and _</p>
+              {/* <input type="text" id="username-input" name="username" required onChange={checkUsername} minlength="3" maxlength="64" pattern="[a-zA-z0-9_-]+" title="3-64 characters. May contain uppercase and lowercase letters, numbers, - and _"/> */}
+              <input type="text" id="username-input" name="username" required onChange={checkUsername} minlength="3" maxlength="64" pattern="[a-zA-z0-9_-]{3,64}" title="3-64 characters. May contain uppercase and lowercase letters, numbers, - and _"/>
+              <p id="username-error" class="error">Invalid username</p>
             </div>
             <div>
               <p id="email-text">Email</p>
-              <input type="email" id="email-input" name="email" required pattern="[a-zA-z0-9%+_.-]+@[a-zA-Z0-9.-]+\.[A-Za-z0-9]+" maxlength="100"/>
+              <input type="email" id="email-input" name="email" required pattern="[a-zA-Z0-9%+_.-]+@[a-zA-Z0-9.-]+\.[A-Za-z0-9]+" maxlength="100"/>
             </div>
             <div>
               <p id="password-text">Password</p>
               <p class="form-info">10-64 characters. Must contain a lower case letter and at least one number, uppercase letter or symbol (!@#$%^&amp;*()_-+={}]:;'&quot;&lt;&#44;&gt;.?/|\~`).</p>
-              <input type="password" id="password-input" name="password1" onInput={checkPasswordsMatch} required minlength="8" maxlength="64" pattern="(?=.*[a-z])((?=.*\d)|(?=.*[A-Z])|(?=.*[!@#$%^&amp;*()_\-+=\{}\]:;'&quot;<,>.?\/|\\~`])).{0,}"/>
+              <input type="password" id="password-input" name="password1" onInput={checkPassword} required minlength="10" maxlength="64" pattern="(?=.*[a-z])((?=.*\d)|(?=.*[A-Z])|(?=.*[!@#$%^&amp;*()_\-+=\{}\]:;'&quot;<,>.?\/|\\~`])).{0,}"/>
             </div>
             <div>
               <p id="password-text">Confirm Password</p> {/* two have the same id */}
               <input type="password" id="password-input" name="password2" required onInput={checkPasswordsMatch}/> {/* should use once attribute */}
             </div>
-            <p class="password-info"></p>
-            <button id="signUp-btn-2" type="submit" onClick={signupHandler}>Sign Up</button>
+            <p id="password-error" class="error"></p>
+            <pre id="signup-error"></pre> { /* pre so that can add new line in textContent*/}
+            <button id="signUp-btn-2" type="button" onClick={signupHandler}>Sign Up</button>
           </form>
         </div>
       </div>
