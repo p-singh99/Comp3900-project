@@ -6,3 +6,9 @@ On wednesday following the lecture we set up the Jira & github pages. The user s
 
 Week 3
 User stories were revised and all acceptance criteria were added. We worked on the various diagrams. I contributed to the storyboard and ER Diagram mostly. We used scrum poker to determine user story points. I added references to and finalised the background section of the proposal. The first sprint was created. Finally the proposal was submitted.
+
+Week 4
+Work was started on the first sprint. I was tasked with creating the database functionality for the first sprint. I created a remotely hosted postgres database so any team member can easily access the same database. I created a preliminary schema for the database and added some test data so the api and front end would have something to work with for testing.
+
+Week 5
+I continued working on the database. I improved the sql schema and added a python script that populates and depopulates the database with test data, based on real podcast rss feeds.
