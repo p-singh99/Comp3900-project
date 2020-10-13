@@ -127,7 +127,7 @@ class Podcasts(Resource):
 	def get(self):
 		search = request.args.get('search_query')
 		if search is None:
-			return 400
+			return {"data": "Bad Request"}400
 		# search = request.form.get('search-input')
 		conn, cur = get_db()
 		cur.execute("""SELECT count(s.userid), p.title, p.author, p.description
