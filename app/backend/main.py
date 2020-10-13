@@ -1,6 +1,6 @@
 from flask import Flask, jsonify, request, make_response
 from flask_restful import Api, Resource
-from flask_cors import CORS
+from flask_cors import CORS, cross_origin
 import psycopg2
 import jwt
 import bcrypt
@@ -14,6 +14,7 @@ CORS(app)
 
 #CHANGE SECRET KEY
 app.config['SECRET_KEY'] = 'secret_key'
+
 
 def create_token(username):
 	token = jwt.encode({'user' : username, 'exp' : datetime.datetime.utcnow() + datetime.timedelta(minutes=20)}, app.config['SECRET_KEY'])
@@ -58,8 +59,9 @@ class Login(Resource):
 		#Check if username exists
 		# cur.execute("SELECT password FROM users WHERE username='%s'" % username)
 		cur.execute("SELECT hashedpassword FROM users WHERE username='%s'" % username)
-		if cur.fetchone():		
-			pw = cur.fetchone()[0].strip()
+		res = cur.fetchone()
+		if res:
+			pw = res[0].strip()
 			pw = pw.encode('UTF-8')
 			cur.close()
 			conn.close()
@@ -74,35 +76,34 @@ class Users(Resource):
 	#signup
 	def post(self):
 		conn, cur = get_db()
-		username = request.form.get('username')
-		email = request.form.get('email')
+		username = request.form.get('username').lower()
+		email = request.form.get('email').lower()
 		passw = request.form.get('password')
 		pw = passw.encode('UTF-8')
 		hashed = bcrypt.hashpw(pw, bcrypt.gensalt())
-		# cur = conn.cursor()
 		error = False
 		error_msg = []
-		data = request.headers['token']
+		# data = request.headers['token']
 		# check if username exists in database
-		cur.execute("SELECT * FROM users WHERE username='%s'" % user)
+		cur.execute("SELECT * FROM users WHERE username='%s'" % username)
 		if cur.fetchone():
-			error = True;
-			error_msg.append({"error" : "Username already exists"})
+			error = True
+			error_msg.append("Username already exists")
 		# check if email exists in database
-		cur.execute("SELECT * FROM users WHERE username='%s'" % email)
+		cur.execute("SELECT * FROM users WHERE email='%s'" % email)
 		if cur.fetchone():
-			error = True;
-			error_msg.append({"error" : "Email already exists"})
+			error = True
+			error_msg.append("Email already exists")
 		if error:
 			cur.close()
 			conn.close()
-			return error_msg, 409
+			return {"error": error_msg}, 409
 		# get next unique id number
-		cur.execute("select count(*) from users");
+		cur.execute("select count(*) from users")
 		count = cur.fetchone()[0] + 1
 		# create entry for username/email/pass
 		# cur.execute("insert into users (id, username, email, password) values ('%s',%s, %s, %s)", (count, username, email, hashed.decode("UTF-8")))
-		cur.execute("insert into users (id, username, email, hashedpassword) values ('%s',%s, %s, %s)", (count, user, email, hashed.decode("UTF-8")))
+		cur.execute("insert into users (id, username, email, hashedpassword) values ('%s',%s, %s, %s)", (count, username, email, hashed.decode("UTF-8")))
 		conn.commit()
 		cur.close()
 		conn.close()
@@ -126,21 +127,24 @@ class Users(Resource):
 
 class Podcasts(Resource):
 	def get(self):
-		search = request.form.get('search-input')
+		search = request.args.get('search_query')
+		if search is None:
+			return {"data": "Bad Request"}, 400
+		# search = request.form.get('search-input')
 		conn, cur = get_db()
 		cur.execute("""SELECT count(s.userid), p.title, p.author, p.description
              			FROM   Subscriptions s
              				FULL OUTER JOIN Podcasts p
                 		ON s.podcastId = p.id
              			WHERE  to_tsvector(p.title || ' ' || p.author || ' ' || p.description) @@ plainto_tsquery('%s')
-             			GROUP BY p.id;""", % search
-           		   );
+             			GROUP BY p.id;""" % search
+           		   )
 
 		podcasts = cur.fetchall()
-		if cur.rowcount = 0:
-			cur.close()
-			conn.close()
-			return [], 200
+		# if cur.rowcount == 0:
+		# 	cur.close()
+		# 	conn.close()
+		# 	return [], 200
 		cur.close()
 		conn.close()
 		results = []

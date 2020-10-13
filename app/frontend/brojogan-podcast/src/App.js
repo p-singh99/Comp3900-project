@@ -33,7 +33,7 @@ function App() {
     <Router>
       <div className="App">
         <Switch>
-          <Route path="/login" component={Login} exact />
+          <Route path="/login" component={Login} exact /> { /* if user is logged in, route to default? */}
           <Route path="/signup" component={SignUp} exact/>
           <Route component={defaultComponents}/>
         </Switch>
