@@ -1,0 +1,10 @@
+#dropDown-div {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  color: #90C1CE;
+  border: 2px solid #64CFEB;
+  padding-left: 15px;
+  background-color: #2E2B3F;
+  font-weight: bold;
+}

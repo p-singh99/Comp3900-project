@@ -1,3 +1,7 @@
+#header-wrapper {
+
+}
+
 #header-div {
   width: 100%;
   display: flex;
@@ -7,11 +11,20 @@
   background-color: #2E2B3F;
 }
 
-#search-div {
-  width: 100%;
+#dropDownDiv {
+  position: absolute;
+  right: 20px;
+  /* border: 1px solid #09BC6D; */
+  width: 150px;
 }
 
-#settings-div {
+#search-div {
+  width: 100%;
+  padding-left: 15%;
+  padding-right: 10%;
+}
+
+#icons-div {
   display: flex;
   flex-direction: row;
 }
@@ -27,4 +40,48 @@
   font-weight: bold;
   padding-left: 20px;
   padding-right: 20px;
+}
+
+#notification-button, #settings-button, 
+#notification-button-clicked, #settings-button-clicked {
+  padding: 0px;
+  margin-left: 10px; 
+  width: 35px;
+  height: 35px;
+  background-color: transparent;
+  border: none;
+}
+
+#notification-button {
+  background-image: url("../images/notifications.png");
+}
+
+#notification-button-clicked {
+  background-image: url("../images/notifications-green.png");
+}
+
+#notification-button-clicked:hover {
+  cursor: pointer;
+}
+
+#settings-button {
+  background-image: url("../images/settings.png");
+}
+
+#settings-button-clicked {
+  background-image: url("../images/settings-green.png");
+}
+
+#settings-button-clicked:hover {
+  cursor: pointer;
+}
+
+#notification-button:hover {
+  background-image: url("../images/notifications-green.png");
+  cursor: pointer;
+}
+
+#settings-button:hover {
+  background-image: url("../images/settings-green.png");
+  cursor: pointer;
 }
