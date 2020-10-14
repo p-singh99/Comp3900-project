@@ -25,6 +25,7 @@ function App() {
         <Route path="/recommended" component={Recommended} exact />
         <Route path="/subscriptions" component={Subscriptions} exact />
         <Route path="/about" component={About} exact />
+        {/* <Route path="/description" component={() => <Description />} exact /> */}
       </div>    
       <Footer />
     </div>

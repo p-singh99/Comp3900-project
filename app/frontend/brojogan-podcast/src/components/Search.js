@@ -1,13 +1,12 @@
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import Select from 'react-select';
 
 const scaryAnimals = [
-  { label: "Alligators", value: 1 },
-  { label: "Crocodiles", value: 2 },
-  { label: "Sharks", value: 3 },
-  { label: "Small crocodiles", value: 4 },
-  { label: "Smallest crocodiles", value: 5 },
-  { label: "Snakes", value: 6 },
+  {label: "Hello Internet          |       Subs: 3", value: 1, subscribers : 3, author: "CGP Grey and Brady Haran", description : "Presented by CGP Grey and Dr. Brady Haran."},
+  { label: "Hardcore History       |      Subs: 5", value: 2, subscribers : 5, author: "Dan Carlin", description : "Hardcore History is Carlins forum for exploring topics throughout world history. The focus of each episode varies widely from show to show but they are generally centered on specific historical events and are discussed in a"},
+  { label: "Chapo Trap House       |     Subs: 4", value: 3, subscribers : 4, author: "Chapo Trap House", description : "Chapo Trap House is an American political podcast founded in March 2016 and hosted by Will Menaker, Matt Christman, Felix Biederman, Amber A'Lee Frost, and Virgil Texas."},
+  { label: "99% Invisible          |    Subs: 2", value: 4, subscribers : 2, author: "Roman Mars", description : "Design is everywhere in our lives, perhaps most importantly in the places where we've just stopped noticing. 99% Invisible is a weekly exploration of the process and power of design and architecture. From award winning producer Roman Mars. Learn more at "},
+  
 ];
 
 const customStyles = {
@@ -54,9 +53,28 @@ const customStyles = {
 };
 
 export default function Search() {
+
+  let [searchValue, setSearchvalue] = useState({});
+
+  useEffect(() => {
+    console.log(`Value: ${searchValue.label}`);
+
+  }, [searchValue])
+
+  function changeHandler(value) {
+    // console.log(value);
+    setSearchvalue(value);
+  }
+
+  // function getvalue(value) {
+  //   if (value) {
+  //     console.log(`Live value ${value}`);
+  //   }
+  // }
+
   return (
     <React.Fragment>
-      <Select options={scaryAnimals} styles={customStyles} placeholder={'Search'}/>
+      <Select id="input-box" options={scaryAnimals} styles={customStyles} placeholder={'Search'} onChange={changeHandler} /*inputValue={getvalue}*/ />
     </React.Fragment>
   )
 }

@@ -1,9 +1,9 @@
 import React from 'react';
 
-function Description() {
+function Description(props) {
   return (
     <div>
-      <h1>Welcome to the Decription page</h1>
+      <h1>Welcome to the Decription page for podcast {props.name}</h1>
     </div>
   );
 }
