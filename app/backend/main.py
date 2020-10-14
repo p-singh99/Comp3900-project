@@ -14,17 +14,16 @@ CORS(app)
 
 #CHANGE SECRET KEY
 app.config['SECRET_KEY'] = 'secret_key'
-
+conn = psycopg2.connect(dbname="ultracast", user="brojogan", password="GbB8j6Op", host="polybius.bowdens.me", port=5432)
 
 def create_token(username):
 	token = jwt.encode({'user' : username, 'exp' : datetime.datetime.utcnow() + datetime.timedelta(minutes=20)}, app.config['SECRET_KEY'])
 	return token.decode('UTF-8')
 
-def get_db():
-	# conn = psycopg2.connect(host="localhost", database="pod", user="postgres", password="m")
-	conn = psycopg2.connect(dbname="ultracast", user="brojogan", password="GbB8j6Op", host="polybius.bowdens.me", port=5432)
-	cur = conn.cursor()
-	return conn, cur
+# def get_db():
+# 	# conn = psycopg2.connect(host="localhost", database="pod", user="postgres", password="m")
+# 	cur = conn.cursor()
+# 	return conn, cur
 
 
 def token_required(f):
@@ -55,16 +54,15 @@ class Login(Resource):
 		username = request.form.get('username')
 		password = request.form.get('password')
 		# Check if username or email
-		conn, cur = get_db()
-		#Check if username exists
+		cur = conn.cursor()
+		# Check if username exists
 		# cur.execute("SELECT password FROM users WHERE username='%s'" % username)
-		cur.execute("SELECT hashedpassword FROM users WHERE username='%s'" % username)
+		cur.execute("SELECT hashedpassword FROM users WHERE username='%s' OR email='%s'" % (username, username))
 		res = cur.fetchone()
 		if res:
 			pw = res[0].strip()
 			pw = pw.encode('UTF-8')
 			cur.close()
-			conn.close()
 			password = request.form.get('password')
 			hashed = bcrypt.hashpw(b"name", bcrypt.gensalt())
 			if bcrypt.checkpw(password.encode('UTF-8'), pw):
@@ -75,7 +73,7 @@ class Login(Resource):
 class Users(Resource):
 	#signup
 	def post(self):
-		conn, cur = get_db()
+		cur = conn.cursor()
 		username = request.form.get('username').lower()
 		email = request.form.get('email').lower()
 		passw = request.form.get('password')
@@ -96,17 +94,9 @@ class Users(Resource):
 			error_msg.append("Email already exists")
 		if error:
 			cur.close()
-			conn.close()
 			return {"error": error_msg}, 409
-		# get next unique id number
-		cur.execute("select count(*) from users")
-		count = cur.fetchone()[0] + 1
-		# create entry for username/email/pass
-		# cur.execute("insert into users (id, username, email, password) values ('%s',%s, %s, %s)", (count, username, email, hashed.decode("UTF-8")))
-		cur.execute("insert into users (id, username, email, hashedpassword) values ('%s',%s, %s, %s)", (count, username, email, hashed.decode("UTF-8")))
+		cur.execute("insert into users (username, email, hashedpassword) values (%s, %s, %s)", (username, email, hashed.decode("UTF-8")))
 		conn.commit()
-		cur.close()
-		conn.close()
 		# return token	
 		return {'token' : create_token(username)}, 201
 
@@ -117,11 +107,10 @@ class Users(Resource):
 		token = request.headers['token']
 		data = jwt.decode(token, app.config['SECRET_KEY'])
 		sql = "DELETE FROM users WHERE username='%s';" % data['user']
-		conn, cur = get_db()
+		cur = conn.cursor()
 		cur.execute(sql)
 		conn.commit()
 		cur.close()
-		conn.close()
 		return {"data": "Account Deleted"}, 200
 	
 
@@ -131,7 +120,7 @@ class Podcasts(Resource):
 		if search is None:
 			return {"data": "Bad Request"}, 400
 		# search = request.form.get('search-input')
-		conn, cur = get_db()
+		cur = conn.cursor()
 		cur.execute("""SELECT count(s.userid), p.title, p.author, p.description
              			FROM   Subscriptions s
              				FULL OUTER JOIN Podcasts p
@@ -141,12 +130,7 @@ class Podcasts(Resource):
            		   )
 
 		podcasts = cur.fetchall()
-		# if cur.rowcount == 0:
-		# 	cur.close()
-		# 	conn.close()
-		# 	return [], 200
 		cur.close()
-		conn.close()
 		results = []
 		for p in podcasts:		
 			subscribers = p[0]
@@ -164,11 +148,10 @@ class Delete(Resource):
 		token = request.headers['token']
 		data = jwt.decode(token, app.config['SECRET_KEY'])
 		sql = "DELETE FROM users WHERE username='%s';" % data['user']
-		conn, cur = get_db()
+		cur = conn.cursor()
 		cur.execute(sql)
 		conn.commit()
 		cur.close()
-		conn.close()
 		return {"data": "Account Deleted"}, 200
 
 class Settings(Resource):
