@@ -56,9 +56,9 @@ class Login(Resource):
 		password = request.form.get('password')
 		# Check if username or email
 		conn, cur = get_db()
-		#Check if username exists
+		# Check if username exists
 		# cur.execute("SELECT password FROM users WHERE username='%s'" % username)
-		cur.execute("SELECT hashedpassword FROM users WHERE username='%s'" % username)
+		cur.execute("SELECT hashedpassword FROM users WHERE username='%s' OR email='%s'" % (username, username))
 		res = cur.fetchone()
 		if res:
 			pw = res[0].strip()
@@ -98,11 +98,6 @@ class Users(Resource):
 			cur.close()
 			conn.close()
 			return {"error": error_msg}, 409
-		# get next unique id number
-		#cur.execute("select count(*) from users")
-		#count = cur.fetchone()[0] + 1
-		# create entry for username/email/pass
-		# cur.execute("insert into users (id, username, email, password) values ('%s',%s, %s, %s)", (count, username, email, hashed.decode("UTF-8")))
 		cur.execute("insert into users (username, email, hashedpassword) values (%s, %s, %s)", (username, email, hashed.decode("UTF-8")))
 		conn.commit()
 		cur.close()
