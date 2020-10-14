@@ -99,11 +99,11 @@ class Users(Resource):
 			conn.close()
 			return {"error": error_msg}, 409
 		# get next unique id number
-		cur.execute("select count(*) from users")
-		count = cur.fetchone()[0] + 1
+		#cur.execute("select count(*) from users")
+		#count = cur.fetchone()[0] + 1
 		# create entry for username/email/pass
 		# cur.execute("insert into users (id, username, email, password) values ('%s',%s, %s, %s)", (count, username, email, hashed.decode("UTF-8")))
-		cur.execute("insert into users (id, username, email, hashedpassword) values ('%s',%s, %s, %s)", (count, username, email, hashed.decode("UTF-8")))
+		cur.execute("insert into users (username, email, hashedpassword) values (%s, %s, %s)", (username, email, hashed.decode("UTF-8")))
 		conn.commit()
 		cur.close()
 		conn.close()
