@@ -22,11 +22,11 @@ else:
 print("Inserting users... ", end='', flush=True)
 
 cur.execute("""insert into users values
-            (default, 'Tom', 'tom@example.com', '$2b$12$vo5q.Bpwl5myC3qTww44EOrqYVE1qZTCM1oJIhhFb6Vq8X0U2KTCm'),
-            (default, 'Pawanjot', 'pawanjot@example.com', '$2b$12$mEXlUC8n0wJH8blt26KeVujn4aga3NJX7RV4M9Vx3yrPJu3YlV8rW'),
-            (default, 'Justin', 'justing@example.com', '$2b$12$b0QdZw3lLRjUI3nTKnmNyu5OUTvmjZb1eIvo9hdVbzY1G8Nxgx75y'),
-            (default, 'Nich', 'nich@example.com', '$2b$12$SfoSQ3Pq1vt24QKHtsCIWONJ39C9W1/yWJWclAA8Y43aMldi1q1Jq'),
-            (default, 'Michael', 'mc@example.com', '$2b$12$HGJribFoHIx53aCxqkr1I.efHZfYfpx44zk59huIWQ.mfWMh/z75K');
+            (default, 'tom', 'tom@example.com', '$2b$12$vo5q.Bpwl5myC3qTww44EOrqYVE1qZTCM1oJIhhFb6Vq8X0U2KTCm'),
+            (default, 'pawanjot', 'pawanjot@example.com', '$2b$12$mEXlUC8n0wJH8blt26KeVujn4aga3NJX7RV4M9Vx3yrPJu3YlV8rW'),
+            (default, 'justin', 'justing@example.com', '$2b$12$b0QdZw3lLRjUI3nTKnmNyu5OUTvmjZb1eIvo9hdVbzY1G8Nxgx75y'),
+            (default, 'nich', 'nich@example.com', '$2b$12$SfoSQ3Pq1vt24QKHtsCIWONJ39C9W1/yWJWclAA8Y43aMldi1q1Jq'),
+            (default, 'michael', 'mc@example.com', '$2b$12$HGJribFoHIx53aCxqkr1I.efHZfYfpx44zk59huIWQ.mfWMh/z75K');
         """)
 print("inserted.\nInserting podcasts... ", end='', flush=True)
 cur.execute("""insert into podcasts values
@@ -129,22 +129,22 @@ for user in userRecords:
 print("selected")
 print("inserting into subscriptions...", end='', flush=True)
 
-cur.execute("insert into subscriptions values (%s, %s);", (users["Tom"],podcasts["Hello Internet"]))
-cur.execute("insert into subscriptions values (%s, %s);", (users["Tom"],podcasts["Hardcore History"]))
-cur.execute("insert into subscriptions values (%s, %s);", (users["Tom"],podcasts["Chapo Trap House"]))
-cur.execute("insert into subscriptions values (%s, %s);", (users["Tom"],podcasts["Joe Rogan (Podcast Site)"]))
-cur.execute("insert into subscriptions values (%s, %s);", (users["Tom"],podcasts["99% Invisible"]))
+cur.execute("insert into subscriptions values (%s, %s);", (users["tom"],podcasts["Hello Internet"]))
+cur.execute("insert into subscriptions values (%s, %s);", (users["tom"],podcasts["Hardcore History"]))
+cur.execute("insert into subscriptions values (%s, %s);", (users["tom"],podcasts["Chapo Trap House"]))
+cur.execute("insert into subscriptions values (%s, %s);", (users["tom"],podcasts["Joe Rogan (Podcast Site)"]))
+cur.execute("insert into subscriptions values (%s, %s);", (users["tom"],podcasts["99% Invisible"]))
 
-cur.execute("insert into subscriptions values (%s, %s);", (users["Pawanjot"],podcasts["Hello Internet"]))
-cur.execute("insert into subscriptions values (%s, %s);", (users["Pawanjot"],podcasts["Hardcore History"]))
-cur.execute("insert into subscriptions values (%s, %s);", (users["Pawanjot"],podcasts["Joe Rogan (Podcast Site)"]))
+cur.execute("insert into subscriptions values (%s, %s);", (users["pawanjot"],podcasts["Hello Internet"]))
+cur.execute("insert into subscriptions values (%s, %s);", (users["pawanjot"],podcasts["Hardcore History"]))
+cur.execute("insert into subscriptions values (%s, %s);", (users["pawanjot"],podcasts["Joe Rogan (Podcast Site)"]))
 
-cur.execute("insert into subscriptions values (%s, %s);", (users["Justin"],podcasts["99% Invisible"]))
-cur.execute("insert into subscriptions values (%s, %s);", (users["Justin"],podcasts["Hardcore History"]))
-cur.execute("insert into subscriptions values (%s, %s);", (users["Justin"],podcasts["Joe Rogan (Podcast Site)"]))
+cur.execute("insert into subscriptions values (%s, %s);", (users["justin"],podcasts["99% Invisible"]))
+cur.execute("insert into subscriptions values (%s, %s);", (users["justin"],podcasts["Hardcore History"]))
+cur.execute("insert into subscriptions values (%s, %s);", (users["justin"],podcasts["Joe Rogan (Podcast Site)"]))
 
-cur.execute("insert into subscriptions values (%s, %s);", (users["Nich"],podcasts["Chapo Trap House"]))
-cur.execute("insert into subscriptions values (%s, %s);", (users["Nich"],podcasts["99% Invisible"]))
+cur.execute("insert into subscriptions values (%s, %s);", (users["nich"],podcasts["Chapo Trap House"]))
+cur.execute("insert into subscriptions values (%s, %s);", (users["nich"],podcasts["99% Invisible"]))
 
 print("inserted")
 print("comitting... ", end='', flush=True)

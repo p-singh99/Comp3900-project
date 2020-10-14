@@ -2,6 +2,10 @@ BEGIN TRANSACTION;
 
 drop function match_category_and_parent;
 drop function match_category_and_podcast;
+drop function subscribed_podcasts_for_user;
+drop function count_subscriptions_for_podcast;
+
+drop view NumSubscribersPerPodcast;
 
 drop table PodcastCategories;
 drop table Categories;

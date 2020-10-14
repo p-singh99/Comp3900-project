@@ -1,7 +1,7 @@
 CREATE TABLE Users (
     id                  serial,
-    username            text not null unique check (username ~ '^[A-Za-z0-9_-]{3,}$'),
-    email               text not null unique,
+    username            text not null unique check (username ~ '^[a-z0-9_-]{3,}$'),
+    email               text not null unique check (email ~ '^[a-z0-9+._-]+@[a-z0-9.-]+$'),   -- pretty close to the email spec, only doesn't allow for quote marks and backslashes
     hashedPassword      text not null,
     PRIMARY KEY (id)
 );
@@ -78,10 +78,10 @@ CREATE TABLE PodcastRatings (
 CREATE TABLE EpisodeRatings (
     userId              integer not null,
     podcastId           integer not null,
-    episodeGuid         integer not null,
+    episodeGuid         text not null,
     rating              integer not null check (rating >= 1 and rating <= 5),
     FOREIGN KEY (userId) references Users (id),
-    FOREIGN KEY (podcastId, episodeSequence) references Episodes (podcastId, guid),
+    FOREIGN KEY (podcastId, episodeGuid) references Episodes (podcastId, guid),
     PRIMARY KEY (userId, podcastId, episodeGuid)
 );
 
@@ -95,37 +95,3 @@ CREATE TABLE RejectedRecommendations (
 
 
 
--- HELPER FUNCTIONS --
-
-
--- match_category_and_podcast helps for inserting into podcastCategories
-create or replace function match_category_and_podcast(_podcast text, _category text)
-returns table (podcastId integer, categoryId integer)
-as $$
-begin
-    return query
-    select sq.podcastId as podcastId, sq.categoryId as categoryId from (
-        select Podcasts.id as podcastId, Categories.id as categoryId, categories.name
-        from Categories
-        join Podcasts on podcasts.title=_podcast
-    ) as sq
-    where name=_category;
-end;
-$$ language plpgsql;
-
--- match_category_and_parent helps for inserting into categories when a parent is required
-create or replace function match_category_and_parent(_category text, _parent text)
-returns table (id integer, name text, parentCategory integer)
-as $$
-begin
- return query
- select cast(nextval(pg_get_serial_sequence('categories','id')) as integer) as id,
- sname as name, bar.id as parentCategory from (
-  select * from categories
-  inner join (
-   select _category as sname, _parent as parentName
-  ) as foo
-  on parentName=categories.name
-) as bar;
-end;
-$$ language plpgsql;
