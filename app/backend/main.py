@@ -73,7 +73,7 @@ class Login(Resource):
 class Users(Resource):
 	#signup
 	def post(self):
-		cur = con.cursor()
+		cur = conn.cursor()
 		username = request.form.get('username').lower()
 		email = request.form.get('email').lower()
 		passw = request.form.get('password')
