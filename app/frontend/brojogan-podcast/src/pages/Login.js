@@ -1,4 +1,5 @@
 import React from 'react';
+import {Link} from 'react-router-dom';
 import './../css/Login.css';
 import logo from './../images/logo.png';
 import {API_URL} from './../constants';
@@ -78,8 +79,9 @@ function Login() {
             <p id="login-error"></p>
             <div id="form-btns">
               <button id="logIn-btn" type="button" onClick={loginHandler}>Log In</button>
-              {/* <button id="signUp-btn" type="button">Sign Up</button>  */}
-              <a href="/signup">Sign up</a>
+              <Link to='/signup'>
+                <button id="signUp-btn" type="button" onClick="location.href='/signup';">Sign Up</button> 
+              </Link>
             </div>
           </form>
         </div>

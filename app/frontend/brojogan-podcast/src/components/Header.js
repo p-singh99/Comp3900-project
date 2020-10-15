@@ -19,10 +19,7 @@ const notificationOptions = [
 ]
 
 const settingsOptions = [
-  'Setting 1',
-  'Setting 2',
-  'Setting 3',
-  'Setting 4',
+  'login',
 ]
 
 function Header() {

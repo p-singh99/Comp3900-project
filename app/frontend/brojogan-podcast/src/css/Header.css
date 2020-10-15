@@ -2,6 +2,10 @@
 
 }
 
+#login-btn-header {
+  height: 50px;
+}
+
 #header-div {
   width: 100%;
   display: flex;

@@ -1,4 +1,5 @@
 import React, {useState, useEffect, useRef} from 'react';
+import {Link} from 'react-router-dom'
 import './../css/DropDownMenu.css';
 
 function DropDownMenu(props) {
@@ -29,7 +30,14 @@ function DropDownMenu(props) {
   return (
     <div id='dropDown-div' ref={menuRef}>
       {props.items.options.map(item => {
-        return <p>{item}</p>
+        // return <p>{item}</p>
+        // const link = '/' + {item};
+        //if ({item} == 'login') {
+          return <a href='/login'>{item}</a>
+        // } else {
+        //   return <a href='#'>{item}</a>
+        // }
+        
       })}
     </div>
   )

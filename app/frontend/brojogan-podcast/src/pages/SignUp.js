@@ -160,27 +160,27 @@ function SignUp() {
           <form id="signUp-form">
             <div id="username-div">
               <p id="username-text">Username</p>
-              <p className="form-info">3-64 characters. May contain lowercase letters, numbers, - and _</p>
+              {/* <p className="form-info">3-64 characters. May contain lowercase letters, numbers, - and _</p> */}
               {/* <input type="text" id="username-input" name="username" required onChange={checkUsername} minlength="3" maxlength="64" pattern="[a-zA-z0-9_-]+" title="3-64 characters. May contain uppercase and lowercase letters, numbers, - and _"/> */}
               <input type="text" id="username-input" name="username" onChange={checkField} minLength="3" maxLength="64" pattern="[a-zA-z0-9_-]{3,64}" title="3-64 characters. May contain uppercase and lowercase letters, numbers, - and _"/>
-              <p id="username-error" className="error">Invalid username</p>
+              {/* <p id="username-error" className="error">Invalid username</p> */}
             </div>
             <div>
               <p id="email-text">Email</p>
               <input type="email" id="email-input" name="email" onChange={checkField} pattern="[a-zA-Z0-9%+_.-]+@[a-zA-Z0-9.-]+\.[A-Za-z0-9]+" maxLength="100"/>
-              <p id="username-error" className="error">Invalid email address</p>
+              {/* <p id="username-error" className="error">Invalid email address</p> */}
             </div>
             <div>
               <p className="password-text">Password</p>
-              <p className="form-info">10-64 characters. Must contain a lower case letter and at least one number, uppercase letter or symbol (!@#$%^&amp;*()_-+={}]:;'&quot;&lt;&#44;&gt;.?/|\~`).</p>
+              {/* <p className="form-info">10-64 characters. Must contain a lower case letter and at least one number, uppercase letter or symbol (!@#$%^&amp;*()_-+={}]:;'&quot;&lt;&#44;&gt;.?/|\~`).</p> */}
               <input type="password" className="password-input" name="password1" onInput={checkPassword} required minLength="10" maxLength="64" pattern="(?=.*[a-z])((?=.*\d)|(?=.*[A-Z])|(?=.*[!@#$%^&amp;*()_\-+=\{}\]:;'&quot;<,>.?\/|\\~`])).{0,}"/>
             </div>
             <div>
               <p className="password-text">Confirm Password</p> {/* two have the same id */}
               <input type="password" className="password-input" name="password2" onInput={checkPasswordsMatch}/> {/* should use once attribute */}
-              <p id="password-error" className="error">Placeholder</p>
+              {/* <p id="password-error" className="error">Placeholder</p> */}
             </div>
-            <pre id="signup-error" className="error">Placeholder</pre> { /* pre so that can add new line in textContent*/}
+            {/*<pre id="signup-error" className="error">Placeholder</pre> */}{ /* pre so that can add new line in textContent */}
             <button id="signUp-btn-2" type="button" onClick={signupHandler}>Sign Up</button>
           </form>
         </div>
