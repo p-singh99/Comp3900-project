@@ -79,6 +79,7 @@
 
 #signUp-btn {
   float: right;
+  cursor: pointer;
 }
 
 #login-error {

@@ -6,6 +6,12 @@ import Search from './../components/Search.js';
 import notifications from './../images/notifications.png';
 import settings from './../images/settings.png';
 
+// move this down the file
+function logoutHandler() {
+  window.localStorage.removeItem('token');
+  window.location.reload();
+}
+
 const Icons = {
   NOTIFICATION: 'notification',
   SETTINGS: 'settings'

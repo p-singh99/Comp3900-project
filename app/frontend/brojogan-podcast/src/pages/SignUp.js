@@ -180,7 +180,7 @@ function SignUp() {
               { <p id="password-error" className="error">Placeholder</p> }
             </div>
             {<pre id="signup-error" className="error">Placeholder</pre> }{ /* pre so that can add new line in textContent */}
-            <button id="signUp-btn-2" type="button" onClick={signupHandler}>Sign Up</button>
+            <button id="signUp-btn-2" type="submit" onClick={signupHandler}>Sign Up</button>
           </form>
         </div>
       </div>

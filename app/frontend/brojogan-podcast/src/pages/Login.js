@@ -13,8 +13,10 @@ function displayLoginError() {
   document.getElementById("login-error").style.visibility = 'visible';
 }
 
-function loginHandler() {
-  const form = document.forms['login-form'];
+function loginHandler(event) {
+  event.preventDefault();
+  // const form = document.forms['login-form'];
+  const form = event.target;
   const username = form.elements.username.value;
   const password = form.elements.password.value;
   // check for maximum length? check that they don't violate some constraints?
@@ -26,7 +28,7 @@ function loginHandler() {
           if (resp.status === 200) {
             window.localStorage.setItem('token', data.token);
             window.localStorage.setItem('username', data.user);
-            window.location.replace("/home");
+            window.location.replace("/home"); // use react redirect, should be faster?
             return true;
           } else {
             displayLoginError();
@@ -75,18 +77,16 @@ function Login() {
         </div>
         <div id="login-div-2">
           <h1>Log In</h1>
-          <form id="login-form">
+          <form id="login-form" onSubmit={loginHandler}>
             <p id="username-text">Username</p>
             <input type="text" id="username-input" name="username"/>
             <p id="password-text">Password</p>
             <input type="password" id="password-input" name="password"/>
             <p id="login-error">Login failed. Username or password incorrect.</p>
             <div id="form-btns">
-            <Link>
-              <button id="logIn-btn" type="button" onClick={(loginHandler)}>Log In</button>
-            </Link>
+              <button id="logIn-btn" type="submit">Log In</button>
               <Link to='/signup'>
-                <button id="signUp-btn" type="button" onClick="location.href='/signup';">Sign Up</button> 
+                <button id="signUp-btn" type="button">Sign Up</button> 
               </Link>
             </div>
           </form>
