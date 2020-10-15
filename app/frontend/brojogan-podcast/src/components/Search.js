@@ -49,6 +49,10 @@ const customStyles = {
   singleValue: base => ({
     ...base,
     color: '#64CFEB',
+  }),
+  input: base => ({
+    ...base,
+    color: 'white',
   })
 };
 
