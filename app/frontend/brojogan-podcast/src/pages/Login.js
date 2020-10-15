@@ -26,9 +26,11 @@ function loginHandler() {
             // document.cookie = `token=${data.token}`; // maybe localstorage not cookie
             window.localStorage.setItem('token', data.token);
             // redirect to homepage
-            alert('Log in successful');
+            //alert('Log in successful');
+            return true;
           } else {
             displayLoginError();
+            return false;
           }
         })
       })
@@ -54,7 +56,9 @@ function loginHandler() {
 }
 
 function Login() {
+  let link = '';
   return (
+    
     <div id="wrapper">
       <div id='login-div'>
         <div id="logo-text">
@@ -78,8 +82,8 @@ function Login() {
             <input type="password" id="password-input" name="password"/>
             <p id="login-error"></p>
             <div id="form-btns">
-            <Link to='/home'>
-              <button id="logIn-btn" type="button" onClick={loginHandler && "location.href='/signup';"}>Log In</button>
+            <Link to={link}>
+              <button id="logIn-btn" type="button" onClick={(loginHandler) ? (link = '/home') : (link = '/login')}>Log In</button>
             </Link>
               <Link to='/signup'>
                 <button id="signUp-btn" type="button" onClick="location.href='/signup';">Sign Up</button> 
