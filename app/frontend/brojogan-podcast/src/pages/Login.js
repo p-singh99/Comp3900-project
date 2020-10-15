@@ -27,7 +27,7 @@ function loginHandler() {
             window.localStorage.setItem('token', data.token);
             // redirect to homepage
             //alert('Log in successful');
-            window.location.replace = "/home";
+            window.location.replace("/home");
             return true;
           } else {
             displayLoginError();
