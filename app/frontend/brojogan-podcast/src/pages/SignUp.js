@@ -126,7 +126,8 @@ function signupHandler(event) {
           if (resp.status === 201) {
             window.localStorage.setItem('token', data.token);
             // redirect to homepage
-            alert(`Sign up successful, ${username.value}`);
+            window.location.replace("/home");
+            // alert(`Sign up successful, ${username.value}`);
           } else {
             displaySignupErrors(data.error);
           }
