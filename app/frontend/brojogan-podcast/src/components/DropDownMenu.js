@@ -33,7 +33,7 @@ function DropDownMenu(props) {
         // return <p>{item}</p>
         // const link = '/' + {item};
         //if ({item} == 'login') {
-          return <a href='/login'>{item}</a>
+          return <a id = "login-home-header" href='/login'>{item}</a>
         // } else {
         //   return <a href='#'>{item}</a>
         // }
