@@ -113,7 +113,6 @@ function signupHandler(event) {
   if (!username.value || !password1.value || !password2.value || !email.value
       || ! username.validity.valid || ! password1.validity.valid || ! email.validity.valid
       || password1.value !== password2.value) {
-        console.log("errors");
         displaySignupError("Please enter all fields correctly.");
   } else {
     let formData = new FormData();
@@ -125,9 +124,8 @@ function signupHandler(event) {
         resp.json().then(data => {
           if (resp.status === 201) {
             window.localStorage.setItem('token', data.token);
-            // redirect to homepage
+            window.localStorage.setItem('username', data.user);
             window.location.replace("/home");
-            // alert(`Sign up successful, ${username.value}`);
           } else {
             displaySignupErrors(data.error);
           }

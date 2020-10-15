@@ -89,3 +89,9 @@
   background-image: url("../images/settings-green.png");
   cursor: pointer;
 }
+
+#username {
+  /* padding: 10px 0; this vertical centering is fragile */
+  /* margin-right: auto; */
+  margin: auto auto auto 0;
+}

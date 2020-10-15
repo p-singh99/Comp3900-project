@@ -24,10 +24,8 @@ function loginHandler() {
       .then(resp => {
         resp.json().then(data => {
           if (resp.status === 200) {
-            // document.cookie = `token=${data.token}`; // maybe localstorage not cookie
             window.localStorage.setItem('token', data.token);
-            // redirect to homepage
-            //alert('Log in successful');
+            window.localStorage.setItem('username', data.user);
             window.location.replace("/home");
             return true;
           } else {

@@ -117,6 +117,7 @@ function Header() {
           <Search />
         </div>
         <div id="icons-div" style={{margin: '15px 25px 0px 0px'}}>
+          <div id="username">{window.localStorage.getItem('username')}</div>
           <button id="notification-button" onClick={() => {
             setNotificationClicked(!notificationClicked);
             setSelectedIcon(Icons.NOTIFICATION);
