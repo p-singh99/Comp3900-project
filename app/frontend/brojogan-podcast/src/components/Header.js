@@ -9,6 +9,7 @@ import settings from './../images/settings.png';
 // move this down the file
 function logoutHandler() {
   window.localStorage.removeItem('token');
+  window.localStorage.removeItem('username');
   window.location.reload();
 }
 
