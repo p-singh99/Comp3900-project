@@ -9,7 +9,8 @@ function displayError(error) {
 }
 
 function displayLoginError() {
-  document.getElementById("login-error").textContent = "Login failed. Username or password incorrect.";
+  // document.getElementById("login-error").textContent = "Login failed. Username or password incorrect.";
+  document.getElementById("login-error").style.visibility = 'visible';
 }
 
 function loginHandler() {
@@ -81,7 +82,7 @@ function Login() {
             <input type="text" id="username-input" name="username"/>
             <p id="password-text">Password</p>
             <input type="password" id="password-input" name="password"/>
-            <p id="login-error"></p>
+            <p id="login-error">Login failed. Username or password incorrect.</p>
             <div id="form-btns">
             <Link>
               <button id="logIn-btn" type="button" onClick={(loginHandler)}>Log In</button>

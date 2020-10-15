@@ -80,3 +80,7 @@
 #signUp-btn {
   float: right;
 }
+
+#login-error {
+  visibility: hidden;
+}
