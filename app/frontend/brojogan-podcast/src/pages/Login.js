@@ -27,6 +27,7 @@ function loginHandler() {
             window.localStorage.setItem('token', data.token);
             // redirect to homepage
             //alert('Log in successful');
+            window.location.replace = "/home";
             return true;
           } else {
             displayLoginError();
@@ -82,8 +83,8 @@ function Login() {
             <input type="password" id="password-input" name="password"/>
             <p id="login-error"></p>
             <div id="form-btns">
-            <Link to={link}>
-              <button id="logIn-btn" type="button" onClick={(loginHandler) ? (link = '/home') : (link = '/login')}>Log In</button>
+            <Link>
+              <button id="logIn-btn" type="button" onClick={(loginHandler)}>Log In</button>
             </Link>
               <Link to='/signup'>
                 <button id="signUp-btn" type="button" onClick="location.href='/signup';">Sign Up</button> 
