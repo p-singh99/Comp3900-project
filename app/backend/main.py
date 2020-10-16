@@ -6,10 +6,11 @@ import jwt
 import bcrypt
 import datetime
 from functools import wraps
+import feedparser
 
 
 app = Flask(__name__)
-api = Api(app) 
+api = Api(app)
 CORS(app)
 
 #CHANGE SECRET KEY
@@ -70,7 +71,7 @@ class Login(Resource):
 			if bcrypt.checkpw(password.encode('UTF-8'), pw):
 				return {'token' : create_token(username)}, 200
 		return {"data" : "Login Failed"}, 401
-				
+
 
 class Users(Resource):
 	#signup
@@ -107,7 +108,7 @@ class Users(Resource):
 		conn.commit()
 		cur.close()
 		conn.close()
-		# return token	
+		# return token
 		return {'token' : create_token(username)}, 201
 
 	@token_required
@@ -123,7 +124,7 @@ class Users(Resource):
 		cur.close()
 		conn.close()
 		return {"data": "Account Deleted"}, 200
-	
+
 
 class Podcasts(Resource):
 	def get(self):
@@ -148,13 +149,50 @@ class Podcasts(Resource):
 		cur.close()
 		conn.close()
 		results = []
-		for p in podcasts:		
+		for p in podcasts:
 			subscribers = p[0]
 			title = p[1]
 			author = p[2]
 			description = p[3]
 			results.append({"subscribers" : subscribers, "title" : title, "author" : author, "description" : description})
 		return results, 200
+
+	@token_required
+	def post(self):
+		rssfeed = request.form.get('rssfeed')
+		data = feedparser.parse(rssfeed)
+		title = data.feed.title
+		description = data.feed.description
+		author = data.feed.author
+		thumbnail = data.feed.image.href
+		if (data.feed.terms):
+			categories = set([x.term for x in data.feed.terms])
+
+		conn, curr = get_db()
+		cur.execute("""insert into podcasts
+		(title, description, author, thumbnail)
+		values (%s, %s, %s, %s)
+		returning id
+		""", (title, description, author, thumbnail))
+		podcastId = cur.fetchone()[0]
+		conn.commit()
+
+		for category in categories:
+			cur.execute("select id from categories where name=%s", (category,))
+			res = cur.fetchone()
+			categoryId = -1
+			if res is None:
+				# we need to add the new category
+				cur.execute("insert into categories (name) values (%s) returning id", (category,))
+				categoryId = cur.fetchone()[0]
+			else:
+				categoryId = res[0]
+			# we now have a category id and podcast id
+			cur.execute("insert into podcastCategories (podcastId, categoryId) values (%s,%s)",
+				(podcastId, categoryId))
+		return {"podcastId": podcastId}
+
+
 
 class Delete(Resource):
 	#@token_required
