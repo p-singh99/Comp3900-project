@@ -7,5 +7,6 @@ function parse_feed(url) {
     return feed;
 }
 
-feed = parse_feed("http://www.hellointernet.fm/podcast?format=rss");
-console.log(feed);
+parse_feed("http://podcasts.joerogan.net/feed").then((feed) => {
+    console.log(feed);
+});
