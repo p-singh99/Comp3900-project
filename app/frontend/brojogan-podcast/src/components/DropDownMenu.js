@@ -38,7 +38,7 @@ function DropDownMenu(props) {
             // return <a id = "login-home-header" href='/login'>{item}</a>
             // return <Link to={item.link}>{item.text}</Link>
             // return <a id = "login-home-header" href={item.link}>{item.text}</a>
-            return <div onClick={item.onClick} style={{cursor: 'pointer'}}>{item.text}</div>
+            return <p onClick={item.onClick} style={{cursor: 'pointer'}}>{item.text}</p>
           // } else {
           //   return <a href='#'>{item}</a>
           // }

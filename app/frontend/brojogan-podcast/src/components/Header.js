@@ -25,14 +25,14 @@ function Header() {
 
   const settingsOptions = isLoggedIn() ?
   [
-    {text: 'logout', onClick: logoutHandler},
+    {text: 'Logout', onClick: logoutHandler},
     {text: 'Change email', onClick: () => alert('Change email')}
   ]
   :
   [
     // {text: 'login', onClick: () => window.location.href = "/login"} // do react redirect instead
-    {text: 'login', onClick: () => history.push("/login")},
-    {text: 'signup', onClick: () => history.push("/signup")}
+    {text: 'Login', onClick: () => history.push("/login")},
+    {text: 'Signup', onClick: () => history.push("/signup")}
   ];
 
   let [isStart, setStart] = useState(true);
