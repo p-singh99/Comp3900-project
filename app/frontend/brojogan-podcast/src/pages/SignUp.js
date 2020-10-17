@@ -2,11 +2,13 @@ import React from 'react';
 import './../css/SignUp.css';
 import logo from './../images/logo.png';
 import { API_URL } from './../constants';
+import {saveToken} from './../auth-functions'
+import {useHistory} from 'react-router-dom';
 
 // General error eg network error
-function displayError(error) {
-  alert(error);
-}
+// function displayError(error) {
+//   alert(error);
+// }
 
 function displaySignupError(msg) {
   let errorElem = document.getElementById("signup-error");
@@ -101,44 +103,47 @@ function checkField(event) {
   }
 }
 
-function signupHandler(event) {
-  event.preventDefault();
-
-  const form = document.forms['signUp-form'];
-  const username = form.elements.username;
-  const email = form.elements.email;
-  const password1 = form.elements.password1;
-  const password2 = form.elements.password2;
-
-  if (!username.value || !password1.value || !password2.value || !email.value
-      || ! username.validity.valid || ! password1.validity.valid || ! email.validity.valid
-      || password1.value !== password2.value) {
-        displaySignupError("Please enter all fields correctly.");
-  } else {
-    let formData = new FormData();
-    formData.append("username", username.value);
-    formData.append("password", password1.value);
-    formData.append("email", email.value);
-    fetch(`${API_URL}/users`, { method: 'post', body: formData })
-      .then(resp => {
-        resp.json().then(data => {
-          if (resp.status === 201) {
-            window.localStorage.setItem('token', data.token);
-            window.localStorage.setItem('username', data.user);
-            window.location.replace("/home");
-          } else {
-            displaySignupErrors(data.error);
-          }
-        })
-      })
-      .catch(error => { // will this catch error from resp.json()?
-        displayError([error]);
-      });
-  }
-}
-
 
 function SignUp() {
+  const history = useHistory();
+
+  function signupHandler(event) {
+    event.preventDefault();
+  
+    const form = document.forms['signUp-form'];
+    const username = form.elements.username;
+    const email = form.elements.email;
+    const password1 = form.elements.password1;
+    const password2 = form.elements.password2;
+  
+    if (!username.value || !password1.value || !password2.value || !email.value
+        || ! username.validity.valid || ! password1.validity.valid || ! email.validity.valid
+        || password1.value !== password2.value) {
+          displaySignupError("Please enter all fields correctly.");
+    } else {
+      let formData = new FormData();
+      formData.append("username", username.value);
+      formData.append("password", password1.value);
+      formData.append("email", email.value);
+      fetch(`${API_URL}/users`, { method: 'post', body: formData })
+        .then(resp => {
+          resp.json().then(data => {
+            if (resp.status === 201) {
+              saveToken(data);
+              // window.location.replace("/home");
+              history.push("/");
+            } else {
+              displaySignupErrors(data.error);
+            }
+          })
+        })
+        .catch(error => { // will this catch error from resp.json()?
+          displaySignupError('Network or other error');
+        });
+    }
+  }
+
+
   return (
     <div id='wrapper'>
       <div id='signUp-div'>

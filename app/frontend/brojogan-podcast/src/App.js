@@ -14,6 +14,8 @@ import Subscriptions from './pages/Subscriptions';
 import About from './pages/About';
 
 function App() {
+  // on app load, check if token valid using useeffect?
+
   const defaultComponents = () => (
     <div id='main'>
       <Header />

@@ -1,5 +1,5 @@
 import React, {useState, useEffect, useRef} from 'react';
-import {Link} from 'react-router-dom'
+import {Link} from 'react-router-dom';
 import './../css/DropDownMenu.css';
 
 function DropDownMenu(props) {
@@ -28,18 +28,24 @@ function DropDownMenu(props) {
   }, [props]);
 
   return (
-    <div id='dropDown-div' ref={menuRef}>
-      {props.items.options.map(item => {
-        // return <p>{item}</p>
-        // const link = '/' + {item};
-        //if ({item} == 'login') {
-          return <a id = "login-home-header" href='/login'>{item}</a>
-        // } else {
-        //   return <a href='#'>{item}</a>
-        // }
-        
-      })}
-    </div>
+    <React.Fragment>
+      <div id='dropDown-div' ref={menuRef}>
+        {/* <Link to="/login">home</Link> */}
+        {props.items.options.map(item => {
+          // return <p>{item}</p>
+          // const link = '/' + {item};
+          //if ({item} == 'login') {
+            // return <a id = "login-home-header" href='/login'>{item}</a>
+            // return <Link to={item.link}>{item.text}</Link>
+            // return <a id = "login-home-header" href={item.link}>{item.text}</a>
+            return <div onClick={item.onClick} style={{cursor: 'pointer'}}>{item.text}</div>
+          // } else {
+          //   return <a href='#'>{item}</a>
+          // }
+          
+        })}
+      </div>
+    </React.Fragment>
   )
 }
 

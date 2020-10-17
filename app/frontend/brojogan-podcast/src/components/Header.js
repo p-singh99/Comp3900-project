@@ -5,13 +5,8 @@ import DropDownMenu from './../components/DropDownMenu';
 import Search from './../components/Search.js';
 import notifications from './../images/notifications.png';
 import settings from './../images/settings.png';
-
-// move this down the file
-function logoutHandler() {
-  window.localStorage.removeItem('token');
-  window.localStorage.removeItem('username');
-  window.location.reload();
-}
+import {logoutHandler, authFailed, isLoggedIn} from './../auth-functions';
+import { useHistory } from 'react-router-dom';
 
 const Icons = {
   NOTIFICATION: 'notification',
@@ -19,17 +14,26 @@ const Icons = {
 }
 
 const notificationOptions = [
-  'Notification 1',
-  'Notification 2',
-  'Notification 3',
-  'Notification 4'
-]
-
-const settingsOptions = [
-  'login',
+  {text: 'Notification 1', onClick: () => alert('notification')},
+  {text: 'Notification 2', onClick: () => alert('notification')},
+  {text: 'Notification 3', onClick: () => alert('notification')},
+  {text: 'Notification 4', onClick: () => alert('notification')}
 ]
 
 function Header() {
+  const history = useHistory();
+
+  const settingsOptions = isLoggedIn() ?
+  [
+    {text: 'logout', onClick: logoutHandler},
+    {text: 'Change email', onClick: () => alert('Change email')}
+  ]
+  :
+  [
+    // {text: 'login', onClick: () => window.location.href = "/login"} // do react redirect instead
+    {text: 'login', onClick: () => history.push("/login")},
+    {text: 'signup', onClick: () => history.push("/signup")}
+  ];
 
   let [isStart, setStart] = useState(true);
   let [options, setOptions] = useState({options: notificationOptions, visibility: 'hidden'})
