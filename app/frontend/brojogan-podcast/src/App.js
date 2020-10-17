@@ -23,7 +23,8 @@ function App() {
         <NavBar />
         <Route path="/" component={Home} exact />
         <Route path="/history" component={History} exact />
-        <Route path="/description" component={Description} exact />
+        <Route path="/podcast/:id" component={Description} exact/>
+        {/* <Route path="/podcast/:id" exact render={(props) => (<Description {...props} url={'https://podcastfeeds.nbcnews.com/nbc-nightly-news'} />)}/> */}
         <Route path="/recommended" component={Recommended} exact />
         <Route path="/subscriptions" component={Subscriptions} exact />
         <Route path="/about" component={About} exact />

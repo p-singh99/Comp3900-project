@@ -44,7 +44,7 @@ function Login() {
           })
         })
         .catch(error => { // will this catch error from resp.json()?
-          displayLoginError("Error"); // need to stop this changing the size - set the width fixed
+          displayLoginError("Error"); // todo: need to stop this changing the size - set the width fixed
         });
     }
   }
