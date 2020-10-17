@@ -24,17 +24,24 @@ function insertInfo(xml) {
       }
 
       const tbody = document.getElementById("episodes").getElementsByTagName("tbody")[0];
+      console.log("starting episodes");
+      // this takes like 2 seconds, will be much faster with virtual DOM
       for (const i in podcast["episodes"]) {
         const episode = podcast["episodes"][i];
         let row = tbody.insertRow(i);
         let name = row.insertCell(0);
         name.textContent = episode["title"];
+
         let description = row.insertCell(1);
         description.textContent = episode["description"];
-        let file = row.insertCell(2);
+
+        let duration = row.insertCell(2);
+        duration.textContent = episode["duration"];
+
+        let file = row.insertCell(3);
         let audio = document.createElement("audio");
         audio.src = episode["url"];
-        audio.preload = "metadata";
+        audio.preload = "none";
         audio.controls = true;
         file.appendChild(audio);
         // let link = document.createElement("a");
@@ -43,6 +50,7 @@ function insertInfo(xml) {
         // link.textContent = "link";
         // audio.appendChild(link);
       }
+      console.log("finished episodes");
   })
     .catch(error => displayError(error));
 }
@@ -85,6 +93,7 @@ function Description(props) {
         <thead>
           <th>Name</th>
           <th>Description</th>
+          <th>Duration</th>
           <th>Audio file</th>
         </thead>
         <tbody></tbody>

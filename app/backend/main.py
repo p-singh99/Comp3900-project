@@ -182,7 +182,6 @@ class Podcast(Resource):
 			url = res[0]
 			resp = requests.get(url)
 			if resp.status_code == 200:
-				print(resp.text)
 				return {"xml": resp.text}, 200
 			else:
 				return {}, 500
