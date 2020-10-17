@@ -51,7 +51,6 @@ function Login() {
 
 
   return (
-    
     <div id="wrapper">
       <div id='login-div'>
         <div id="logo-text">

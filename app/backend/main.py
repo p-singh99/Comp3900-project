@@ -6,6 +6,7 @@ import jwt
 import bcrypt
 import datetime
 from functools import wraps
+import requests
 
 
 app = Flask(__name__)
@@ -179,9 +180,15 @@ class Podcast(Resource):
 		cur.close()
 		if res:
 			url = res[0]
+			resp = requests.get(url)
+			if resp.status_code == 200:
+				print(resp.text)
+				return {"xml": resp.text}, 200
+			else:
+				return {}, 500
 			# podcast = getPodcast(url)
 			# return podcast, 200
-			return {"rss": url}, 200
+			# return {"rss": url}, 200
 		else:
 			return {}, 404
 
