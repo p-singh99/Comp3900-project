@@ -171,6 +171,20 @@ class Settings(Resource):
 
 		return {"data" : "Failed"}
 
+class Podcast(Resource):
+	def get(self, id):
+		cur = conn.cursor()
+		cur.execute("SELECT rssFeed FROM Podcasts WHERE id=(%s)", (id,))
+		res = cur.fetchone()
+		cur.close()
+		if res:
+			url = res[0]
+			# podcast = getPodcast(url)
+			# return podcast, 200
+			return {"rss": url}, 200
+		else:
+			return {}, 404
+
 api.add_resource(Unprotected, "/unprotected")
 api.add_resource(Protected, "/protected")
 api.add_resource(Login, "/login")
@@ -178,6 +192,7 @@ api.add_resource(Users, "/users")
 api.add_resource(Delete, "/users/self")
 api.add_resource(Settings, "/users/self/<string:name>")
 api.add_resource(Podcasts, "/podcasts")
+api.add_resource(Podcast, "/podcasts/<int:id>")
 
 
 if __name__ == '__main__':

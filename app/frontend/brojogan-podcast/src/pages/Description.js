@@ -4,7 +4,9 @@ import {getPodcastFromURL} from './../rss';
 import {API_URL} from './../constants';
 
 function displayError(msg) {
-  alert(msg);
+  // alert(msg);
+  const elem = document.getElementById("description-error");
+  elem.textContent = msg;
 }
 
 function insertInfo(podcast) {
@@ -15,18 +17,24 @@ function insertInfo(podcast) {
 }
 
 async function getPodcast(id) {
+  // try {
+  // doesn't need authorization
+  let resp;
   try {
-    // doesn't need authorization
-    const resp = await fetch(`${API_URL}/podcasts/${id}`);
-    const data = await resp.json();
-    if (resp.status === 200) {
-      return data;
-    } else {
-      throw Error("Error in retrieving podcast");
-    }
+    resp = await fetch(`${API_URL}/podcasts/${id}`);
   } catch {
-    throw Error("Network error")
+    throw Error("Network error");
   }
+  if (resp.status === 200) {
+    return await resp.json();
+  } else if (resp.status == 404) {
+    throw Error("Podcast not found");
+  } else {
+    throw Error("Error in retrieving podcast");
+  }
+  // } catch (err) {
+  //   throw Error(err)
+  // }
 }
 
 function Description(props) {
@@ -42,6 +50,7 @@ function Description(props) {
     <div>
       <h1>Welcome to the Decription page for podcast {props.name}</h1>
       {id}
+      <p id="description-error"></p>
     </div>
   );
 }
