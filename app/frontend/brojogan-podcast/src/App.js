@@ -6,6 +6,7 @@ import NavBar from './components/NavBar';
 import Footer from './components/Footer';
 import Login from './pages/Login';
 import SignUp from './pages/SignUp';
+import Search from './pages/SearchPage'
 import Home from './pages/Home';
 import Description from './pages/Description';
 import History from './pages/History';
@@ -25,6 +26,7 @@ function App() {
         <Route path="/recommended" component={Recommended} exact />
         <Route path="/subscriptions" component={Subscriptions} exact />
         <Route path="/about" component={About} exact />
+        <Route path="/search" component={Search} exact />
         {/* <Route path="/description" component={() => <Description />} exact /> */}
       </div>    
       <Footer />

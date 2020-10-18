@@ -9,6 +9,7 @@ import settings from './../images/settings.png';
 
 import {Link} from 'react-router-dom';
 import {API_URL} from './../constants';
+import { useHistory } from 'react-router-dom';
 
 function displayError(error) {
   alert(error);
@@ -121,7 +122,9 @@ function Header() {
         .then(resp => {
           resp.json().then(podcasts => {
             if (resp.status === 200) {
-              Search(podcasts);
+              console.log(podcasts[0].title);
+
+             window.location.replace("/search" + "?" + searched_text.value);
             } else {
               // should never enter this
               console.log('response status is not 200 after search');
