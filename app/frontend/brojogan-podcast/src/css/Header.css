@@ -95,3 +95,7 @@
   /* margin-right: auto; */
   margin: auto auto auto 0;
 }
+
+a {
+  text-decoration: none;
+}

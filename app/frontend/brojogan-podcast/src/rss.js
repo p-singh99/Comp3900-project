@@ -38,7 +38,7 @@ function verifyPodcast(podcast) {
 
 // todo handle dodgy feeds
 
-export async function getPodcastFromXML(xmlText) {
+export function getPodcastFromXML(xmlText) {
   const parser = new DOMParser();
   const xml = parser.parseFromString(xmlText, "text/xml");
   let podcast = {};
@@ -46,7 +46,7 @@ export async function getPodcastFromXML(xmlText) {
   podcast = getDetailsFromChannel(channel);
   podcast["episodes"] = getEpisodesFromChannel(channel);
   if (!verifyPodcast(podcast)) {
-    throw Error("Podcast error");
+    return null;
   }
   return podcast;
 }

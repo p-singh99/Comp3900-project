@@ -1,4 +1,5 @@
 import React, {useState, useEffect, useRef} from 'react';
+import {Link} from 'react-router-dom';
 import './../css/Header.css';
 import logo from './../images/logo.png';
 import DropDownMenu from './../components/DropDownMenu';
@@ -112,14 +113,16 @@ function Header() {
     <div id="header-wrapper">
       <div id="header-div">
         <React.Fragment>
-          <img id="logo" 
-            style={imgStyle} 
-            src={logo} 
-            alt="Logo" 
-            height={50} 
-            width={50}
-          />
-          <p style={textStyle}> BroJogan <br /> Podcast </p>
+          <Link to="/">
+            <img id="logo" 
+              style={imgStyle} 
+              src={logo} 
+              alt="Logo" 
+              height={50} 
+              width={50}
+            />
+            <p style={textStyle}> BroJogan <br /> Podcast </p>
+          </Link>
         </React.Fragment>
         <div id="search-div" style={{margin: '15px 0px 0px 0px'}}>
           {/* <form>

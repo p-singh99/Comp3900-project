@@ -17,21 +17,25 @@ function App() {
   // on app load, check if token valid using useeffect?
 
   const defaultComponents = () => (
-    <div id='main'>
-      <Header />
-      <div id='middle'>
-        <NavBar />
-        <Route path="/" component={Home} exact />
-        <Route path="/history" component={History} exact />
-        <Route path="/podcast/:id" component={Description} exact/>
-        {/* <Route path="/podcast/:id" exact render={(props) => (<Description {...props} url={'https://podcastfeeds.nbcnews.com/nbc-nightly-news'} />)}/> */}
-        <Route path="/recommended" component={Recommended} exact />
-        <Route path="/subscriptions" component={Subscriptions} exact />
-        <Route path="/about" component={About} exact />
-        {/* <Route path="/description" component={() => <Description />} exact /> */}
-      </div>    
-      <Footer />
-    </div>
+    <body>
+      <div id='main'>
+        <Header />
+        <div id='middle'>
+          <NavBar />
+          <Route path="/" component={Home} exact />
+          <Route path="/history" component={History} exact />
+          <Route path="/podcast/:id" component={Description} exact/>
+          {/* <Route path="/podcast/:id" exact render={(props) => (<Description {...props} url={'https://podcastfeeds.nbcnews.com/nbc-nightly-news'} />)}/> */}
+          <Route path="/recommended" component={Recommended} exact />
+          <Route path="/subscriptions" component={Subscriptions} exact />
+          <Route path="/about" component={About} exact />
+          {/* <Route path="/description" component={() => <Description />} exact /> */}
+        </div>    
+      </div>
+      <footer>
+        <Footer />
+      </footer>
+    </body>
   )
   return (
     <Router>

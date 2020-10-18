@@ -5,6 +5,7 @@ import logo from './../images/logo.png';
 import {API_URL} from './../constants';
 import {saveToken} from './../auth-functions';
 import { useHistory } from 'react-router-dom';
+import { Helmet } from 'react-helmet';
 
 // function displayError(error) {
 //   alert(error);
@@ -52,6 +53,10 @@ function Login() {
 
   return (
     <div id="wrapper">
+        <Helmet>
+          <title>Brojogan Podcasts - Login</title>
+        </Helmet>
+        
       <div id='login-div'>
         <div id="logo-text">
           <img 

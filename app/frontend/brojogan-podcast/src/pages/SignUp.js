@@ -4,6 +4,7 @@ import logo from './../images/logo.png';
 import { API_URL } from './../constants';
 import {saveToken} from './../auth-functions'
 import {useHistory} from 'react-router-dom';
+import { Helmet } from 'react-helmet';
 
 // General error eg network error
 // function displayError(error) {
@@ -146,6 +147,10 @@ function SignUp() {
 
   return (
     <div id='wrapper'>
+      <Helmet>
+        <title>Brojogan Podcasts - Signup</title>
+      </Helmet>
+      
       <div id='signUp-div'>
         <div id='logo-text'>
           <img

@@ -1,0 +1,30 @@
+#podcast {
+    font-family: sans-serif;
+}
+    
+#episodes > ul {
+list-style-type: none;
+padding: 0;
+}
+
+li.episode {
+    background-color: #aaaaaa;
+    margin: 20px 0;
+}
+
+.date, .duration {
+    padding-right: 50px;
+    font-weight: bold;
+}
+
+.description {
+    cursor: pointer;
+}
+
+#podcast-info {
+    display: flex;
+}
+
+#podcast-img {
+    padding-left: 50px;
+}
