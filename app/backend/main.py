@@ -184,10 +184,7 @@ class Podcast(Resource):
 			if resp.status_code == 200:
 				return {"xml": resp.text}, 200
 			else:
-				return {}, 500
-			# podcast = getPodcast(url)
-			# return podcast, 200
-			# return {"rss": url}, 200
+				return {}, 500 # 500 might not the right code
 		else:
 			return {}, 404
 

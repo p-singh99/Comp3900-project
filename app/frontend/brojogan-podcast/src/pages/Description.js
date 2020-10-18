@@ -26,6 +26,7 @@ function insertInfo(xml) {
       const tbody = document.getElementById("episodes").getElementsByTagName("tbody")[0];
       console.log("starting episodes");
       // this takes like 2 seconds, will be much faster with virtual DOM
+      // also probably only load a certain number at a time
       for (const i in podcast["episodes"]) {
         const episode = podcast["episodes"][i];
         let row = tbody.insertRow(i);
@@ -46,9 +47,9 @@ function insertInfo(xml) {
         file.appendChild(audio);
         // let link = document.createElement("a");
         // link.href = episode["url"];
-        // // link.target = "_blank";
         // link.textContent = "link";
-        // audio.appendChild(link);
+        // link.download = "file";
+        // file.appendChild(link);
       }
       console.log("finished episodes");
   })
@@ -78,8 +79,7 @@ function Description(props) {
       getRSS(id)
         .then(rss => insertInfo(rss))
         .catch(error => displayError(error));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [id]);
 
   return (
     <div>

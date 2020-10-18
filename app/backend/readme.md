@@ -11,10 +11,10 @@ FLASK_APP=main.py flask run
 ### Sprint 1
 | HTTP Method |  Endpoint                                                    | Request body                          | Response body | Action                  |
 |-------------|--------------------------------------------------------------|---------------------------------------|---------------|-------------------------|
-| POST        | `/users`                                                     | Form: “username”, “email”, "password” | {“token : “”}, 201<br>{“error “ :  “Username already exists”}, {“error “ :  “Email already exists”}, 409 | Sign up |
-| POST        | `/login`                                                     | Form: "username", "password"          | {“token : “”}, 201<br>{“error” : “Login Failed”}, 401 | Login |
-| GET         | `/podcasts/<podcastID>`                                      |                                       | {"rss": url}, 200<br>{}, 404 | Returns podcast details - RSS feed URL, rating |
-| GET         | `/podcasts?search_query=<query>&offset=<startNum>&limit=<limitNum>`     | key: "search_query"                  | [{"subscribers": subs, "title": title, "author" : author, "description" : desc}, #], 200<br> [],200              | Search. Request `limitNum` results starting at result number `startNum` |  
+| POST        | `/users`                                                     | Form: “username”, “email”, "password” | `{“token: “”}`, 201<br>`{“error“ :  “Username already exists”}`, `{“error“ :  “Email already exists”}`, 409 | Sign up |
+| POST        | `/login`                                                     | Form: "username", "password"          | `{“token: “”}`, 200<br>`{“error” : “Login Failed”}`, 401 | Login |
+| GET         | `/podcasts/<podcastID>`                                      |                                       | `{"xml": xml text}`, 200<br>`{}`, 404<br>`{}`, 500 | Returns podcast details - RSS feed URL, rating |
+| GET         | `/podcasts?search_query=<query>&offset=<startNum>&limit=<limitNum>`     |                 | `[{"subscribers": subs, "title": title, "author" : author, "description" : desc}, #]`, 200<br> `[]`, 200              | Search. Request `limitNum` results starting at result number `startNum` |  
 
 ### Future endpoints, subject to change
 | HTTP Method |  Endpoint                                                    | Request body         | Response body | Action                  |
@@ -24,7 +24,6 @@ FLASK_APP=main.py flask run
 | PUT         | `/users/self/podcasts/<podcastID>/episodes/<episodeID>/time` | `{"time": <time>}`   |               | Update time progress in episode, and also listening history |
 | PUT         | `/users/self/podcasts/<podcastID>/rating`                    | `{"rating": <rating>}` |             | Update rating for podcast |
 | GET         | `/users/self/podcasts/<podcastID>`                           |                      |               | Get user's podcast rating, whether subscribed |
-| POST        | `/users`                                                     | `{"email": <email>, "username": <username>, "password": <password>}` | | Create account |
 | DELETE      | `/users/self`                                                |                      |               | Delete account |
 | PUT         | `/users/self/password`                                       | `{"oldpassword": <oldpassword>, "newpassword": <newpassword>}` | |                                                                 Change password |
 | PUT         | `/users/self/email`                                          | `{"password": <password>, "newemail": <email>}` | |                                                                                          | Change email address |
