@@ -16,3 +16,9 @@ all the user stories in a readable format for the proposal and also answered thi
 functions we had in the user stories.
 We met up on final time on Saturday to confirm everything on the proposal
 I submitted the documents after some edits from the team members submitted on Sunday morning and afternoon.
+
+Week 4
+I started work on the searching functionss and algorithms.
+
+Week 5
+I helped connect the Searching from the front end to the back end and helped making the search page results
