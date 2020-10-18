@@ -126,7 +126,7 @@ class Podcasts(Resource):
 		limitNum = request.args.get('limit')
 
 		cur = conn.cursor()
-		cur.execute("""SELECT count(s.userid), p.title, p.author, p.description
+		cur.execute("""SELECT count(s.userid), p.title, p.author, p.description, p.id
 	     			FROM   Subscriptions s
 	     				FULL OUTER JOIN Podcasts p
 				ON s.podcastId = p.id
@@ -143,7 +143,8 @@ class Podcasts(Resource):
 			title = p[1]
 			author = p[2]
 			description = p[3]
-			results.append({"subscribers" : subscribers, "title" : title, "author" : author, "description" : description})
+			pID = p[4]
+			results.append({"subscribers" : subscribers, "title" : title, "author" : author, "description" : description, "pid" : pID})
 		return results, 200
 
 class Delete(Resource):
