@@ -7,10 +7,6 @@ import {saveToken} from './../auth-functions';
 import { useHistory } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
 
-// function displayError(error) {
-//   alert(error);
-// }
-
 function displayLoginError(msg) {
   document.getElementById("login-error").textContent = msg;
   document.getElementById("login-error").style.visibility = 'visible';
@@ -36,11 +32,9 @@ function Login() {
               saveToken(data);
               // window.location.replace("/home"); // use react redirect, should be faster?
               // window.location.href = "/home"; // this allows the back button to be used
-              history.push("/");
-              // return true;
+              history.push("/"); // this is faster
             } else {
               displayLoginError("Login failed. Username or password incorrect.");
-              // return false;
             }
           })
         })

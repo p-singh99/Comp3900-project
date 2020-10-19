@@ -119,6 +119,10 @@ function getExplicitBool(node) {
 //   return true;
 // }
 
+function isDigits(str) {
+    return str.match(/^\d+$/);
+}
+
 // returns list of objects with fields 
 // "title", "description", "guid", "image", "keywords" (list), "duration", "url", "bytes" (integer), "type", "timestamp" (unix timestamp), "explicit" (bool)
 function getEpisodesFromChannel(channel) {
@@ -135,7 +139,21 @@ for (let item of episodeNodes) {
               case "itunes:keywords": episode["keywords"] = node.textContent.split(","); break;
               case "itunes:duration": // need to convert duration to common format - it may be seconds or something like "00:09:12" (hh:mm:ss)
                   // or maybe just display as they give it for now
-                  episode["duration"] = node.textContent;
+                  if (isDigits(node.textContent)) { // by the specification, if this is the case then the field should be seconds
+                    // the provided duration seconds seem to frequently be wrong though
+                    // console.log(episode.title);
+                    // console.log(node.textContent);
+                    let hhmmss = new Date(node.textContent*1000).toISOString().substr(11,8);
+                    // console.log(hhmmss);
+                    if (hhmmss.startsWith("00:")) {
+                      hhmmss = hhmmss.substr(3);
+                    } else if (hhmmss.startsWith("0")) {
+                      hhmmss = hhmmss.substr(1);
+                    }
+                    episode["duration"] = hhmmss;
+                  } else {
+                    episode["duration"] = node.textContent;
+                  }
                   break;
               case "enclosure": 
                   for (let attr of node.attributes) {
@@ -161,13 +179,14 @@ for (let item of episodeNodes) {
                       episode["description"] = node.textContent;
                   }
                   break;
+              case "link": episode["link"] = node.textContent;
               default: break;
           }
           // there is one more: content:encoded
       }
       episodes.push(episode);
   }
-  episodes.sort(compareEpisodes);
+  episodes.sort(compareEpisodes); // is this actually necessary? The rss feed creators have their own order and its normal (always?) the same as this
   return episodes;
 }
 
