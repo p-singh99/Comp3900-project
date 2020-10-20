@@ -26,7 +26,6 @@ FLASK_APP=main.py flask run
 | GET         | `/users/self/podcasts/<podcastID>`                           |                      |               | Get user's podcast rating, whether subscribed |
 | DELETE      | `/users/self/settings`                                                |                      |               | Delete account |
 | PUT         | `/users/self/settings`                                       | `{"oldpassword": <oldpassword>, "newpassword": <newpassword>, "newemail":<email>}` | |                                                                 Change password and/or email |
-| PUT         | `/users/self/`                                          | `{"password": <password>, "newemail": <email>}` | |                                                                                          | Change email address |
 | POST        | `/users/passwordreset`                                       | `{"email": <emailaddress>}` | |                                                                                           Request password reset |
 | POST        | `/users/self/subscriptions`                                  | `{"id": <podcastID>}` | | Subscribe to a podcast |
 | DELETE      | `/users/self/subscriptions/<podcastID>`                      |                       | | Unsubscribe from a podcast |
