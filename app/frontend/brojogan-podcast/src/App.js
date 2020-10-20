@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
+import { Redirect, BrowserRouter as Router, Route, Switch } from 'react-router-dom';
 import './App.css';
 import Header from './components/Header';
 import NavBar from './components/NavBar';
@@ -12,6 +12,7 @@ import History from './pages/History';
 import Recommended from './pages/Recommended';
 import Subscriptions from './pages/Subscriptions';
 import About from './pages/About';
+import { isLoggedIn } from './auth-functions';
 
 function App() {
   // on app load, check if token valid using useeffect?
@@ -38,14 +39,18 @@ function App() {
         <Footer />
         {/* <Footer playing={playing} setPlaying={setPlaying} /> */}
       </footer>
+      // move <footer></footer> into Footer component?
     </body>
   )
   return (
     <Router>
       <div className="App">
         <Switch>
-          <Route path="/login" component={Login} exact /> { /* if user is logged in, route to default? */}
-          <Route path="/signup" component={SignUp} exact />
+          {/* There were multiple ways to do the redirect to login, could have just displayed default component without redirect */}
+          {/* but that seemed weird, this is more code but makes more sense. */}
+          {/* its hard to read though so idk */}
+          <Route path="/login" exact>{isLoggedIn() ? <Redirect to="/" /> : <Login />}</Route>
+          <Route path="/signup" exact>{isLoggedIn() ? <Redirect to="/" /> : <SignUp />}</Route>
           <Route component={defaultComponents} />
         </Switch>
       </div>
