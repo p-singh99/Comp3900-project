@@ -12,3 +12,5 @@ Work was started on the first sprint. I was tasked with creating the database fu
 
 Week 5
 I continued working on the database. I improved the sql schema and added a python script that populates and depopulates the database with test data, based on real podcast rss feeds.
+I also helped with troubleshooting some problems with the search functionality. I did a bit on the description page for downloading the podcast episodes but justin already implemented it by the time I finished it (and his implementation was better).
+For next week: Keep going on rss parsing, maybe add more podcast details/episode details to the database? I also need to learn react so I can help more with the frontend stuff.

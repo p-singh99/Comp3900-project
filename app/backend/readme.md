@@ -24,9 +24,9 @@ FLASK_APP=main.py flask run
 | PUT         | `/users/self/podcasts/<podcastID>/episodes/<episodeID>/time` | `{"time": <time>}`   |               | Update time progress in episode, and also listening history |
 | PUT         | `/users/self/podcasts/<podcastID>/rating`                    | `{"rating": <rating>}` |             | Update rating for podcast |
 | GET         | `/users/self/podcasts/<podcastID>`                           |                      |               | Get user's podcast rating, whether subscribed |
-| DELETE      | `/users/self`                                                |                      |               | Delete account |
-| PUT         | `/users/self/password`                                       | `{"oldpassword": <oldpassword>, "newpassword": <newpassword>}` | |                                                                 Change password |
-| PUT         | `/users/self/email`                                          | `{"password": <password>, "newemail": <email>}` | |                                                                                          | Change email address |
+| DELETE      | `/users/self/settings`                                                |                      |               | Delete account |
+| PUT         | `/users/self/settings`                                       | `{"oldpassword": <oldpassword>, "newpassword": <newpassword>, "newemail":<email>}` | |                                                                 Change password and/or email |
+| PUT         | `/users/self/`                                          | `{"password": <password>, "newemail": <email>}` | |                                                                                          | Change email address |
 | POST        | `/users/passwordreset`                                       | `{"email": <emailaddress>}` | |                                                                                           Request password reset |
 | POST        | `/users/self/subscriptions`                                  | `{"id": <podcastID>}` | | Subscribe to a podcast |
 | DELETE      | `/users/self/subscriptions/<podcastID>`                      |                       | | Unsubscribe from a podcast |

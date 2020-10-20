@@ -12,4 +12,7 @@ We met on Monday and worked on storyboards, made some user story changes and wor
 Pawanjot and I were allocated to frontend - Pawanjot the parts directly reacted to React and me the parts focused on form/data processing and api interaction. I connected the frontend and backend and started the event handlers for login and signup.
 
 **Week 5**
-I finished the form validation, processing and api interaction of the login and signup pages. I debugged and fixed parts of frontend/backend to make it all work properly. I wrote some small things like logout handler and username indicator.
+I finished the form validation, processing and api interaction of the login and signup pages. I debugged and fixed parts of frontend/backend to make it all work properly. I implemented some small things like logout functionality and username indicator. I did the backend and frontend logic for the descriptions page, and made a base for the actual page.
+The end of week 5 was the end of the first sprint.
+
+**Week 6**
