@@ -6,11 +6,10 @@ import jwt
 import bcrypt
 import datetime
 from functools import wraps
-import requests
 
 
 app = Flask(__name__)
-api = Api(app)
+api = Api(app) 
 CORS(app)
 
 #CHANGE SECRET KEY
@@ -25,6 +24,11 @@ def create_token(username):
 # 	# conn = psycopg2.connect(host="localhost", database="pod", user="postgres", password="m")
 # 	cur = conn.cursor()
 # 	return conn, cur
+def get_user_id(cur):
+	token = request.headers['token']
+	data = jwt.decode(token, app.config['SECRET_KEY'])
+	cur.execute("SELECT id FROM users WHERE username ='%s' or email = '%s'" % (data['user'], data['user']))
+	return cur.fetchone()[0]
 
 
 def token_required(f):
@@ -65,11 +69,10 @@ class Login(Resource):
 			pw = pw.encode('UTF-8')
 			cur.close()
 			password = request.form.get('password')
-			hashed = bcrypt.hashpw(b"name", bcrypt.gensalt())
 			if bcrypt.checkpw(password.encode('UTF-8'), pw):
 				return {'token' : create_token(username)}, 200
 		return {"data" : "Login Failed"}, 401
-
+				
 
 class Users(Resource):
 	#signup
@@ -82,7 +85,6 @@ class Users(Resource):
 		hashed = bcrypt.hashpw(pw, bcrypt.gensalt())
 		error = False
 		error_msg = []
-		# data = request.headers['token']
 		# check if username exists in database
 		cur.execute("SELECT * FROM users WHERE username='%s'" % username)
 		if cur.fetchone():
@@ -98,7 +100,7 @@ class Users(Resource):
 			return {"error": error_msg}, 409
 		cur.execute("insert into users (username, email, hashedpassword) values (%s, %s, %s)", (username, email, hashed.decode("UTF-8")))
 		conn.commit()
-		# return token
+		# return token	
 		return {'token' : create_token(username)}, 201
 
 	@token_required
@@ -113,39 +115,32 @@ class Users(Resource):
 		conn.commit()
 		cur.close()
 		return {"data": "Account Deleted"}, 200
-
+	
 
 class Podcasts(Resource):
 	def get(self):
-		# todo: try catch this
-		print(request.args)
 		search = request.args.get('search_query')
 		if search is None:
 			return {"data": "Bad Request"}, 400
-		# todo: try catch this
-		startNum = request.args.get('offset')
-		limitNum = request.args.get('limit')
-
+		# search = request.form.get('search-input')
 		cur = conn.cursor()
-		cur.execute("""SELECT count(s.userid), p.title, p.author, p.description, p.id
-	     			FROM   Subscriptions s
-	     				FULL OUTER JOIN Podcasts p
-				ON s.podcastId = p.id
-	     			WHERE  to_tsvector(p.title || ' ' || p.author || ' ' || p.description) @@ plainto_tsquery(%s)
-	     			GROUP BY p.id;""",
-				(search,)
-	   		   )
+		cur.execute("""SELECT count(s.userid), p.title, p.author, p.description
+             			FROM   Subscriptions s
+             				FULL OUTER JOIN Podcasts p
+                		ON s.podcastId = p.id
+             			WHERE  to_tsvector(p.title || ' ' || p.author || ' ' || p.description) @@ plainto_tsquery('%s')
+             			GROUP BY p.id;""" % search
+           		   )
 
 		podcasts = cur.fetchall()
 		cur.close()
 		results = []
-		for p in podcasts:
+		for p in podcasts:		
 			subscribers = p[0]
 			title = p[1]
 			author = p[2]
 			description = p[3]
-			pID = p[4]
-			results.append({"subscribers" : subscribers, "title" : title, "author" : author, "description" : description, "pid" : pID})
+			results.append({"subscribers" : subscribers, "title" : title, "author" : author, "description" : description})
 		return results, 200
 
 class Delete(Resource):
@@ -167,32 +162,69 @@ class Settings(Resource):
 	def post(self, name):
 		return {"data": f"{name}"}
 
+	@token_required
 	def put(self, name):
+		data = jwt.decode(request.headers['token'], app.config['SECRET_KEY'])
+		username = data['user']
+		cur = conn.cursor()
 		if name == "password":
 			# change password
-			return {"data" : f"{name}"}
+			password = request.form['password']
+			password = password.encode('UTF-8')
+			hashedpassword = bcrypt.hashpw(password, bcrypt.gensalt())
+			cur.execute("UPDATE users SET hashedpassword='%s' FROM users WHERE name='%s' OR email = '%s'" % (hashedpassword, username, username))
+			# return {"data" : f"{name}"}
 
 		elif name == "email":
 			# change email
-			return {"data" : f"{name}"}
+			email = request.form['email']
+			cur.execute("UPDATE users SET email='%s' WHERE username='%s' OR email='%s'" % (email, username, username))
 
-		return {"data" : "Failed"}
+		cur.close()
+		return {"data" : "success"}, 200
 
-class Podcast(Resource):
+class UpdateRatings(Resource):
+	def put(self, id):
+		content = request.json
+		rating = int(content['rating'])
+		# get user id
+		cur = conn.cursor()
+		token = request.headers['token']
+		data = jwt.decode(token, app.config['SECRET_KEY'])
+		cur.execute("SELECT id FROM users WHERE username ='%s' or email = '%s'" % (data['user'], data['user']))
+		user_id = cur.fetchone()[0]
+		# get old ranking
+		# calculate new ranking
+		# save new ranking
+		# update podcast rating
+		cur.execute("UPDATE PodcastRatings SET rating = %s WHERE userId = %s AND podcastId = %s" % (rating, user_id, id))
+
+class Ratings(Resource):
 	def get(self, id):
 		cur = conn.cursor()
-		cur.execute("SELECT rssFeed FROM Podcasts WHERE id=(%s)", (id,))
-		res = cur.fetchone()
-		cur.close()
-		if res:
-			url = res[0]
-			resp = requests.get(url)
-			if resp.status_code == 200:
-				return {"xml": resp.text}, 200
-			else:
-				return {}, 500 # 500 might not the right code
-		else:
-			return {}, 404
+		user_id = get_user_id(cur)
+		cur.execute("SELECT rating FROM podcastratings WHERE userId=%s AND podcastId=%s" % (user_id, id))
+		return cur.fetchone()[0]
+		
+class Subscribe(Resource):
+	def get(self):
+		# return all subscriptions
+		pass
+
+	def post(self, id):
+		cur = conn.cursor()
+		user_id = get_user_id(cur)
+		cur.execute("INSERT INTO subscriptions (userId, podcastId) VALUES (%s, %s)" % user_id, id)
+
+	def delete(self):
+		# delete all subscriptions
+		# delete user account
+		# delete ratings
+		# delete listens
+		# delete seach queries
+		# delete rejected recommendations
+		pass
+		
 
 api.add_resource(Unprotected, "/unprotected")
 api.add_resource(Protected, "/protected")
@@ -201,7 +233,9 @@ api.add_resource(Users, "/users")
 api.add_resource(Delete, "/users/self")
 api.add_resource(Settings, "/users/self/<string:name>")
 api.add_resource(Podcasts, "/podcasts")
-api.add_resource(Podcast, "/podcasts/<int:id>")
+api.add_resource(Ratings, "/podcasts/<string:id>")
+api.add_resource(UpdateRatings, "/podcasts/<string:id>/rating")
+api.add_resource(Subscribe, "/users/self/subscriptions/<string:id>")
 
 
 if __name__ == '__main__':
