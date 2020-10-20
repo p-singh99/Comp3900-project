@@ -21,12 +21,6 @@ def create_token(username):
 	token = jwt.encode({'user' : username, 'exp' : datetime.datetime.utcnow() + datetime.timedelta(minutes=20)}, app.config['SECRET_KEY'])
 	return token.decode('UTF-8')
 
-# def get_db():
-# 	# conn = psycopg2.connect(host="localhost", database="pod", user="postgres", password="m")
-# 	cur = conn.cursor()
-# 	return conn, cur
-
-
 def token_required(f):
 	@wraps(f)
 	def decorated(*args, **kwargs):
@@ -40,6 +34,11 @@ def token_required(f):
 		return f(*args, **kwargs)
 	return decorated
 
+def get_user_id(cur):
+	token = request.headers['token']
+	data = jwt.decode(token, app.config['SECRET_KEY'])
+	cur.execute("SELECT id FROM users WHERE username ='%s' or email = '%s'" % (data['user'], data['user']))
+	return cur.fetchone()[0]
 
 class Unprotected(Resource):
 	def get(self):
@@ -65,7 +64,6 @@ class Login(Resource):
 			pw = pw.encode('UTF-8')
 			cur.close()
 			password = request.form.get('password')
-			hashed = bcrypt.hashpw(b"name", bcrypt.gensalt())
 			if bcrypt.checkpw(password.encode('UTF-8'), pw):
 				return {'token' : create_token(username)}, 200
 		return {"data" : "Login Failed"}, 401
@@ -82,7 +80,6 @@ class Users(Resource):
 		hashed = bcrypt.hashpw(pw, bcrypt.gensalt())
 		error = False
 		error_msg = []
-		# data = request.headers['token']
 		# check if username exists in database
 		cur.execute("SELECT * FROM users WHERE username='%s'" % username)
 		if cur.fetchone():
@@ -164,19 +161,36 @@ class Delete(Resource):
 
 class Settings(Resource):
 
-	def post(self, name):
-		return {"data": f"{name}"}
-
-	def put(self, name):
-		if name == "password":
+	@token_required
+	def put(self):
+		data = request.get_json()
+		data = jwt.decode(request.headers['token'], app.config['SECRET_KEY'])
+		username = data['user']
+		data = request.get_json()
+		cur = conn.cursor()
+		if data["newpassword"]:
 			# change password
-			return {"data" : f"{name}"}
-
-		elif name == "email":
+			password = data["newpassword"]
+			password = password.encode('UTF-8')
+			hashedpassword = bcrypt.hashpw(password, bcrypt.gensalt())
+			cur.execute("UPDATE users SET hashedpassword='%s' FROM users WHERE name='%s' OR email = '%s'" % (hashedpassword, username, username))
+		if data['newemail']:
 			# change email
-			return {"data" : f"{name}"}
+			email = data['newemail']
+			cur.execute("UPDATE users SET email='%s' WHERE username='%s' OR email='%s'" % (email, username, username))
+		cur.close()
+		return {"data" : "success"}, 200
 
-		return {"data" : "Failed"}
+	@token_required
+	def delete(self):
+		# delete all subscriptions
+		# delete user account
+		# delete ratings
+		# delete listens
+		# delete seach queries
+		# delete rejected recommendations
+		pass
+
 
 class Podcast(Resource):
 	def get(self, id):
@@ -199,7 +213,7 @@ api.add_resource(Protected, "/protected")
 api.add_resource(Login, "/login")
 api.add_resource(Users, "/users")
 api.add_resource(Delete, "/users/self")
-api.add_resource(Settings, "/users/self/<string:name>")
+api.add_resource(Settings, "/users/self/settings")
 api.add_resource(Podcasts, "/podcasts")
 api.add_resource(Podcast, "/podcasts/<int:id>")
 
