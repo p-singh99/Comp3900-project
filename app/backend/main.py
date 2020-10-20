@@ -183,13 +183,23 @@ class Settings(Resource):
 
 	@token_required
 	def delete(self):
+		cur = conn.cursor()
+		user_id = get_user_id(cur)
+		# delete from users
+		cur.execute("DELETE FROM users WHERE userId=%s" % user_id)
 		# delete all subscriptions
-		# delete user account
-		# delete ratings
+		cur.execute("DELETE FROM subscriptions WHERE userId=%s" % user_id)
+		# delete podcast account
+		cur.execute("DELETE FROM podcastratings WHERE userId=%s" % user_id)
+		# delete episode ratings
+		cur.execute("DELETE FROM episoderatings WHERE userId=%s" % user_id)
 		# delete listens
+		cur.execute("DELETE FROM listens WHERE userId=%s" % user_id)
 		# delete seach queries
+		cur.execute("DELETE FROM searchqueries WHERE userId=%s" % user_id)
 		# delete rejected recommendations
-		pass
+		cur.execute("DELETE FROM rejectedrecommendations WHERE userId=%s" % user_id)
+		return {"data" : "account deleted"}, 200
 
 
 class Podcast(Resource):
