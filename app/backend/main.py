@@ -98,19 +98,6 @@ class Users(Resource):
 		# return token
 		return {'token' : create_token(username)}, 201
 
-	@token_required
-	def delete(self):
-		if not request.headers.get('token'):
-			return {"error" : "FAILED"}, 401
-		token = request.headers['token']
-		data = jwt.decode(token, app.config['SECRET_KEY'])
-		sql = "DELETE FROM users WHERE username='%s';" % data['user']
-		cur = conn.cursor()
-		cur.execute(sql)
-		conn.commit()
-		cur.close()
-		return {"data": "Account Deleted"}, 200
-
 
 class Podcasts(Resource):
 	def get(self):
@@ -145,22 +132,7 @@ class Podcasts(Resource):
 			results.append({"subscribers" : subscribers, "title" : title, "author" : author, "description" : description, "pid" : pID})
 		return results, 200
 
-class Delete(Resource):
-	#@token_required
-	def delete(self):
-		if not request.headers.get('token'):
-			return {"error" : "FAILED"}, 401
-		token = request.headers['token']
-		data = jwt.decode(token, app.config['SECRET_KEY'])
-		sql = "DELETE FROM users WHERE username='%s';" % data['user']
-		cur = conn.cursor()
-		cur.execute(sql)
-		conn.commit()
-		cur.close()
-		return {"data": "Account Deleted"}, 200
-
 class Settings(Resource):
-
 	@token_required
 	def put(self):
 		data = request.get_json()
@@ -178,6 +150,7 @@ class Settings(Resource):
 			# change email
 			email = data['newemail']
 			cur.execute("UPDATE users SET email='%s' WHERE username='%s' OR email='%s'" % (email, username, username))
+		cur.commit()
 		cur.close()
 		return {"data" : "success"}, 200
 
@@ -199,6 +172,8 @@ class Settings(Resource):
 		cur.execute("DELETE FROM searchqueries WHERE userId=%s" % user_id)
 		# delete rejected recommendations
 		cur.execute("DELETE FROM rejectedrecommendations WHERE userId=%s" % user_id)
+		cur.commit()
+		cur.close()
 		return {"data" : "account deleted"}, 200
 
 
@@ -222,7 +197,6 @@ api.add_resource(Unprotected, "/unprotected")
 api.add_resource(Protected, "/protected")
 api.add_resource(Login, "/login")
 api.add_resource(Users, "/users")
-api.add_resource(Delete, "/users/self")
 api.add_resource(Settings, "/users/self/settings")
 api.add_resource(Podcasts, "/podcasts")
 api.add_resource(Podcast, "/podcasts/<int:id>")
