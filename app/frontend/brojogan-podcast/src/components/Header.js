@@ -132,7 +132,7 @@ function Header() {
         .then(resp => {
           resp.json().then(podcasts => {
             if (resp.status === 200) {
-              console.log(podcasts[0].title);
+              // console.log(podcasts[0].title);
 
              window.location.replace("/search" + "?" + searched_text.value);
             } else {

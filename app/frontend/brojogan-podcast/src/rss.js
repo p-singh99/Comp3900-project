@@ -17,25 +17,6 @@ function verifyPodcast(podcast) {
   }
   return true;
 }
-
-// returns object {"podcast": {...}, "episodes": {...}}
-// export async function getPodcastFromURL(url) {
-//   console.log('getpodcastfromurl');
-//   try {
-//     const resp = await fetch(url);
-//     const text = await resp.text();
-//     const parser = new DOMParser();
-//     const xml = parser.parseFromString(text, "text/xml");
-//     let podcast = {};
-//     let channel = xml.getElementsByTagName("channel")[0];
-//     podcast["podcast"] = getDetailsFromChannel(channel);
-//     podcast["episodes"] = getEpisodesFromChannel(channel);
-//     return podcast;
-//   } catch {
-//     throw Error("error");
-//   }
-// }
-
 // todo handle dodgy feeds
 
 export function getPodcastFromXML(xmlText) {

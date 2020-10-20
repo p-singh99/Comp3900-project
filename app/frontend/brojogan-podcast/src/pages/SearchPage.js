@@ -13,7 +13,7 @@ function Search(podcasts) {
               var text = podcast.title + " | Subscribers: " + podcast.subscribers;
               var a = document.createElement("a");
               a.textContent = text;
-              a.href = "localhost:3000/podcast/"+podcast.pid; 
+              a.href = "/podcast/"+podcast.pid; 
               newLi.appendChild(a);
               podcastList.appendChild(newLi);
         }

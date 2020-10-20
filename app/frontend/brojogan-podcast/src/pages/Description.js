@@ -5,75 +5,24 @@ import { getPodcastFromXML } from '../rss';
 import { API_URL } from '../constants';
 import './../css/Description.css';
 
-/*function insertInfo(xml) {
-  const podcast = getPodcastFromXML(xml);
-  if (!podcast) {
-    displayError("Podcast error");
-    return;
-  }
-  
-  console.log(podcast);
-// insert podcast name etc. into page
-  document.getElementById("podcast-name").textContent = podcast["title"];
-  document.getElementById("podcast-author").textContent = podcast["author"];
-  document.getElementById("podcast-description").textContent = podcast["description"];
-  // with the description, they seem to be in html so we somehow need to allow some tags
-  // but obv still prevent xss
-  if (podcast["image"]) {
-    document.getElementById("podcast-img").src = podcast["image"];
-  } else {
-    document.getElementById("podcast-img").remove();
-  }
-
-  const tbody = document.getElementById("episodes").getElementsByTagName("tbody")[0];
-  console.log("starting episodes");
-  // this takes like 2 seconds, will be much faster with virtual DOM
-  // also probably only load a certain number at a time
-  for (const i in podcast["episodes"]) {
-    const episode = podcast["episodes"][i];
-    let row = tbody.insertRow(i);
-    let name = row.insertCell(0);
-    name.textContent = episode["title"];
-
-    let description = row.insertCell(1);
-    description.textContent = episode["description"];
-
-    let duration = row.insertCell(2);
-    duration.textContent = episode["duration"];
-
-    let file = row.insertCell(3);
-    let audio = document.createElement("audio");
-    audio.src = episode["url"];
-    audio.preload = "none";
-    audio.controls = true;
-    file.appendChild(audio);
-    // let link = document.createElement("a");
-    // link.href = episode["url"];
-    // link.textContent = "link";
-    // link.download = "file";
-    // file.appendChild(link);
-  }
-  console.log("finished episodes");
-}*/
-
 // CORS bypass
 async function getRSS(id) {
+  let resp, data;
   try {
-    const resp = await fetch(`${API_URL}/podcasts/${id}`);
-    const data = await resp.json();
-    if (resp.status === 200) {
-      // console.log(data.xml);
-      return data.xml;
-    } else {
-      throw Error("Error in retrieving podcast");
-    }
+    resp = await fetch(`${API_URL}/podcasts/${id}`);
+    data = await resp.json();
   } catch {
     throw Error("Network error");
   }
+  if (resp.status === 200) {
+    // console.log(data.xml);
+    return data.xml;
+  } else if (resp.status === 404) {
+    throw Error("Podcast does not exist");
+  } else {
+    throw Error("Error in retrieving podcast");
+  }
 }
-
-// There actually seems to be not much speed difference between the DOM approach and the React approach
-// I can't tell which is faster
 
 function onTag(tag, html, options) {
   if (tag === 'p') {
@@ -263,27 +212,6 @@ function Description() {
           })}
         </ul>
       </div>
-
-      {/* <table id="episodes">
-        <thead>
-          <th>Name</th>
-          <th>Description</th>
-          <th>Duration</th>
-          <th>Audio file</th>
-        </thead>
-        <tbody>
-          {episodes.map(episode => {
-            console.log('episode:', Date.now());
-            return (
-            <tr>
-              <td>{episode.title}</td>
-              <td>{shortenDescription(episode.description)}</td>
-              <td>{episode.duration}</td>
-              <td><audio src={episode.url} controls preload="none"></audio></td>
-            </tr>
-          )})}
-        </tbody>
-      </table> */}
     </div>
   );
 }
