@@ -152,7 +152,7 @@ function Header() {
     <div id="header-wrapper">
       <div id="header-div">
         <React.Fragment>
-          <Link to="/">
+         <Link to="/" style={{textDecoration: 'none', display: 'flex'}}>
             <img id="logo" 
               style={imgStyle} 
               src={logo} 
