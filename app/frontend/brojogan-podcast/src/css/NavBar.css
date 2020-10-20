@@ -1,5 +1,5 @@
 #navBar-div {
-  width: 210px;
+  min-width: 210px; /* changed to min-width because it was getting shrunk on descriptions page. this might break something idk */
   height: 100%;
   min-height: 300px;
   background-color: #2E2B3F;
