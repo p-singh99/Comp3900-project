@@ -160,7 +160,7 @@ for (let item of episodeNodes) {
                       episode["description"] = node.textContent;
                   }
                   break;
-              case "link": episode["link"] = node.textContent;
+              case "link": episode["link"] = node.textContent; break;
               default: break;
           }
           // there is one more: content:encoded

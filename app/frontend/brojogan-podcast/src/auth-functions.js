@@ -25,3 +25,7 @@ export const isLoggedIn = () => {
   // that's my current plan for handling tokens
   return (window.localStorage.getItem("token") !== null)
 }
+
+export const getUsername = () => {
+  return window.localStorage.getItem("username");
+}

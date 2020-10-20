@@ -7,7 +7,7 @@ import DropDownMenu from './../components/DropDownMenu';
 import Search from './../components/SearchPage.js';
 import notifications from './../images/notifications.png';
 import settings from './../images/settings.png';
-import {logoutHandler, authFailed, isLoggedIn} from './../auth-functions';
+import {logoutHandler, authFailed, isLoggedIn, getUsername} from './../auth-functions';
 import { useHistory } from 'react-router-dom';
 import {API_URL} from './../constants';
 
@@ -173,6 +173,7 @@ function Header() {
           </form>
         </div>
         <div id="icons-div" style={{margin: '15px 25px 0px 0px'}}>
+        <div id="username">{getUsername()}</div>
           <button id="notification-button" onClick={() => {
             setNotificationClicked(!notificationClicked);
             setSelectedIcon(Icons.NOTIFICATION);
