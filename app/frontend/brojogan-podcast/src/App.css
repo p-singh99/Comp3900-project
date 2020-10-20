@@ -21,9 +21,10 @@ html, body {
 }
 
 #middle {
-  margin: 0px;
-  padding: 0px;
+  margin: 0 0 100px 0;
+  padding: 0;
   height: 100%;
   display: flex;
   flex-direction: row;
+  border: 5px solid gold; /* just here so i can see where the div ends */
 }

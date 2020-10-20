@@ -3,65 +3,60 @@ import {Link} from 'react-router-dom';
 import './../css/Login.css';
 import logo from './../images/logo.png';
 import {API_URL} from './../constants';
+import {saveToken} from './../auth-functions';
+import { useHistory } from 'react-router-dom';
+import { Helmet } from 'react-helmet';
 
-function displayError(error) {
-  alert(error);
-}
+// function displayError(error) {
+//   alert(error);
+// }
 
-function displayLoginError() {
-  // document.getElementById("login-error").textContent = "Login failed. Username or password incorrect.";
+function displayLoginError(msg) {
+  document.getElementById("login-error").textContent = msg;
   document.getElementById("login-error").style.visibility = 'visible';
 }
 
-function loginHandler(event) {
-  event.preventDefault();
-  // const form = document.forms['login-form'];
-  const form = event.target;
-  const username = form.elements.username.value;
-  const password = form.elements.password.value;
-  // check for maximum length? check that they don't violate some constraints?
-  if (username && password) {
-    let formData = new FormData(form);
-    fetch(`${API_URL}/login`, {method: 'post', body: formData})
-      .then(resp => {
-        resp.json().then(data => {
-          if (resp.status === 200) {
-            window.localStorage.setItem('token', data.token);
-            window.localStorage.setItem('username', data.user);
-            window.location.replace("/home"); // use react redirect, should be faster?
-            return true;
-          } else {
-            displayLoginError();
-            return false;
-          }
-        })
-      })
-      .catch(error => { // will this catch error from resp.json()?
-        displayError(error);
-      });
-
-      // .then(resp => {
-      //   if (resp.ok) {
-      //     return resp.json();
-      //   } else {
-      //     throw new Error('Login failed');
-      //   }
-      // })
-      // .then(json => {
-      //   document.cookie = `token=${json.token}`; // maybe localstorage not cookie
-      //   // redirect to homepage
-      // })
-      // .catch(error => {
-      //   alert(error);
-      // });
-  }
-}
-
 function Login() {
-  let link = '';
+  // let link = '';
+  const history = useHistory();
+
+  function loginHandler(event) {
+    event.preventDefault();
+    // const form = document.forms['login-form'];
+    const form = event.target;
+    const username = form.elements.username.value;
+    const password = form.elements.password.value;
+    // check for maximum length? check that they don't violate some constraints?
+    if (username && password) {
+      let formData = new FormData(form);
+      fetch(`${API_URL}/login`, {method: 'post', body: formData})
+        .then(resp => {
+          resp.json().then(data => {
+            if (resp.status === 200) {
+              saveToken(data);
+              // window.location.replace("/home"); // use react redirect, should be faster?
+              // window.location.href = "/home"; // this allows the back button to be used
+              history.push("/");
+              // return true;
+            } else {
+              displayLoginError("Login failed. Username or password incorrect.");
+              // return false;
+            }
+          })
+        })
+        .catch(error => { // will this catch error from resp.json()?
+          displayLoginError("Error"); // todo: need to stop this changing the size - set the width fixed
+        });
+    }
+  }
+
+
   return (
-    
     <div id="wrapper">
+        <Helmet>
+          <title>Brojogan Podcasts - Login</title>
+        </Helmet>
+        
       <div id='login-div'>
         <div id="logo-text">
           <img 

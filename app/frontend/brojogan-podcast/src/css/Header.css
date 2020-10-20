@@ -93,5 +93,10 @@
 #username {
   /* padding: 10px 0; this vertical centering is fragile */
   /* margin-right: auto; */
-  margin: auto auto auto 0;
+  /* margin: auto auto auto 0; */
+  padding-top: 12px; /* trying to align with icons */
 }
+
+/* a {
+  text-decoration: none;
+} */

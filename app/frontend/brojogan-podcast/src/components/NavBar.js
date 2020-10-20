@@ -11,11 +11,11 @@ function NavBar() {
   return (
     <div id='navBar-div' style={divStyle}>
       <ul>
-        <li><NavLink className="nav-item" exact to="/" activeClassName="active">Home</NavLink></li>
-        <li><NavLink className="nav-item" exact to="/history" activeClassName="active">History</NavLink></li>
-        <li><NavLink className="nav-item" exact to="/recommended" activeClassName="active">Recommended</NavLink></li>
-        <li><NavLink className="nav-item" exact to="/subscriptions" activeClassName="active">Subscriptions</NavLink></li>
-        <li><NavLink className="nav-item" exact to="/about" activeClassName="active">About</NavLink></li>
+        <NavLink className="nav-item" exact to="/" activeClassName="active"><li>Home</li></NavLink>
+        <NavLink className="nav-item" exact to="/history" activeClassName="active"><li>History</li></NavLink>
+        <NavLink className="nav-item" exact to="/recommended" activeClassName="active"><li>Recommended</li></NavLink>
+        <NavLink className="nav-item" exact to="/subscriptions" activeClassName="active"><li>Subscriptions</li></NavLink>
+        <NavLink className="nav-item" exact to="/about" activeClassName="active"><li>About</li></NavLink>
       </ul>
     </div>
   )

@@ -1,17 +1,20 @@
 import React, {useState, useEffect, useRef} from 'react';
+import {Link} from 'react-router-dom';
 import './../css/Header.css';
 import logo from './../images/logo.png';
 import DropDownMenu from './../components/DropDownMenu';
-import Search from './../components/Search.js';
+//import Search from './../components/Search.js';
+import Search from './../components/SearchPage.js';
 import notifications from './../images/notifications.png';
 import settings from './../images/settings.png';
+import {logoutHandler, authFailed, isLoggedIn} from './../auth-functions';
+import { useHistory } from 'react-router-dom';
+import {API_URL} from './../constants';
 
-// move this down the file
-function logoutHandler() {
-  window.localStorage.removeItem('token');
-  window.localStorage.removeItem('username');
-  window.location.reload();
+function displayError(error) {
+  alert(error);
 }
+
 
 const Icons = {
   NOTIFICATION: 'notification',
@@ -19,17 +22,26 @@ const Icons = {
 }
 
 const notificationOptions = [
-  'Notification 1',
-  'Notification 2',
-  'Notification 3',
-  'Notification 4'
-]
-
-const settingsOptions = [
-  'login',
+  {text: 'Notification 1', onClick: () => alert('notification')},
+  {text: 'Notification 2', onClick: () => alert('notification')},
+  {text: 'Notification 3', onClick: () => alert('notification')},
+  {text: 'Notification 4', onClick: () => alert('notification')}
 ]
 
 function Header() {
+  const history = useHistory();
+
+  const settingsOptions = isLoggedIn() ?
+  [
+    {text: 'Logout', onClick: logoutHandler},
+    {text: 'Change email', onClick: () => alert('Change email')}
+  ]
+  :
+  [
+    // {text: 'login', onClick: () => window.location.href = "/login"} // do react redirect instead
+    {text: 'Login', onClick: () => history.push("/login")},
+    {text: 'Signup', onClick: () => history.push("/signup")}
+  ];
 
   let [isStart, setStart] = useState(true);
   let [options, setOptions] = useState({options: notificationOptions, visibility: 'hidden'})
@@ -104,27 +116,63 @@ function Header() {
     setNotificationClicked(false);
   }
 
+  function searchHandler(event) {
+    event.preventDefault();
+    const form = event.target;
+    const searched_text = form.elements.searchComponent;
+    if (searched_text) {
+      let formData = new FormData(form);
+      console.log("formData is");
+      console.log(formData);
+      console.log("searched_text is ");
+      console.log(searched_text);
+      console.log(searched_text.value);
+
+      fetch(`${API_URL}/podcasts?search_query=`+searched_text.value+'&offset=0&limit=50', {method: 'get'})
+        .then(resp => {
+          resp.json().then(podcasts => {
+            if (resp.status === 200) {
+              console.log(podcasts[0].title);
+
+             window.location.replace("/search" + "?" + searched_text.value);
+            } else {
+              // should never enter this
+              console.log('response status is not 200 after search');
+            }
+          })
+        })
+        .catch(error => { // will this catch error from resp.json()?
+        displayError(error);
+      });
+    }
+  }
+
+
   return (
     <div id="header-wrapper">
       <div id="header-div">
         <React.Fragment>
-          <img id="logo" 
-            style={imgStyle} 
-            src={logo} 
-            alt="Logo" 
-            height={50} 
-            width={50}
-          />
-          <p style={textStyle}> BroJogan <br /> Podcast </p>
+         <Link to="/" style={{textDecoration: 'none', display: 'flex'}}>
+            <img id="logo" 
+              style={imgStyle} 
+              src={logo} 
+              alt="Logo" 
+              height={50} 
+              width={50}
+            />
+            <p style={textStyle}> BroJogan <br /> Podcast </p>
+          </Link>
+
         </React.Fragment>
         <div id="search-div" style={{margin: '15px 0px 0px 0px'}}>
-          {/* <form>
+          <form id = "search-form" onSubmit = {searchHandler}>
             <input type='text' id='search-input' name='searchComponent' placeholder='Search'/>
-          </form> */}
-          <Search />
+            <div id="search-btn">
+              <button id="search-btn" type="submit">Search</button>
+            </div>
+          </form>
         </div>
         <div id="icons-div" style={{margin: '15px 25px 0px 0px'}}>
-          <div id="username">{window.localStorage.getItem('username')}</div>
           <button id="notification-button" onClick={() => {
             setNotificationClicked(!notificationClicked);
             setSelectedIcon(Icons.NOTIFICATION);
@@ -137,7 +185,7 @@ function Header() {
       </div>
       <div id="dropDownDiv">
         <DropDownMenu ref={dropDownRef} items={options} clickedOutside={clickedOutside}/>
-      </div> 
+      </div>
     </div>
   )
 }
