@@ -39,6 +39,8 @@ function DropDownMenu(props) {
             // return <Link to={item.link}>{item.text}</Link>
             // return <a id = "login-home-header" href={item.link}>{item.text}</a>
             return <p onClick={item.onClick} style={{cursor: 'pointer'}}>{item.text}</p>
+            // would be good to do item.onClick ? onClick = item.onClick : <Link to={item.ink}>
+            // if that is possible
           // } else {
           //   return <a href='#'>{item}</a>
           // }

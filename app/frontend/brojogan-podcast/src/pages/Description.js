@@ -85,18 +85,25 @@ function onTag(tag, html, options) {
 // this will make sure that all rels are nofollow, but it won't add nofollow to links
 function onIgnoreTagAttr(tag, name, value, isWhiteAttr) {
   if (tag === 'a' && name === 'rel') {
-    return 'rel=nofollow';
+    return 'rel=nofollow'; // why does this work? Shouldn't I just return nofollow?
+  } else if (tag === 'a' && name === 'target') {
+    return 'target=_blank;'
   }
   // no return, it does default ie remove attibute
 }
 
 // maybe use DOMPurify instead, and should try to add rel="nofollow" to links
+// also should set target = _blank on all links
+// could also do that in js - get all links and loop through setting the attributes
+// or could set base target = _blank, and then change it on the ones we control
+// this doesn't really feel secure, this third party script could get bugs or be altered
+// should put the script in local folder
 function sanitiseDescription(description) {
   // https://www.npmjs.com/package/xss
   // https://jsxss.com/en/options.
   let options = {
     whiteList: {
-      a: ['href', 'title', 'target'],
+      a: ['href'], // title
       // p: [],
       // strong: []
     },
@@ -108,14 +115,16 @@ function sanitiseDescription(description) {
   return description;
 }
 
+// https://stackoverflow.com/questions/1912501/unescape-html-entities-in-javascript
 function htmlDecode(text) {
   let doc = new DOMParser().parseFromString(text, "text/html");
   return doc.documentElement.textContent;
 }
 
+// this function is for removing tags so they don't show up in text
+// it is not for security sanitisting for innerHTML
 function unTagDescription(description) {
-  description = description.replace(/<[^>]+>/g, ''); // remove HTML tags
-  // description = "&lt;script&gt;alert(1)&lt;/script&gt;"; // the <> are display as text so this seems safe
+  description = description.replace(/<[^>]+>/g, ''); // remove HTML tags - could be flawed
   description = htmlDecode(description);
   return description;
 }
@@ -135,14 +144,14 @@ function getDate(timestamp) {
   return date.toLocaleDateString(undefined, {year: 'numeric', month: 'short', day: 'numeric' }).replace(/,/g,'')/*.toUpperCase()*/;
 }
 
-function playEpisode(event, setPlaying, episodes) {
+function playEpisode(event, setPlaying, episodes, podcastName, podcastID, episodeName) {
   let guid = event.target.getAttribute('eid');
   let episode = episodes.find(x => x.guid === guid);
   console.log(episode);
 
   console.log('playEpisode');
   // put player in footer
-  setPlaying({ src: episode.url });
+  setPlaying({ src: episode.url, podcastName: podcastName, podcastID: podcastID, episodeName: episodeName, episodeID: guid });
 }
 
 function downloadEpisode(event) {
@@ -231,6 +240,7 @@ function Description() {
 
             return (
               <li className="episode">
+                {/* make this flexbox or grid? */}
                 <div className="head">
                   <span className="date">{getDate(episode.timestamp)}</span>
                   <span className="title">{episode.title}</span>
