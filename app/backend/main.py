@@ -134,22 +134,28 @@ class Podcasts(Resource):
 
 class Settings(Resource):
 	@token_required
-	def put(self):
-		data = request.get_json()
+	def get(self):
 		data = jwt.decode(request.headers['token'], app.config['SECRET_KEY'])
 		username = data['user']
-		data = request.get_json()
 		cur = conn.cursor()
-		if data["newpassword"]:
+		cur.execute("SELECT email FROM users WHERE name='%s'" % username)
+		return cur.fetchone()[0]
+		
+	@token_required
+	def put(self):
+		data = jwt.decode(request.headers['token'], app.config['SECRET_KEY'])
+		username = data['user']
+		args = request.get_json()
+		cur = conn.cursor()
+		if args["newpassword"]:
 			# change password
-			password = data["newpassword"]
+			password = args["newpassword"]
 			password = password.encode('UTF-8')
 			hashedpassword = bcrypt.hashpw(password, bcrypt.gensalt())
 			cur.execute("UPDATE users SET hashedpassword='%s' WHERE username='%s' OR email = '%s'" % (hashedpassword.decode('UTF-8'), username, username))
-		if data['newemail']:
+		if args['newemail']:
 			# change email
-			email = data['newemail']
-			cur.execute("UPDATE users SET email='%s' WHERE username='%s' OR email='%s'" % (email, username, username))
+			cur.execute("UPDATE users SET email='%s' WHERE username='%s' OR email='%s'" % (args['newemail'], username, username))
 		conn.commit()
 		cur.close()
 		return {"data" : "success"}, 200
