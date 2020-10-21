@@ -44,7 +44,7 @@ function App() {
         <Footer />
         {/* <Footer playing={playing} setPlaying={setPlaying} /> */}
       </footer>
-      // move <footer></footer> into Footer component?
+      {/* move <footer></footer> into Footer component? It breaks it for some reason, makes it overlap with content */}
     </body>
 
   )

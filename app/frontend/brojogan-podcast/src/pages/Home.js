@@ -1,5 +1,5 @@
 import React from 'react';
-import { isLoggedIn } from './../auth-functions'
+import { isLoggedIn, getUsername } from './../auth-functions'
 import { Helmet } from 'react-helmet';
 
 function Home() {
@@ -11,7 +11,7 @@ function Home() {
 
       <h1>
         {isLoggedIn()
-          ? <p>Welcome back, {window.localStorage.getItem("username")}</p>
+          ? <p>Welcome back, {getUsername()}</p>
           : <p>Welcome to the Homepage</p>
         }
       </h1>
