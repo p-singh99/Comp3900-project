@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Helmet } from 'react-helmet';
 import { checkPassword, checkPasswordsMatch, checkField } from './../validation-functions';
-import { fetchJSON, logoutHandler, getUsername } from './../auth-functions';
+import { fetchAPI, logoutHandler, getUsername } from './../auth-functions';
 import { API_URL } from './../constants';
 import './../css/settings.css';
 
@@ -17,7 +17,7 @@ function handleDelete() {
   }
 
   let body = { "password": password };
-  fetchJSON(`/users/self/settings`, 'delete', body, false) // REST would be /users/self
+  fetchAPI(`/users/self/settings`, 'delete', body, false) // REST would be /users/self
     .then(() => {
       alert("Success. Account deleted.");
       logoutHandler();
@@ -59,7 +59,7 @@ function Settings() {
       data.newpassword = password1.value ? password1.value : null;
       data.newemail = email.value ? email.value : null;
       // confirmation popup?
-      fetchJSON('/users/self/settings', 'post', data, false)
+      fetchAPI('/users/self/settings', 'put', data, false)
         .then(() => {
           displayMessage("success");
         })
@@ -72,13 +72,13 @@ function Settings() {
   useEffect(() => {
     const fetchEmail = async () => {
       try {
-        const resp = await fetch(`${API_URL}/user/self/settings`);
-        const data = await resp.json();
+        const data = await fetchAPI('/user/self/settings');
         if (data.email) {
           setCurrentEmail(data.email);
         }
       } catch (error) {
         setCurrentEmail("currentemail@address.com"); // this line is for testing, remove
+        console.log(error);
         displayMessage(error);
       }
     }
@@ -91,7 +91,7 @@ function Settings() {
         <title>Brojogan Podcasts - Settings</title>
       </Helmet>
 
-      <h1>Settings - {window.localStorage.getItem('username')}</h1>
+      <h1>Account Settings - {window.localStorage.getItem('username')}</h1>
       <form onSubmit={settingsHandler}>
         <div>
           <label for="new-email-input">Email</label>
@@ -115,7 +115,7 @@ function Settings() {
         </div>
         <p id="signup-error" className="error">Placeholder</p>
         <button type="submit">Change</button>
-        <button onClick={handleDelete} style={{ background: 'red', color: 'white' }}>Delete</button>
+        <button onClick={handleDelete}>Delete</button>
         <p>{error}</p>
       </form>
     </div >

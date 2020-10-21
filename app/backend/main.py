@@ -51,21 +51,22 @@ class Protected(Resource):
 
 class Login(Resource):
 	def post(self):
-		username = request.form.get('username')
+		username = request.form.get('username').lower()
 		password = request.form.get('password')
 		# Check if username or email
 		cur = conn.cursor()
 		# Check if username exists
 		# cur.execute("SELECT password FROM users WHERE username='%s'" % username)
-		cur.execute("SELECT hashedpassword FROM users WHERE username='%s' OR email='%s'" % (username, username))
+		cur.execute("SELECT username, hashedpassword FROM users WHERE username='%s' OR email='%s'" % (username, username))
 		res = cur.fetchone()
 		if res:
-			pw = res[0].strip()
+			username = res[0].strip()
+			pw = res[1].strip()
 			pw = pw.encode('UTF-8')
 			cur.close()
 			password = request.form.get('password')
 			if bcrypt.checkpw(password.encode('UTF-8'), pw):
-				return {'token' : create_token(username)}, 200
+				return {'token' : create_token(username), 'user': username}, 200
 		return {"data" : "Login Failed"}, 401
 
 
@@ -96,7 +97,7 @@ class Users(Resource):
 		cur.execute("insert into users (username, email, hashedpassword) values (%s, %s, %s)", (username, email, hashed.decode("UTF-8")))
 		conn.commit()
 		# return token
-		return {'token' : create_token(username)}, 201
+		return {'token' : create_token(username), 'user': username}, 201
 
 
 class Podcasts(Resource):

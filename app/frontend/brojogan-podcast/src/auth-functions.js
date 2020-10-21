@@ -41,7 +41,7 @@ export const getToken = () => {
 // returns resp.json() or an error
 // give endpoint as eg /podcasts/4
 // sends json. provide body as js object
-export async function fetchJSON(endpoint, method, body, failAuth=true) {
+export async function fetchAPI(endpoint, method, body, failAuth=true) {
   let resp, data;
   let args = {method: method, body: JSON.stringify(body), headers: {'token': getToken(), 'Content-Type': 'application/json'}};
   try {
