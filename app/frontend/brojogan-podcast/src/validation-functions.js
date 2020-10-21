@@ -8,8 +8,7 @@ function removePasswordError() {
   document.getElementById("password-error").style.visibility = 'hidden';
 }
 
-export function checkPassword(event) {
-  const form = document.forms[1];
+export function checkPassword(event, form) {
   const password1Elem = form.elements.password1;
   console.log(password1Elem);
   if (password1Elem.validity.tooShort) {
@@ -19,12 +18,11 @@ export function checkPassword(event) {
   } else if (!password1Elem.validity.valid) {
     displayPasswordError("Password missing requirements")
   } else {
-    checkPasswordsMatch(event);
+    checkPasswordsMatch(event, form);
   }
 }
 
-export function checkPasswordsMatch(event) {
-  const form = document.forms[1];
+export function checkPasswordsMatch(event, form) {
   const password1 = form.elements.password1.value;
   const password2 = form.elements.password2.value;
   if (password1 !== password2) {

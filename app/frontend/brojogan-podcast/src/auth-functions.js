@@ -53,7 +53,7 @@ export async function fetchAPI(endpoint, method, body, failAuth=true) {
   if (resp.ok) {
     return data;
   } else if (resp.status === 401) {
-    if (failAuth) {
+    if (data.error && data.error.toLowerCase().includes("token")) {
       authFailed(); // doesn't return
     }
     throw Error(data.error || "Authentication failed");

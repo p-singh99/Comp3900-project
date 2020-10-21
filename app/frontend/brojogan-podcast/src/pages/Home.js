@@ -2,7 +2,19 @@ import React from 'react';
 import { isLoggedIn, getUsername } from './../auth-functions'
 import { Helmet } from 'react-helmet';
 
-function Home() {
+// just an idea to try something
+function welcome(newUser) {
+  if (newUser) {
+    return <p>Welcome to BroJogan Podcasts, {getUsername()}</p>
+  } else if (isLoggedIn()) {
+    return <p>Welcome back, {getUsername()}</p>
+  } else {
+    return <p>Welcome to the Homepage</p>
+  }
+}
+
+function Home(props) {
+  const newUser = props.location.state ? props.location.state.newUser : false;
   return (
     <div>
       <Helmet>
@@ -10,10 +22,7 @@ function Home() {
       </Helmet>
 
       <h1>
-        {isLoggedIn()
-          ? <p>Welcome back, {getUsername()}</p>
-          : <p>Welcome to the Homepage</p>
-        }
+        {welcome(newUser)}
       </h1>
     </div>
   );

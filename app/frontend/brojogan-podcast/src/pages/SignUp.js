@@ -81,8 +81,8 @@ function SignUp() {
           resp.json().then(data => {
             if (resp.status === 201) {
               saveToken(data);
-              // window.location.replace("/home");
-              history.push("/");
+              // window.sessionStorage.setItem("newuser", true); // maybe - user stays as a new user for their entire first session
+              history.push("/", {newUser: true});
             } else {
               displaySignupErrors(data.error);
             }
@@ -132,11 +132,11 @@ function SignUp() {
             <div>
               <p className="password-text">Password</p>
               { <p className="form-info">10-64 characters. Must contain a lower case letter and at least one number, uppercase letter or symbol (!@#$%^&amp;*()_-+={}]:;'&quot;&lt;&#44;&gt;.?/|\~`).</p> }
-              <input type="password" className="password-input" name="password1" onInput={checkPassword} minLength="10" maxLength="64" pattern="(?=.*[a-z])((?=.*\d)|(?=.*[A-Z])|(?=.*[!@#$%^&amp;*()_\-+=\{}\]:;'&quot;<,>.?\/|\\~`])).{0,}"/>
+              <input type="password" className="password-input" name="password1" onInput={(event) => checkPassword(event, document.forms["signUp-form"])} minLength="10" maxLength="64" pattern="(?=.*[a-z])((?=.*\d)|(?=.*[A-Z])|(?=.*[!@#$%^&amp;*()_\-+=\{}\]:;'&quot;<,>.?\/|\\~`])).{0,}"/>
             </div>
             <div>
               <p className="password-text">Confirm Password</p> {/* two have the same id */}
-              <input type="password" className="password-input" name="password2" onInput={checkPasswordsMatch}/> {/* should use once attribute */}
+              <input type="password" className="password-input" name="password2" onInput={(event) => checkPasswordsMatch(event, document.forms["signUp-form"])}/> {/* should use once attribute */}
               { <p id="password-error" className="error">Placeholder</p> }
             </div>
             {<pre id="signup-error" className="error">Placeholder</pre> }{ /* pre so that can add new line in textContent */}

@@ -5,6 +5,9 @@ import { getPodcastFromXML } from '../rss';
 import { API_URL } from '../constants';
 import './../css/Description.css';
 
+// !! what happens if the description is invalid html, will it break the whole page?
+// eg the a tag doesn't close
+
 // CORS bypass
 async function getRSS(id) {
   let resp, data;

@@ -67,7 +67,7 @@ function Login() {
         <div id="login-div-2">
           <h1>Log In</h1>
           <form id="login-form" onSubmit={loginHandler}>
-            <p id="username-text">Username</p>
+            <p id="username-text">Username/email</p>
             <input type="text" id="username-input" name="username" />
             <p id="password-text">Password</p>
             <input type="password" id="password-input" name="password" />

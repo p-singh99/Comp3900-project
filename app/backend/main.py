@@ -26,11 +26,11 @@ def token_required(f):
 	def decorated(*args, **kwargs):
 		token = request.headers.get('token')
 		if not token:
-			return {'message' : 'token is missing'}, 401
+			return {'error' : 'token is missing'}, 401
 		try:
 			data = jwt.decode(token, app.config['SECRET_KEY'])
 		except:
-			return {'message' : 'token is invalid'}, 401
+			return {'error' : 'token is invalid'}, 401
 		return f(*args, **kwargs)
 	return decorated
 
@@ -146,12 +146,12 @@ class Settings(Resource):
 			password = data["newpassword"]
 			password = password.encode('UTF-8')
 			hashedpassword = bcrypt.hashpw(password, bcrypt.gensalt())
-			cur.execute("UPDATE users SET hashedpassword='%s' FROM users WHERE name='%s' OR email = '%s'" % (hashedpassword, username, username))
+			cur.execute("UPDATE users SET hashedpassword='%s' WHERE username='%s' OR email = '%s'" % (hashedpassword.decode('UTF-8'), username, username))
 		if data['newemail']:
 			# change email
 			email = data['newemail']
 			cur.execute("UPDATE users SET email='%s' WHERE username='%s' OR email='%s'" % (email, username, username))
-		cur.commit()
+		conn.commit()
 		cur.close()
 		return {"data" : "success"}, 200
 
@@ -160,7 +160,7 @@ class Settings(Resource):
 		cur = conn.cursor()
 		user_id = get_user_id(cur)
 		# delete from users
-		cur.execute("DELETE FROM users WHERE userId=%s" % user_id)
+		cur.execute("DELETE FROM users WHERE id=%s" % user_id)
 		# delete all subscriptions
 		cur.execute("DELETE FROM subscriptions WHERE userId=%s" % user_id)
 		# delete podcast account
@@ -173,7 +173,7 @@ class Settings(Resource):
 		cur.execute("DELETE FROM searchqueries WHERE userId=%s" % user_id)
 		# delete rejected recommendations
 		cur.execute("DELETE FROM rejectedrecommendations WHERE userId=%s" % user_id)
-		cur.commit()
+		conn.commit()
 		cur.close()
 		return {"data" : "account deleted"}, 200
 
