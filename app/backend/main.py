@@ -56,7 +56,6 @@ class Login(Resource):
 		# Check if username or email
 		cur = conn.cursor()
 		# Check if username exists
-		# cur.execute("SELECT password FROM users WHERE username='%s'" % username)
 		cur.execute("SELECT username, hashedpassword FROM users WHERE username='%s' OR email='%s'" % (username, username))
 		res = cur.fetchone()
 		if res:
@@ -71,7 +70,6 @@ class Login(Resource):
 
 
 class Users(Resource):
-	#signup
 	def post(self):
 		cur = conn.cursor()
 		username = request.form.get('username').lower()
@@ -139,7 +137,7 @@ class Settings(Resource):
 		data = jwt.decode(request.headers['token'], app.config['SECRET_KEY'])
 		username = data['user']
 		cur = conn.cursor()
-		cur.execute("SELECT email FROM users WHERE name='%s'" % username)
+		cur.execute("SELECT email FROM users WHERE username='%s'" % username)
 		return cur.fetchone()[0]
 		
 	@token_required
