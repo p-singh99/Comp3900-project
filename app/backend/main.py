@@ -57,11 +57,10 @@ class Login(Resource):
 		cur = conn.cursor()
 		# Check if username exists
 		# cur.execute("SELECT password FROM users WHERE username='%s'" % username)
-		cur.execute("SELECT username, hashedpassword FROM users WHERE username='%s' OR email='%s'" % (username, username))
+		cur.execute("SELECT hashedpassword FROM users WHERE username='%s' OR email='%s'" % (username, username))
 		res = cur.fetchone()
 		if res:
-			username = res[0].strip()
-			pw = res[1].strip()
+			pw = res[0].strip()
 			pw = pw.encode('UTF-8')
 			cur.close()
 			password = request.form.get('password')
