@@ -5,6 +5,8 @@ import { API_URL } from './../constants';
 import {saveToken} from './../auth-functions'
 import {useHistory} from 'react-router-dom';
 import { Helmet } from 'react-helmet';
+import { checkPassword, checkPasswordsMatch, checkField } from './../validation-functions';
+
 
 // General error eg network error
 // function displayError(error) {
@@ -26,16 +28,6 @@ function displaySignupErrors(errors) {
     errorElem.textContent += msg + '.\n';
   }
   errorElem.style.visibility = 'visible';
-}
-
-// change
-function displayPasswordError(msg) {
-  document.getElementById("password-error").textContent = msg;
-  document.getElementById("password-error").style.visibility = 'visible';
-}
-
-function removePasswordError() {
-  document.getElementById("password-error").style.visibility = 'hidden';
 }
 
 // if we can add password2change() as a once event listener, can do it this way - only display doesn't match message after password2 is changed once
@@ -62,48 +54,6 @@ function removePasswordError() {
 //     if ()
 //   }
 // }
-
-function checkPassword() {
-  const form = document.forms['signUp-form'];
-  const password1Elem = form.elements.password1;
-  if (password1Elem.validity.tooShort) {
-    displayPasswordError("Password too short");
-  } else if (password1Elem.validity.tooLong) {
-    displayPasswordError("Password too long");
-  } else if (! password1Elem.validity.valid) {
-    displayPasswordError("Password missing requirements")
-  } else {
-    checkPasswordsMatch();
-  }
-}
-
-function checkPasswordsMatch() {
-  const form = document.forms['signUp-form'];
-  const password1 = form.elements.password1.value;
-  const password2 = form.elements.password2.value;
-  if (password1 !== password2) {
-    displayPasswordError("Passwords don't match");
-  } else {
-    removePasswordError();
-  }
-}
-
-function checkField(event) {
-  let field = event.target;
-  // let correct = /^([a-zA-z0-9_-]{3,64})$/.test(username);
-  let errorElem = field.nextSibling;
-  if (field.validity.valid) {
-    // document.getElementById("username-error").textContent = "";
-    // errorID = `${field.id.split("-")[0]}-error`;
-    // document.getElementById(errorID).style.visibility = "hidden";
-    errorElem.style.visibility = 'hidden';
-  } else {
-    // document.getElementById("username-error").textContent = "Invalid username";
-    // document.getElementById(errorID).style.visibility = "visible";
-    errorElem.style.visibility = 'visible';
-  }
-}
-
 
 function SignUp() {
   const history = useHistory();
@@ -182,7 +132,7 @@ function SignUp() {
             <div>
               <p className="password-text">Password</p>
               { <p className="form-info">10-64 characters. Must contain a lower case letter and at least one number, uppercase letter or symbol (!@#$%^&amp;*()_-+={}]:;'&quot;&lt;&#44;&gt;.?/|\~`).</p> }
-              <input type="password" className="password-input" name="password1" onInput={checkPassword} required minLength="10" maxLength="64" pattern="(?=.*[a-z])((?=.*\d)|(?=.*[A-Z])|(?=.*[!@#$%^&amp;*()_\-+=\{}\]:;'&quot;<,>.?\/|\\~`])).{0,}"/>
+              <input type="password" className="password-input" name="password1" onInput={checkPassword} minLength="10" maxLength="64" pattern="(?=.*[a-z])((?=.*\d)|(?=.*[A-Z])|(?=.*[!@#$%^&amp;*()_\-+=\{}\]:;'&quot;<,>.?\/|\\~`])).{0,}"/>
             </div>
             <div>
               <p className="password-text">Confirm Password</p> {/* two have the same id */}

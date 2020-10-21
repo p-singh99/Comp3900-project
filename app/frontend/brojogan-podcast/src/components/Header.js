@@ -34,7 +34,7 @@ function Header() {
   const settingsOptions = isLoggedIn() ?
   [
     {text: 'Logout', onClick: logoutHandler},
-    {text: 'Change email', onClick: () => alert('Change email')}
+    {text: 'Account settings', onClick: () => history.push("/settings")}
   ]
   :
   [
