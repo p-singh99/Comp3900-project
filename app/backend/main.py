@@ -2,6 +2,7 @@ from flask import Flask, jsonify, request, make_response
 from flask_restful import Api, Resource
 from flask_cors import CORS, cross_origin
 import psycopg2
+from psycopg2 import pool
 import jwt
 import bcrypt
 import datetime
@@ -15,7 +16,17 @@ CORS(app)
 
 #CHANGE SECRET KEY
 app.config['SECRET_KEY'] = 'secret_key'
-conn = psycopg2.connect(dbname="ultracast", user="brojogan", password="GbB8j6Op", host="polybius.bowdens.me", port=5432)
+conn_pool = psycopg2.pool.ThreadedConnectionPool(1, 3,\
+	 dbname="ultracast", user="brojogan", password="GbB8j6Op", host="polybius.bowdens.me", port=5432)
+
+def get_conn():
+	conn = conn_pool.getconn()
+	cur = conn.cursor()
+	return conn, cur
+
+def close_conn(conn, cur):
+	cur.close()
+	conn_pool.putconn(conn)
 
 def create_token(username):
 	token = jwt.encode({'user' : username, 'exp' : datetime.datetime.utcnow() + datetime.timedelta(minutes=20)}, app.config['SECRET_KEY'])
@@ -54,15 +65,15 @@ class Login(Resource):
 		username = request.form.get('username').lower()
 		password = request.form.get('password')
 		# Check if username or email
-		cur = conn.cursor()
+		conn, cur = get_conn()
 		# Check if username exists
 		cur.execute("SELECT username, hashedpassword FROM users WHERE username='%s' OR email='%s'" % (username, username))
 		res = cur.fetchone()
+		close_conn(conn, cur)
 		if res:
 			username = res[0].strip()
 			pw = res[1].strip()
 			pw = pw.encode('UTF-8')
-			cur.close()
 			password = request.form.get('password')
 			if bcrypt.checkpw(password.encode('UTF-8'), pw):
 				return {'token' : create_token(username), 'user': username}, 200
@@ -71,7 +82,7 @@ class Login(Resource):
 
 class Users(Resource):
 	def post(self):
-		cur = conn.cursor()
+		conn, cur = get_conn()
 		username = request.form.get('username').lower()
 		email = request.form.get('email').lower()
 		passw = request.form.get('password')
@@ -94,6 +105,7 @@ class Users(Resource):
 			return {"error": error_msg}, 409
 		cur.execute("insert into users (username, email, hashedpassword) values (%s, %s, %s)", (username, email, hashed.decode("UTF-8")))
 		conn.commit()
+		close_conn(conn, cur)
 		# return token
 		return {'token' : create_token(username), 'user': username}, 201
 
@@ -106,10 +118,10 @@ class Podcasts(Resource):
 		if search is None:
 			return {"data": "Bad Request"}, 400
 		# todo: try catch this
+		conn, cur = get_conn()
 		startNum = request.args.get('offset')
 		limitNum = request.args.get('limit')
 
-		cur = conn.cursor()
 		cur.execute("""SELECT count(s.userid), p.title, p.author, p.description, p.id
 	     			FROM   Subscriptions s
 	     				FULL OUTER JOIN Podcasts p
@@ -129,15 +141,17 @@ class Podcasts(Resource):
 			description = p[3]
 			pID = p[4]
 			results.append({"subscribers" : subscribers, "title" : title, "author" : author, "description" : description, "pid" : pID})
+		close_conn(conn, cur)
 		return results, 200
 
 class Settings(Resource):
 	@token_required
 	def get(self):
+		conn, cur = get_conn()
 		data = jwt.decode(request.headers['token'], app.config['SECRET_KEY'])
 		username = data['user']
-		cur = conn.cursor()
 		cur.execute("SELECT email FROM users WHERE username='%s'" % username)
+		close_conn(conn, cur)
 		return cur.fetchone()[0]
 		
 	@token_required
@@ -145,23 +159,30 @@ class Settings(Resource):
 		data = jwt.decode(request.headers['token'], app.config['SECRET_KEY'])
 		username = data['user']
 		args = request.get_json()
-		cur = conn.cursor()
-		if args["newpassword"]:
-			# change password
-			password = args["newpassword"]
-			password = password.encode('UTF-8')
-			hashedpassword = bcrypt.hashpw(password, bcrypt.gensalt())
-			cur.execute("UPDATE users SET hashedpassword='%s' WHERE username='%s' OR email = '%s'" % (hashedpassword.decode('UTF-8'), username, username))
-		if args['newemail']:
-			# change email
-			cur.execute("UPDATE users SET email='%s' WHERE username='%s' OR email='%s'" % (args['newemail'], username, username))
-		conn.commit()
-		cur.close()
-		return {"data" : "success"}, 200
+		conn, cur = get_conn()
+		# check current password
+		cur.execute("SELECT hashedpassword FROM users WHERE username='%s'" % username)
+		old_pw = cur.fetchone()[0].strip()
+		if bcrypt.checkpw(args["oldpassword"].encode('UTF-8'), old_pw):
+			if args["newpassword"]:
+				if args["oldpassword"] != args["newpassword"]:
+					# change password
+					password = args["newpassword"]
+					password = password.encode('UTF-8')
+					hashedpassword = bcrypt.hashpw(password, bcrypt.gensalt())
+					cur.execute("UPDATE users SET hashedpassword='%s' WHERE username='%s' OR email = '%s'" % (hashedpassword.decode('UTF-8'), username, username))
+			if args['newemail']:
+				# change email
+				cur.execute("UPDATE users SET email='%s' WHERE username='%s' OR email='%s'" % (args['newemail'], username, username))
+			conn.commit()
+			close_conn(conn, cur)
+
+			return {"data" : "success"}, 200
+		return {}, 400
 
 	@token_required
 	def delete(self):
-		cur = conn.cursor()
+		conn, cur = get_conn()
 		user_id = get_user_id(cur)
 		# delete from users
 		cur.execute("DELETE FROM users WHERE id=%s" % user_id)
@@ -178,16 +199,16 @@ class Settings(Resource):
 		# delete rejected recommendations
 		cur.execute("DELETE FROM rejectedrecommendations WHERE userId=%s" % user_id)
 		conn.commit()
-		cur.close()
+		close_conn(conn,cur)
 		return {"data" : "account deleted"}, 200
 
 
 class Podcast(Resource):
 	def get(self, id):
-		cur = conn.cursor()
+		conn, cur = get_conn()
 		cur.execute("SELECT rssFeed FROM Podcasts WHERE id=(%s)", (id,))
 		res = cur.fetchone()
-		cur.close()
+		close_conn(conn,cur)
 		if res:
 			url = res[0]
 			resp = requests.get(url)
