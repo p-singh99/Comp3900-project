@@ -2,6 +2,7 @@ from flask import Flask, jsonify, request, make_response
 from flask_restful import Api, Resource
 from flask_cors import CORS, cross_origin
 import psycopg2
+from psycopg2 import pool
 import jwt
 import bcrypt
 import datetime
@@ -16,16 +17,12 @@ CORS(app)
 
 #CHANGE SECRET KEY
 app.config['SECRET_KEY'] = 'secret_key'
-conn = psycopg2.connect(dbname="ultracast", user="brojogan", password="GbB8j6Op", host="polybius.bowdens.me", port=5432)
+pool = psycopg2.pool.ThreadedConnectionPool(2,5, dbname="ultracast", user="brojogan", password="GbB8j6Op", host="polybius.bowdens.me", port=5432)
 
 def create_token(username):
 	token = jwt.encode({'user' : username, 'exp' : datetime.datetime.utcnow() + datetime.timedelta(minutes=20)}, app.config['SECRET_KEY'])
 	return token.decode('UTF-8')
 
-# def get_db():
-# 	# conn = psycopg2.connect(host="localhost", database="pod", user="postgres", password="m")
-# 	cur = conn.cursor()
-# 	return conn, cur
 
 
 def token_required(f):
@@ -56,6 +53,7 @@ class Login(Resource):
 		username = request.form.get('username')
 		password = request.form.get('password')
 		# Check if username or email
+		conn = pool.getconn()
 		cur = conn.cursor()
 		# Check if username exists
 		# cur.execute("SELECT password FROM users WHERE username='%s'" % username)
@@ -69,12 +67,15 @@ class Login(Resource):
 			hashed = bcrypt.hashpw(b"name", bcrypt.gensalt())
 			if bcrypt.checkpw(password.encode('UTF-8'), pw):
 				return {'token' : create_token(username)}, 200
+		cur.close()
+		pool.putconn(conn)
 		return {"data" : "Login Failed"}, 401
 
 
 class Users(Resource):
 	#signup
 	def post(self):
+		conn = pool.getconn()
 		cur = conn.cursor()
 		username = request.form.get('username').lower()
 		email = request.form.get('email').lower()
@@ -99,6 +100,8 @@ class Users(Resource):
 			return {"error": error_msg}, 409
 		cur.execute("insert into users (username, email, hashedpassword) values (%s, %s, %s)", (username, email, hashed.decode("UTF-8")))
 		conn.commit()
+		cur.close()
+		pool.putcon(conn)
 		# return token
 		return {'token' : create_token(username)}, 201
 
@@ -109,10 +112,12 @@ class Users(Resource):
 		token = request.headers['token']
 		data = jwt.decode(token, app.config['SECRET_KEY'])
 		sql = "DELETE FROM users WHERE username='%s';" % data['user']
+		conn = pool.getconn()
 		cur = conn.cursor()
 		cur.execute(sql)
 		conn.commit()
 		cur.close()
+		pool.putcon(conn)
 		return {"data": "Account Deleted"}, 200
 
 
@@ -126,7 +131,7 @@ class Podcasts(Resource):
 		# todo: try catch this
 		startNum = request.args.get('offset')
 		limitNum = request.args.get('limit')
-
+		conn = pool.getconn()
 		cur = conn.cursor()
 		cur.execute("""SELECT count(s.userid), p.title, p.author, p.description, p.id
 	     			FROM   Subscriptions s
@@ -139,6 +144,7 @@ class Podcasts(Resource):
 
 		podcasts = cur.fetchall()
 		cur.close()
+		pool.putcon(conn)
 		results = []
 		for p in podcasts:
 			subscribers = p[0]
@@ -160,7 +166,8 @@ class Podcasts(Resource):
 		if (data.feed.terms):
 			categories = set([x.term for x in data.feed.terms])
 
-		conn, curr = get_db()
+		conn = pool.getconn()
+		cur = conn.cursor()
 		cur.execute("""insert into podcasts
 		(title, description, author, thumbnail)
 		values (%s, %s, %s, %s)
@@ -168,6 +175,8 @@ class Podcasts(Resource):
 		""", (title, description, author, thumbnail))
 		podcastId = cur.fetchone()[0]
 		conn.commit()
+		cur.close()
+		pool.putcon(conn)
 
 		for category in categories:
 			cur.execute("select id from categories where name=%s", (category,))
@@ -194,10 +203,12 @@ class Delete(Resource):
 		token = request.headers['token']
 		data = jwt.decode(token, app.config['SECRET_KEY'])
 		sql = "DELETE FROM users WHERE username='%s';" % data['user']
+		conn = pool.getconn()
 		cur = conn.cursor()
 		cur.execute(sql)
 		conn.commit()
 		cur.close()
+		pool.putcon(conn)
 		return {"data": "Account Deleted"}, 200
 
 class Settings(Resource):
@@ -218,10 +229,12 @@ class Settings(Resource):
 
 class Podcast(Resource):
 	def get(self, id):
+		conn = pool.getconn()
 		cur = conn.cursor()
 		cur.execute("SELECT rssFeed FROM Podcasts WHERE id=(%s)", (id,))
 		res = cur.fetchone()
 		cur.close()
+		pool.putcon(conn)
 		if res:
 			url = res[0]
 			resp = requests.get(url)
