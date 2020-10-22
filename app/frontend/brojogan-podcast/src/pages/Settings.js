@@ -87,7 +87,7 @@ function Settings() {
   useEffect(() => {
     const fetchEmail = async () => {
       try {
-        const data = await fetchAPI('/user/self/settings');
+        const data = await fetchAPI('/users/self/settings');
         if (data.email) {
           // setCurrentEmail(data.email);
           document.getElementById("new-email-input").value = data.email; // instead of currentEmail

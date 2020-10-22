@@ -151,8 +151,10 @@ class Settings(Resource):
 		data = jwt.decode(request.headers['token'], app.config['SECRET_KEY'])
 		username = data['user']
 		cur.execute("SELECT email FROM users WHERE username='%s'" % username)
+		email = cur.fetchone()[0]
 		close_conn(conn, cur)
-		return cur.fetchone()[0]
+		print(email)
+		return {"email" : email}
 		
 	@token_required
 	def put(self):
@@ -163,7 +165,7 @@ class Settings(Resource):
 		# check current password
 		cur.execute("SELECT hashedpassword FROM users WHERE username='%s'" % username)
 		old_pw = cur.fetchone()[0].strip()
-		if bcrypt.checkpw(args["oldpassword"].encode('UTF-8'), old_pw):
+		if bcrypt.checkpw(args["oldpassword"].encode('UTF-8'), old_pw.encode('utf-8')):
 			if args["newpassword"]:
 				if args["oldpassword"] != args["newpassword"]:
 					# change password
@@ -176,7 +178,6 @@ class Settings(Resource):
 				cur.execute("UPDATE users SET email='%s' WHERE username='%s' OR email='%s'" % (args['newemail'], username, username))
 			conn.commit()
 			close_conn(conn, cur)
-
 			return {"data" : "success"}, 200
 		return {}, 400
 
