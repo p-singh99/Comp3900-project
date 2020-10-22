@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import './../css/SignUp.css';
 import logo from './../images/logo.png';
 import { API_URL } from './../constants';
@@ -16,7 +16,7 @@ function displaySignupError(msg) {
   errorElem.textContent = msg;
   errorElem.style.visibility = 'visible'
 }
-
+const placeholder = '3-64 characters including "-" and "_" with lowercase letters and numbers'
 // sign up fail eg email already exists
 // takes a list
 function displaySignupErrors(errors) {
@@ -108,9 +108,11 @@ function checkField(event) {
 function SignUp() {
   const history = useHistory();
 
+  let [usernameHelpStatus, setUsernameStatus] = useState(false);
+  let [passwordHelpStatus, setPasswordStatus] = useState(false);
+
   function signupHandler(event) {
     event.preventDefault();
-  
     const form = document.forms['signUp-form'];
     const username = form.elements.username;
     const email = form.elements.email;
@@ -144,6 +146,23 @@ function SignUp() {
     }
   }
 
+  useEffect(() => {
+    
+    // Check if user clicked help for password field
+    if (usernameHelpStatus == false) {
+      document.getElementById('help-text-username').style.visibility = "hidden";
+    } else {
+      document.getElementById('help-text-username').style.visibility = "visible";
+    }
+
+    // Check if user clicked help for password field
+    if (passwordHelpStatus == false) {
+      document.getElementById('help-text-password').style.visibility = "hidden";
+    } else {
+      document.getElementById('help-text-password').style.visibility = "visible";
+    }
+  }, [passwordHelpStatus, usernameHelpStatus])
+
 
   return (
     <div id='wrapper'>
@@ -168,10 +187,24 @@ function SignUp() {
           <h1>Sign Up</h1>
           <form id="signUp-form">
             <div id="username-div">
-              <p id="username-text">Username</p>
-              { <p className="form-info">3-64 characters. May contain lowercase letters, numbers, - and _</p> }
+              <p id="username-text">
+                Username
+                <button 
+                  className="signup-help-btn" 
+                  type="button"
+                  onClick = {() => {
+                    setUsernameStatus(!usernameHelpStatus);  
+                  }}
+                >
+                  ?
+                </button>
+                <p className="help-text" id="help-text-username">
+                3-64 characters including "-" and "_" with lowercase <br /> letters and numbers.
+                </p>
+              </p>
+              { <p className="form-info"></p> }
               {/* <input type="text" id="username-input" name="username" required onChange={checkUsername} minlength="3" maxlength="64" pattern="[a-zA-z0-9_-]+" title="3-64 characters. May contain uppercase and lowercase letters, numbers, - and _"/> */}
-              <input type="text" id="username-input" name="username" onChange={checkField} minLength="3" maxLength="64" pattern="[a-zA-z0-9_-]{3,64}" title="3-64 characters. May contain uppercase and lowercase letters, numbers, - and _"/>
+              <input type="text"  id="username-input" name="username" onChange={checkField} minLength="3" maxLength="64" pattern="[a-zA-z0-9_-]{3,64}" title="3-64 characters. May contain uppercase and lowercase letters, numbers, - and _"/>
               { <p id="username-error" className="error">Invalid username</p> }
             </div>
             <div>
@@ -180,13 +213,27 @@ function SignUp() {
               { <p id="username-error" className="error">Invalid email address</p> }
             </div>
             <div>
-              <p className="password-text">Password</p>
-              { <p className="form-info">10-64 characters. Must contain a lower case letter and at least one number, uppercase letter or symbol (!@#$%^&amp;*()_-+={}]:;'&quot;&lt;&#44;&gt;.?/|\~`).</p> }
+              <p className="password-text">
+                Password
+                <button 
+                  className="signup-help-btn"
+                  type="button" 
+                  onClick={() => {
+                    setPasswordStatus(!passwordHelpStatus);                   
+                  }}
+                >
+                  ?
+                </button>
+                <p className="help-text" id="help-text-password">
+                10-64 characters. Requires a lowercase letter and at least one number, <br /> uppercase letter or symbol (!@#$%^&amp;*()_-+={}]:;'&quot;&lt;&#44;&gt;.?/|\~`).
+                </p>
+              </p>
+              { <p className="form-info"></p> }
               <input type="password" className="password-input" name="password1" onInput={checkPassword} required minLength="10" maxLength="64" pattern="(?=.*[a-z])((?=.*\d)|(?=.*[A-Z])|(?=.*[!@#$%^&amp;*()_\-+=\{}\]:;'&quot;<,>.?\/|\\~`])).{0,}"/>
             </div>
             <div>
-              <p className="password-text">Confirm Password</p> {/* two have the same id */}
-              <input type="password" className="password-input" name="password2" onInput={checkPasswordsMatch}/> {/* should use once attribute */}
+              <p className="password-text" id="confirm-pswd">Confirm Password</p> {/* two have the same id */}
+              <input id="confirm-pswd-input" type="password" className="password-input" name="password2" onInput={checkPasswordsMatch}/> {/* should use once attribute */}
               { <p id="password-error" className="error">Placeholder</p> }
             </div>
             {<pre id="signup-error" className="error">Placeholder</pre> }{ /* pre so that can add new line in textContent */}

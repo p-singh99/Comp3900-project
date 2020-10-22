@@ -74,9 +74,9 @@ function Login() {
           <h1>Log In</h1>
           <form id="login-form" onSubmit={loginHandler}>
             <p id="username-text">Username</p>
-            <input type="text" id="username-input" name="username"/>
+            <input type="text" className="login-input" id="username-input" name="username"/>
             <p id="password-text">Password</p>
-            <input type="password" id="password-input" name="password"/>
+            <input type="password" className="login-input" id="password-input" name="password"/>
             <p id="login-error">Login failed. Username or password incorrect.</p>
             <div id="form-btns">
               <button id="logIn-btn" type="submit">Log In</button>

@@ -53,8 +53,13 @@ li.episode {
 
 #podcast-info {
     display: flex;
+    flex-direction: row;
+    width: 100%;
 }
 
 #podcast-img {
-    padding-right: 50px;
+  background-color: red;
+  margin-left: 20px;
+  margin-right: 20px;
+  margin-top: 20px;
 }
