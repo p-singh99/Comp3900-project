@@ -76,7 +76,7 @@ function Settings() {
       // confirmation popup?
       fetchAPI('/users/self/settings', 'put', data)
         .then(() => {
-          displayMessage("success");
+          displayMessage("Success");
         })
         .catch(err => {
           displayMessage(err);
