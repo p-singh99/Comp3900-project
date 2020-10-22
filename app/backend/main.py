@@ -7,6 +7,7 @@ import bcrypt
 import datetime
 from functools import wraps
 import requests
+import feedparser
 
 
 app = Flask(__name__)
@@ -147,6 +148,43 @@ class Podcasts(Resource):
 			pID = p[4]
 			results.append({"subscribers" : subscribers, "title" : title, "author" : author, "description" : description, "pid" : pID})
 		return results, 200
+
+	@token_required
+	def post(self):
+		rssfeed = request.form.get('rssfeed')
+		data = feedparser.parse(rssfeed)
+		title = data.feed.title
+		description = data.feed.description
+		author = data.feed.author
+		thumbnail = data.feed.image.href
+		if (data.feed.terms):
+			categories = set([x.term for x in data.feed.terms])
+
+		conn, curr = get_db()
+		cur.execute("""insert into podcasts
+		(title, description, author, thumbnail)
+		values (%s, %s, %s, %s)
+		returning id
+		""", (title, description, author, thumbnail))
+		podcastId = cur.fetchone()[0]
+		conn.commit()
+
+		for category in categories:
+			cur.execute("select id from categories where name=%s", (category,))
+			res = cur.fetchone()
+			categoryId = -1
+			if res is None:
+				# we need to add the new category
+				cur.execute("insert into categories (name) values (%s) returning id", (category,))
+				categoryId = cur.fetchone()[0]
+			else:
+				categoryId = res[0]
+			# we now have a category id and podcast id
+			cur.execute("insert into podcastCategories (podcastId, categoryId) values (%s,%s)",
+				(podcastId, categoryId))
+		return {"podcastId": podcastId}
+
+
 
 class Delete(Resource):
 	#@token_required
