@@ -42,7 +42,7 @@ client.connect(err => {
                 }
                 console.log("   -- got feed for url '" + url + "'");
                 try {
-                    let res = await client.query("insert into podcasts values (default, $1, $2, $3, $4, $5) returning id",
+                    let res = await client.query("insert into podcasts (rssfeed, title, author, description, thumbnail) values ($1, $2, $3, $4, $5) returning id",
                                  [url, feed.title, feed.itunes ? feed.itunes.author : null, feed.description, feed.itunes ? feed.itunes.image : null]
                                 );
                     if (res.rowCount != 1) {
@@ -69,6 +69,7 @@ client.connect(err => {
                         console.error(error);
                     }
                 }
+                console.log(" for " + url + " categories is " + categories);
                 for (let category of categories) {
                     try {
                         let res = await client.query("select * from categories where name = $1",
@@ -105,6 +106,7 @@ client.connect(err => {
                                                            [podcastid, categoryid]);
                         } catch (error) {
                             console.error("    -- something went wrong inserting the new podcast category");
+                            console.error("      -- podcastid was " + podcastid + ", categoryid was " + categoryid);
                             console.error(error);
                             return;
                         }
