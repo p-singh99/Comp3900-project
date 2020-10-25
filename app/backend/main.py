@@ -227,8 +227,30 @@ class Podcast(Resource):
 
 class Recommendations(Resource):
 	def get(self):
+		recs = []
 		conn, cur = get_conn()
-
+		user_id = get_user_id(cur)
+		# Finds the most recently listened to podcasts that are not subscribed to
+		cur.execute("select p.title from podcasts p, listens l where p.id = l.podcastid and l.userid=%s and \
+			p.id not in (select p.id from podcasts p, subscriptions s where s.userid=%s and s.podcastid=p.id) \
+				order by l.listendate DESC Limit 10;" % (user_id, user_id))
+		for i in cur.fetchall():
+			recs.append(i)
+		# ADD sql to find podcasts from search queries
+		
+		# Finds the podcasts that share the most amount of categories with subscribed podcasts
+		cur.execute("select p.title, count(p.title) from podcasts p, podcastcategories pc, categories c \
+			where p.id=pc.podcastid and pc.categoryid=c.id and c.id in (select distinct c.id from categories c, subscriptions s, podcastcategories pc \
+				where s.userId=%s and s.podcastid = pc.podcastid and pc.categoryid = c.id) and \
+					p.title not in (select p.title from podcasts p, subscriptions s where p.id = s.podcastid and \
+						s.userid=%s) group by p.title order by count(p.title) DESC;" % (user_id, user_id))
+		for i in cur.fetchall():
+			recs.append(i)
+		recs = recs[:10]
+		print(recs)
+		close_conn(conn, cur)
+		return {"something" : recs}
+			
 
 
 api.add_resource(Unprotected, "/unprotected")
@@ -238,6 +260,7 @@ api.add_resource(Users, "/users")
 api.add_resource(Settings, "/users/self/settings")
 api.add_resource(Podcasts, "/podcasts")
 api.add_resource(Podcast, "/podcasts/<int:id>")
+api.add_resource(Recommendations, "/self/recommendations")
 
 
 if __name__ == '__main__':
