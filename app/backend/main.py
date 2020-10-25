@@ -1,5 +1,5 @@
 from flask import Flask, jsonify, request, make_response
-from flask_restful import Api, Resource
+from flask_restful import Api, Resource, reqparse
 from flask_cors import CORS, cross_origin
 import psycopg2
 from psycopg2 import pool
@@ -153,15 +153,19 @@ class Settings(Resource):
 		cur.execute("SELECT email FROM users WHERE username='%s'" % username)
 		email = cur.fetchone()[0]
 		close_conn(conn, cur)
-		print(email)
 		return {"email" : email}
 		
 	@token_required
 	def put(self):
 		data = jwt.decode(request.headers['token'], app.config['SECRET_KEY'])
 		username = data['user']
-		args = request.get_json()
+		# args = request.get_json()
 		conn, cur = get_conn()
+		parser = reqparse.RequestParser(bundle_errors=True)
+		parser.add_argument('oldpassword', type=str, required=True, help="Need old password", location="json")
+		parser.add_argument('newpassword', type=str, location="json")
+		parser.add_argument('newemail', type=str, location="json")
+		args = parser.parse_args()
 		# check current password
 		cur.execute("SELECT hashedpassword FROM users WHERE username='%s'" % username)
 		old_pw = cur.fetchone()[0].strip()
@@ -219,6 +223,12 @@ class Podcast(Resource):
 				return {}, 500 # 500 might not the right code
 		else:
 			return {}, 404
+
+class Recommendations(Resource):
+	def get(self):
+		conn, cur = get_conn()
+
+
 
 api.add_resource(Unprotected, "/unprotected")
 api.add_resource(Protected, "/protected")
