@@ -30,6 +30,7 @@ FLASK_APP=main.py flask run
 | POST        | `/users/self/subscriptions`                                  | `{"id": <podcastID>}` | | Subscribe to a podcast |
 | DELETE      | `/users/self/subscriptions/<podcastID>`                      |                       | | Unsubscribe from a podcast |
 | GET         | `/users/self/subscriptions`                                  |                       | | Get list of subscribed podcasts - IDs and maybe the actual podcast info as well, to save an RTT from follow up requests? |
+| GET         | `/users/self/recommendations`                        |                       | | Get list of podcast recommendations |
 | GET         | `/users/self/rejectedrecommendations`                        |                       | | Get list of rejected podcast recommendations |
 | POST        | `/users/self/rejectedrecommendations`                        | `{"id": <podcastID>}` | | Add rejected recommendation |
 | GET         | `/users/self/history?offset=<startNum>&limit=<limitNum>&podcast=<podcastID>` |       | | Get listening history. With podcast set, returns listening history for a particular podcast. |
