@@ -91,3 +91,10 @@ input.settings {
   font-weight: bold;
   font-size: 1.1rem;
 }
+
+.settings-error.small {
+  /* color: aquamarine; */
+  color: #b442c5;
+  font-size: 1rem;
+  visibility: hidden;
+}

@@ -18,8 +18,8 @@ function handleDelete(event) {
     return;
   }
 
-  let body = { "password": password };
-  fetchAPI('/users/self/settings', 'delete', body, false)
+  let body = { "oldpassword": password };
+  fetchAPI('/users/self/settings', 'delete', body)
     .then(() => {
       alert("Success. Account deleted.");
       logoutHandler();
@@ -35,6 +35,7 @@ function Settings() {
   const [error, setError] = useState("");
   const [deleteShow, setDeleteShow] = useState(false);
   const [disabled, setDisabled] = useState(true);
+  const [emailDisabled, setEmailDisabled] = useState(true);
 
   function displayMessage(msg) {
     setError(msg.toString());
@@ -104,6 +105,7 @@ function Settings() {
         console.log(error);
         displayMessage(error);
       }
+      setEmailDisabled(false);
     }
     fetchEmail();
   }, []);
@@ -119,7 +121,7 @@ function Settings() {
         <div>
           <label htmlFor="new-email-input">Email</label>
           {/* <input type="email" id="new-email-input" name="email" required className="settings" pattern="[a-zA-Z0-9%+_.-]+@[a-zA-Z0-9.-]+\.[A-Za-z0-9]+" maxLength="100" /> */}
-          <input type="email" id="new-email-input" name="email" required className="settings" maxLength="100" />
+          <input type="email" id="new-email-input" name="email" required disabled={emailDisabled} className="settings" maxLength="100" />
         </div>
         <div>
           <p className="form-info">10-64 characters. Must contain a lower case letter and at least one number, uppercase letter or symbol (!@#$%^&amp;*()_-+={}]:;'&quot;&lt;&#44;&gt;.?/|\~`).</p>
@@ -130,7 +132,7 @@ function Settings() {
         <div>
           <label htmlFor="new-password-input2">Confirm new password</label>
           <input type="password" id="new-password-input2" className="new-password-input settings" name="password2" onInput={(event) => checkPasswordsMatch(event, document.forms["settings-form"])} /> {/* should use once attribute */}
-          <p id="password-error" className="error">Placeholder</p>
+          <p id="password-error" className="settings-error small">Placeholder</p>
         </div>
         <div>
           <p>Enter your current password to confirm your identity.</p>
@@ -145,7 +147,7 @@ function Settings() {
 
       <h2 id="delete-heading">Delete Account</h2>
       <p>This action is permanent and cannot be undone. This will delete your account including all subscriptions, listening history and ratings.</p>
-      <button className="settings-btn delete-btn" onClick={() => { console.log("show"); setDeleteShow(true) }}>Delete Account</button>
+      <button className="settings-btn delete-btn" onClick={() => { setDeleteShow(true) }}>Delete Account</button>
 
       {/* Bootstrap requires importing bootstrap css which screws everything up because they couldn't be bothered using bootstrap-specific selectors */}
       <Modal show={deleteShow} onHide={hideModal}>
@@ -169,7 +171,6 @@ function Settings() {
           <input type="submit" form="delete-form" disabled={disabled} className="settings-btn delete-btn" id="delete-btn" value="Delete my account" />
         </Modal.Footer>
       </Modal>
-
 
     </div >
   )
