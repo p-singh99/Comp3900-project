@@ -3,6 +3,7 @@ import { Helmet } from 'react-helmet';
 import { useParams } from 'react-router-dom';
 import { getPodcastFromXML } from '../rss';
 import { API_URL } from '../constants';
+import AudioPlayer from 'react-h5-audio-player';
 import './../css/Description.css';
 
 // !! what happens if the description is invalid html, will it break the whole page?
@@ -160,16 +161,17 @@ function Description() {
         <div id="podcast-info">
           {podcast.image && <img id="podcast-img" src={podcast.image} alt="Podcast icon" style={{ height: '300px', width: '300px' , minWidth: '300px'}}></img>}
           <div id="podcast-name-author">
-            <h1 id="podcast-name">{podcast.title}</h1>
-            <h3 id="podcast-author">{podcast.author}</h3>
-            <p id="podcast-description" dangerouslySetInnerHTML={{ __html: sanitiseDescription(podcast.description) }}></p>
+            <h1 id="podcast-name" className="podcast-heading">{podcast.title}</h1>
+            <h5 id="podcast-author">{podcast.author}</h5>
+            <p id="podcast-description" /*dangerouslySetInnerHTML={{ __html: sanitiseDescription(podcast.description) }}*/></p>
             {podcastDescription}
           </div>
         </div>
       </div>
     )
   }
-
+  let e = [];
+  e.push(episodes[0]);
   return (
     <div id="podcast">
       <Helmet>
@@ -194,14 +196,17 @@ function Description() {
               <li className="episode">
                 {/* make this flexbox or grid? */}
                 <div className="head">
-                  <span className="date">{getDate(episode.timestamp)}</span>
                   <span className="title">{episode.title}</span>
+                  <span className="date">{getDate(episode.timestamp)}</span>
                 </div>
                 <div className="play">
                   <span className="duration">{episode.duration}</span>
                   {/* <button className="play" eid={episode.guid} onClick={(event) => playEpisode(event, setPlaying, episodes)}>Play</button> */}
-                  <audio src={episode.url} controls preload="none"></audio>
+                  <audio id="audioCTRL" src={episode.url} controls preload="none"></audio>
                   <button className="download" eid={episode.guid} onClick={downloadEpisode}>Download</button>
+                </div>
+                <div>
+                  <AudioPlayer onPlay={console.log(`URL: ${episode.url}`)} src={episode.url} showFilledProgress={true}/>
                 </div>
                 {/* guid won't always work because some of them will contain invalid characters I think ? */}
                 {description}
