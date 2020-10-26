@@ -113,8 +113,7 @@ function toggleDescription(event) {
   // maybe want to do this fancier using js not css
 }
 
-// function Description({ setPlaying }) {
-function Description() {
+function Description({ setPlaying }) {
   const [episodes, setEpisodes] = useState([]);
   const [podcast, setPodcast] = useState(<h1>Loading...</h1>);
   const [podcastTitle, setPodcastTitle] = useState(""); // overlaps with above
@@ -196,7 +195,7 @@ function Description() {
                 </div>
                 <div className="play">
                   <span className="duration">{episode.duration}</span>
-                  {/* <button className="play" eid={episode.guid} onClick={(event) => playEpisode(event, setPlaying, episodes)}>Play</button> */}
+                  <button className="play" eid={episode.guid} onClick={(event) => playEpisode(event, setPlaying, episodes)}>Play</button>
                   <audio src={episode.url} controls preload="none"></audio>
                   <button className="download" eid={episode.guid} onClick={downloadEpisode}>Download</button>
                 </div>

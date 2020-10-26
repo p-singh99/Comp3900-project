@@ -14,11 +14,21 @@ import Recommended from './pages/Recommended';
 import Subscriptions from './pages/Subscriptions';
 import About from './pages/About';
 import { isLoggedIn } from './auth-functions';
+import {HowlWrapper} from './playing';
 
 function App() {
   // on app load, check if token valid using useeffect?
 
-  // const [playing, setPlaying] = useState();
+  const [playing, setPlaying] = useState(new HowlWrapper());
+  function changePlaying(episode) {
+    console.log("changed playing to " + episode);
+
+    setPlaying(() => {
+      const hw = new HowlWrapper();
+      hw.loadNew("test", "testname", 0, "https://via.placeholder.com/150");
+      return hw;
+    })
+  }
 
   const defaultComponents = () => (
 
@@ -29,8 +39,7 @@ function App() {
           <NavBar />
           <Route path="/" component={Home} exact />
           <Route path="/history" component={History} exact />
-          <Route path="/podcast/:id" component={Description} exact />
-          {/* <Route path="/podcast/:id" exact render={(props) => (<Description {...props} setPlaying={setPlaying} />)}/> */}
+          <Route path="/podcast/:id" exact render={(props) => (<Description {...props} setPlaying={changePlaying} />)}/>
           <Route path="/recommended" component={Recommended} exact />
           <Route path="/subscriptions" component={Subscriptions} exact />
           <Route path="/about" component={About} exact />
@@ -39,8 +48,7 @@ function App() {
         </div>
       </div>
       <footer>
-        <Footer />
-        {/* <Footer playing={playing} setPlaying={setPlaying} /> */}
+        <Footer currentlyPlaying={playing} setPlaying={changePlaying} />
       </footer>
       {/* move <footer></footer> into Footer component? It breaks it for some reason, makes it overlap with content */}
     </body>

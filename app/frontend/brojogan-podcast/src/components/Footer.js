@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { HowlWrapper, currentlyPlaying } from './../playing.js';
+import { HowlWrapper } from './../playing.js';
 import './../css/Footer.css';
 
 // function storeTime() {
@@ -10,17 +10,13 @@ function sendTime() {
   // get playtime, send to server
 }
 
-function Footer() {
+function Footer({ currentlyPlaying, setPlaying }) {
   return (
     <div id='footer-div'>
       <div id='player'>
-        <img src="" class="thumbnail"></img>
-        <span class="material-icons" id='playpause'>play_arrow</span>
-        <div class="seekbar">
-          seek bar
-        </div>
-        <span class="material-icons" id="volume">volume_up</span>
-        <span class="material-icons" id="rate">speed</span>
+        <img src={currentlyPlaying.thumb} className="thumbnail"></img>
+        {currentlyPlaying.title}
+        <button onclick={currentlyPlaying.play()}>play</button>
       </div>
     </div>
   )

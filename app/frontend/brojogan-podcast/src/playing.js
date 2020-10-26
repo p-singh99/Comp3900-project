@@ -122,6 +122,14 @@ export class HowlWrapper {
     get rate() {
         return this._rate;
     }
+
+    get thumb() {
+        return this._thumb;
+    }
+
+    get title() {
+        return this._title;
+    }
 }
 
-export const currentlyPlaying = HowlWrapper();
+export const currentlyPlaying = new HowlWrapper();
