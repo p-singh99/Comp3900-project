@@ -220,7 +220,7 @@ class Podcast(Resource):
 			if resp.status_code == 200:
 				return {"xml": resp.text}, 200
 			else:
-				return {}, 500 # 500 might not the right code
+				return {}, 502
 		else:
 			return {}, 404
 
