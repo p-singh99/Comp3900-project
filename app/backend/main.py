@@ -9,7 +9,6 @@ import datetime
 from functools import wraps
 import requests
 
-
 app = Flask(__name__)
 api = Api(app)
 CORS(app)
@@ -46,10 +45,15 @@ def token_required(f):
 	return decorated
 
 def get_user_id(cur):
-	token = request.headers['token']
-	data = jwt.decode(token, app.config['SECRET_KEY'])
-	cur.execute("SELECT id FROM users WHERE username ='%s' or email = '%s'" % (data['user'], data['user']))
-	return cur.fetchone()[0]
+	token = request.headers.get('token')
+	if token:
+		try:
+			data = jwt.decode(token, app.config['SECRET_KEY'])
+			cur.execute("SELECT id FROM users WHERE username ='%s' or email = '%s'" % (data['user'], data['user']))
+		except:
+			return None
+		return cur.fetchone()[0]
+	return None
 
 class Unprotected(Resource):
 	def get(self):
@@ -113,12 +117,17 @@ class Users(Resource):
 class Podcasts(Resource):
 	def get(self):
 		# todo: try catch this
-		print(request.args)
 		search = request.args.get('search_query')
 		if search is None:
 			return {"data": "Bad Request"}, 400
 		# todo: try catch this
 		conn, cur = get_conn()
+		# add search query to db
+		user_id = get_user_id(cur)
+		if user_id:
+			cur.execute("insert into searchqueries (userid, query, searchdate) values (%s, '%s', '%s')" \
+				% (user_id, search, datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")))
+		conn.commit()
 		startNum = request.args.get('offset')
 		limitNum = request.args.get('limit')
 
@@ -133,7 +142,6 @@ class Podcasts(Resource):
 	   		   )
 
 		podcasts = cur.fetchall()
-		cur.close()
 		results = []
 		for p in podcasts:
 			subscribers = p[0]
@@ -160,7 +168,6 @@ class Settings(Resource):
 	def put(self):
 		data = jwt.decode(request.headers['token'], app.config['SECRET_KEY'])
 		username = data['user']
-		# args = request.get_json()
 		conn, cur = get_conn()
 		parser = reqparse.RequestParser(bundle_errors=True)
 		parser.add_argument('oldpassword', type=str, required=True, help="Need old password", location="json")
@@ -180,33 +187,43 @@ class Settings(Resource):
 					cur.execute("UPDATE users SET hashedpassword='%s' WHERE username='%s' OR email = '%s'" % (hashedpassword.decode('UTF-8'), username, username))
 			if args['newemail']:
 				# change email
-				cur.execute("UPDATE users SET email='%s' WHERE username='%s' OR email='%s'" % (args['newemail'], username, username))
+				cur.execute("SELECT email FROM users where email='%s'" % (args['newemail']))
+				if cur.fetchone() is None:
+					cur.execute("UPDATE users SET email='%s' WHERE username='%s' OR email='%s'" % (args['newemail'], username, username))
 			conn.commit()
 			close_conn(conn, cur)
 			return {"data" : "success"}, 200
-		return {}, 400
+		return {"error" : "wrong password"}, 400
 
 	@token_required
 	def delete(self):
 		conn, cur = get_conn()
 		user_id = get_user_id(cur)
-		# delete from users
-		cur.execute("DELETE FROM users WHERE id=%s" % user_id)
-		# delete all subscriptions
-		cur.execute("DELETE FROM subscriptions WHERE userId=%s" % user_id)
-		# delete podcast account
-		cur.execute("DELETE FROM podcastratings WHERE userId=%s" % user_id)
-		# delete episode ratings
-		cur.execute("DELETE FROM episoderatings WHERE userId=%s" % user_id)
-		# delete listens
-		cur.execute("DELETE FROM listens WHERE userId=%s" % user_id)
-		# delete seach queries
-		cur.execute("DELETE FROM searchqueries WHERE userId=%s" % user_id)
-		# delete rejected recommendations
-		cur.execute("DELETE FROM rejectedrecommendations WHERE userId=%s" % user_id)
-		conn.commit()
-		close_conn(conn,cur)
-		return {"data" : "account deleted"}, 200
+		parser = reqparse.RequestParser(bundle_errors=True)
+		parser.add_argument('oldpassword', type=str, required=True, help="Need old password", location="json")
+		args = parser.parse_args()
+		cur.execute("SELECT hashedpassword FROM users WHERE id='%s'" % user_id)
+		old_pw = cur.fetchone()[0].strip()
+		if bcrypt.checkpw(args["oldpassword"].encode('UTF-8'), old_pw.encode('utf-8')):
+			# delete from users
+			cur.execute("DELETE FROM users WHERE id=%s" % user_id)
+			# delete all subscriptions
+			cur.execute("DELETE FROM subscriptions WHERE userId=%s" % user_id)
+			# delete podcast account
+			cur.execute("DELETE FROM podcastratings WHERE userId=%s" % user_id)
+			# delete episode ratings
+			cur.execute("DELETE FROM episoderatings WHERE userId=%s" % user_id)
+			# delete listens
+			cur.execute("DELETE FROM listens WHERE userId=%s" % user_id)
+			# delete seach queries
+			cur.execute("DELETE FROM searchqueries WHERE userId=%s" % user_id)
+			# delete rejected recommendations
+			cur.execute("DELETE FROM rejectedrecommendations WHERE userId=%s" % user_id)
+			conn.commit()
+			close_conn(conn,cur)
+			return {"data" : "account deleted"}, 200
+		else:
+			return {"error" : "wrong password"}, 400
 
 
 class Podcast(Resource):
@@ -226,6 +243,7 @@ class Podcast(Resource):
 			return {}, 404
 
 class Recommendations(Resource):
+	@token_required
 	def get(self):
 		recs = []
 		conn, cur = get_conn()
@@ -236,8 +254,23 @@ class Recommendations(Resource):
 				order by l.listendate DESC Limit 10;" % (user_id, user_id))
 		for i in cur.fetchall():
 			recs.append(i)
-		# ADD sql to find podcasts from search queries
+		cur.execute("select query from searchqueries where userid=%s order by searchdate DESC limit 10" % user_id)
 		
+
+		search = "Hello"
+		# ADD sql to find podcasts from search queries
+		cur.execute("""SELECT v.title
+			FROM   searchvector v
+			FULL OUTER JOIN Subscriptions s ON s.podcastId = v.id
+			WHERE  v.vector @@ plainto_tsquery(%s)
+			GROUP BY  (v.title, v.vector)
+		ORDER BY  ts_rank(v.vector, plainto_tsquery(%s)) desc;
+		""",
+		(search,search)
+		)
+		cur.execute("CREATE OR REPLACE VIEW query_results (title) as SELECT v.title FROM searchvector v \
+			FULL OUTER JOIN Subscriptions s ON s.podcastId = v.id WHERE  v.vector @@ plainto_tsquery(%s) \
+				GROUP BY  (v.title, v.vector) ORDER BY  ts_rank(v.vector, plainto_tsquery()) desc;")
 		# Finds the podcasts that share the most amount of categories with subscribed podcasts
 		cur.execute("select p.title, count(p.title) from podcasts p, podcastcategories pc, categories c \
 			where p.id=pc.podcastid and pc.categoryid=c.id and c.id in (select distinct c.id from categories c, subscriptions s, podcastcategories pc \
@@ -247,7 +280,6 @@ class Recommendations(Resource):
 		for i in cur.fetchall():
 			recs.append(i)
 		recs = recs[:10]
-		print(recs)
 		close_conn(conn, cur)
 		return {"something" : recs}
 			
