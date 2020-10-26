@@ -13,7 +13,7 @@ app = Flask(__name__)
 api = Api(app)
 CORS(app)
 
-#CHANGE SECRET KEY
+#CHANGE SECRET KEY 
 app.config['SECRET_KEY'] = 'secret_key'
 conn_pool = psycopg2.pool.ThreadedConnectionPool(1, 3,\
 	 dbname="ultracast", user="brojogan", password="GbB8j6Op", host="polybius.bowdens.me", port=5432)
@@ -131,15 +131,13 @@ class Podcasts(Resource):
 		startNum = request.args.get('offset')
 		limitNum = request.args.get('limit')
 
-		cur.execute("""SELECT count(s.userid), v.title, v.author, v.description, v.id
-	     			FROM   searchvector v
-	     			FULL OUTER JOIN Subscriptions s ON s.podcastId = v.id
-	     			WHERE  v.vector @@ plainto_tsquery(%s)
-	     			GROUP BY  (s.userid, v.title, v.author, v.description, v.id, v.vector)
-				ORDER BY  ts_rank(v.vector, plainto_tsquery(%s)) desc;
-				""",
-				(search,search)
-	   		   )
+		cur.execute("""SELECT count(s.userid), p.title, p.author, p.description, p.id
+	     			FROM   Subscriptions s
+	     				FULL OUTER JOIN Podcasts p
+				ON s.podcastId = p.id
+	     			WHERE  to_tsvector(p.title || ' ' || p.author || ' ' || p.description) @@ plainto_tsquery(%s)
+	     			GROUP BY p.id;""",
+				(search,))
 
 		podcasts = cur.fetchall()
 		results = []
