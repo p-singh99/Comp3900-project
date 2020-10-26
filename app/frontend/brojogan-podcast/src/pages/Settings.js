@@ -9,7 +9,8 @@ import './../css/bootstrap-modal.css'
 // import 'bootstrap/dist/css/bootstrap.min.css';
 
 
-function handleDelete() {
+function handleDelete(event) {
+  event.preventDefault();
   // pop up / modal
   // are you sure? Enter username and password to confirm
   const password = document.getElementById("delete-password-input").value;
@@ -18,19 +19,19 @@ function handleDelete() {
   }
 
   let body = { "password": password };
-  fetchAPI(`/users/self/settings`, 'delete', body, false)
+  fetchAPI('/users/self/settings', 'delete', body, false)
     .then(() => {
       alert("Success. Account deleted.");
       logoutHandler();
     })
     .catch(err => {
-      document.getElementById("error").textContent = err.toString();
+      document.getElementById("delete-error").textContent = err.toString();
     });
 }
 
 
 function Settings() {
-  // const [currentEmail, setCurrentEmail] = useState("Leave unchanged to keep current email address");
+  const [currentEmail, setCurrentEmail] = useState("");
   const [error, setError] = useState("");
   const [deleteShow, setDeleteShow] = useState(false);
   const [disabled, setDisabled] = useState(true);
@@ -59,8 +60,8 @@ function Settings() {
 
     console.log(email.validity);
 
-    if (!email.value && !password1.value) {
-      displayMessage("You haven't made any changes.")
+    if ((! email.value || (currentEmail && email.value === currentEmail)) && !password1.value) {
+      displayMessage("You haven't made any changes.");
     } else if (!oldPassword.value) {
       displayMessage("Please enter current password.");
     } else if (!email.validity.valid || !password1.validity.valid
@@ -73,10 +74,15 @@ function Settings() {
       data.oldpassword = oldPassword.value;
       data.newpassword = password1.value ? password1.value : null;
       data.newemail = email.value ? email.value : null;
+      setError("...");
       // confirmation popup?
       fetchAPI('/users/self/settings', 'put', data)
         .then(() => {
           displayMessage("Success");
+          if (email.value) {
+            setCurrentEmail(email.value);
+          }
+          // refresh?
         })
         .catch(err => {
           displayMessage(err);
@@ -85,15 +91,15 @@ function Settings() {
   }
 
   useEffect(() => {
+    document.getElementById("new-email-input").value = "Loading...";
     const fetchEmail = async () => {
       try {
         const data = await fetchAPI('/users/self/settings');
         if (data.email) {
-          // setCurrentEmail(data.email);
-          document.getElementById("new-email-input").value = data.email; // instead of currentEmail
+          setCurrentEmail(data.email);
+          document.getElementById("new-email-input").value = data.email;
         }
       } catch (error) {
-        // setCurrentEmail("currentemail@address.com"); // this line is for testing, remove
         document.getElementById("new-email-input").value = "Error"; // for testing
         console.log(error);
         displayMessage(error);
@@ -111,24 +117,24 @@ function Settings() {
       <h1>Account Settings - {window.localStorage.getItem('username')}</h1>
       <form id="settings-form" onSubmit={settingsHandler}>
         <div>
-          <label for="new-email-input">Email</label>
+          <label htmlFor="new-email-input">Email</label>
           {/* <input type="email" id="new-email-input" name="email" required className="settings" pattern="[a-zA-Z0-9%+_.-]+@[a-zA-Z0-9.-]+\.[A-Za-z0-9]+" maxLength="100" /> */}
           <input type="email" id="new-email-input" name="email" required className="settings" maxLength="100" />
         </div>
         <div>
           <p className="form-info">10-64 characters. Must contain a lower case letter and at least one number, uppercase letter or symbol (!@#$%^&amp;*()_-+={}]:;'&quot;&lt;&#44;&gt;.?/|\~`).</p>
-          <label for="new-password-input1">New password</label>
+          <label htmlFor="new-password-input1">New password</label>
           <input type="password" id="new-password-input1" className="new-password-input settings" name="password1" onInput={(event) => checkPassword(event, document.forms["settings-form"])} minLength="10" maxLength="64" pattern="(?=.*[a-z])((?=.*\d)|(?=.*[A-Z])|(?=.*[!@#$%^&amp;*()_\-+=\{}\]:;'&quot;<,>.?\/|\\~`])).{0,}" /> {/* should use once attribute */}
         </div>
         <br />
         <div>
-          <label for="new-password-input2">Confirm new password</label>
+          <label htmlFor="new-password-input2">Confirm new password</label>
           <input type="password" id="new-password-input2" className="new-password-input settings" name="password2" onInput={(event) => checkPasswordsMatch(event, document.forms["settings-form"])} /> {/* should use once attribute */}
           <p id="password-error" className="error">Placeholder</p>
         </div>
         <div>
           <p>Enter your current password to confirm your identity.</p>
-          <label for="old-password-input">Current password</label>
+          <label htmlFor="old-password-input">Current password</label>
           <input type="password" className="old-password-input settings" name="old-password" required />
         </div>
         {/* <p id="signup-error" className="error">Placeholder</p> */}
@@ -148,18 +154,19 @@ function Settings() {
         </Modal.Header>
         <Modal.Body>
           Confirm that you want to delete your account by entering your username and password:
-          <form>
-            <label for="delete-username-input">Username </label>
+          <form id="delete-form" onSubmit={handleDelete}>
+            <label htmlFor="delete-username-input">Username </label>
             <input type="text" id="delete-username-input" className="settings" name="username" onInput={checkUsername} />
             <br /><br />
-            <label for="delete-password-input">Password </label>
-            <input type="password" id="delete-password-input" className="settings" name="password" />
+            <label htmlFor="delete-password-input">Password </label>
+            <input type="password" id="delete-password-input" className="settings" name="password" required/>
           </form>
-          <p id="error"></p>
+          <p id="delete-error"></p>
         </Modal.Body>
         <Modal.Footer>
           <button className="settings-btn" onClick={hideModal}>Cancel</button>
-          <button disabled={disabled} className="settings-btn delete-btn" id="delete-btn" onClick={handleDelete}>Delete my account</button>
+          {/* <button disabled={disabled} className="settings-btn delete-btn" id="delete-btn" onClick={handleDelete}>Delete my account</button> */}
+          <input type="submit" form="delete-form" disabled={disabled} className="settings-btn delete-btn" id="delete-btn" value="Delete my account" />
         </Modal.Footer>
       </Modal>
 

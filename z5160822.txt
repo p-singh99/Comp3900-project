@@ -16,3 +16,7 @@ I finished the form validation, processing and api interaction of the login and 
 The end of week 5 was the end of the first sprint.
 
 **Week 6**
+I did the frontend for the user settings page.
+Next week, I'm going to try editing the podcast description page to use infinite scroll rather than loading all episodes at once.
+
+**Week 7**
