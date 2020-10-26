@@ -101,7 +101,7 @@ class Users(Resource):
 		cur.execute("insert into users (username, email, hashedpassword) values (%s, %s, %s)", (username, email, hashed.decode("UTF-8")))
 		conn.commit()
 		cur.close()
-		pool.putcon(conn)
+		pool.putconn(conn)
 		# return token
 		return {'token' : create_token(username)}, 201
 
@@ -117,7 +117,7 @@ class Users(Resource):
 		cur.execute(sql)
 		conn.commit()
 		cur.close()
-		pool.putcon(conn)
+		pool.putconn(conn)
 		return {"data": "Account Deleted"}, 200
 
 
@@ -144,7 +144,7 @@ class Podcasts(Resource):
 
 		podcasts = cur.fetchall()
 		cur.close()
-		pool.putcon(conn)
+		pool.putconn(conn)
 		results = []
 		for p in podcasts:
 			subscribers = p[0]
@@ -176,7 +176,7 @@ class Podcasts(Resource):
 		podcastId = cur.fetchone()[0]
 		conn.commit()
 		cur.close()
-		pool.putcon(conn)
+		pool.putconn(conn)
 
 		for category in categories:
 			cur.execute("select id from categories where name=%s", (category,))
@@ -208,7 +208,7 @@ class Delete(Resource):
 		cur.execute(sql)
 		conn.commit()
 		cur.close()
-		pool.putcon(conn)
+		pool.putconn(conn)
 		return {"data": "Account Deleted"}, 200
 
 class Settings(Resource):
@@ -234,7 +234,7 @@ class Podcast(Resource):
 		cur.execute("SELECT rssFeed FROM Podcasts WHERE id=(%s)", (id,))
 		res = cur.fetchone()
 		cur.close()
-		pool.putcon(conn)
+		pool.putconn(conn)
 		if res:
 			url = res[0]
 			resp = requests.get(url)
