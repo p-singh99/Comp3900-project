@@ -5,75 +5,27 @@ import { getPodcastFromXML } from '../rss';
 import { API_URL } from '../constants';
 import './../css/Description.css';
 
-/*function insertInfo(xml) {
-  const podcast = getPodcastFromXML(xml);
-  if (!podcast) {
-    displayError("Podcast error");
-    return;
-  }
-  
-  console.log(podcast);
-// insert podcast name etc. into page
-  document.getElementById("podcast-name").textContent = podcast["title"];
-  document.getElementById("podcast-author").textContent = podcast["author"];
-  document.getElementById("podcast-description").textContent = podcast["description"];
-  // with the description, they seem to be in html so we somehow need to allow some tags
-  // but obv still prevent xss
-  if (podcast["image"]) {
-    document.getElementById("podcast-img").src = podcast["image"];
-  } else {
-    document.getElementById("podcast-img").remove();
-  }
-
-  const tbody = document.getElementById("episodes").getElementsByTagName("tbody")[0];
-  console.log("starting episodes");
-  // this takes like 2 seconds, will be much faster with virtual DOM
-  // also probably only load a certain number at a time
-  for (const i in podcast["episodes"]) {
-    const episode = podcast["episodes"][i];
-    let row = tbody.insertRow(i);
-    let name = row.insertCell(0);
-    name.textContent = episode["title"];
-
-    let description = row.insertCell(1);
-    description.textContent = episode["description"];
-
-    let duration = row.insertCell(2);
-    duration.textContent = episode["duration"];
-
-    let file = row.insertCell(3);
-    let audio = document.createElement("audio");
-    audio.src = episode["url"];
-    audio.preload = "none";
-    audio.controls = true;
-    file.appendChild(audio);
-    // let link = document.createElement("a");
-    // link.href = episode["url"];
-    // link.textContent = "link";
-    // link.download = "file";
-    // file.appendChild(link);
-  }
-  console.log("finished episodes");
-}*/
+// !! what happens if the description is invalid html, will it break the whole page?
+// eg the a tag doesn't close
 
 // CORS bypass
 async function getRSS(id) {
+  let resp, data;
   try {
-    const resp = await fetch(`${API_URL}/podcasts/${id}`);
-    const data = await resp.json();
-    if (resp.status === 200) {
-      // console.log(data.xml);
-      return data.xml;
-    } else {
-      throw Error("Error in retrieving podcast");
-    }
+    resp = await fetch(`${API_URL}/podcasts/${id}`);
+    data = await resp.json();
   } catch {
     throw Error("Network error");
   }
+  if (resp.status === 200) {
+    // console.log(data.xml);
+    return data.xml;
+  } else if (resp.status === 404) {
+    throw Error("Podcast does not exist");
+  } else {
+    throw Error("Error in retrieving podcast");
+  }
 }
-
-// There actually seems to be not much speed difference between the DOM approach and the React approach
-// I can't tell which is faster
 
 function onTag(tag, html, options) {
   if (tag === 'p') {
@@ -85,18 +37,25 @@ function onTag(tag, html, options) {
 // this will make sure that all rels are nofollow, but it won't add nofollow to links
 function onIgnoreTagAttr(tag, name, value, isWhiteAttr) {
   if (tag === 'a' && name === 'rel') {
-    return 'rel=nofollow';
+    return 'rel=nofollow'; // why does this work? Shouldn't I just return nofollow?
+  } else if (tag === 'a' && name === 'target') {
+    return 'target=_blank;'
   }
   // no return, it does default ie remove attibute
 }
 
 // maybe use DOMPurify instead, and should try to add rel="nofollow" to links
+// also should set target = _blank on all links
+// could also do that in js - get all links and loop through setting the attributes
+// or could set base target = _blank, and then change it on the ones we control
+// this doesn't really feel secure, this third party script could get bugs or be altered
+// should put the script in local folder
 function sanitiseDescription(description) {
   // https://www.npmjs.com/package/xss
   // https://jsxss.com/en/options.
   let options = {
     whiteList: {
-      a: ['href', 'title', 'target'],
+      a: ['href'], // title
       // p: [],
       // strong: []
     },
@@ -108,14 +67,16 @@ function sanitiseDescription(description) {
   return description;
 }
 
+// https://stackoverflow.com/questions/1912501/unescape-html-entities-in-javascript
 function htmlDecode(text) {
   let doc = new DOMParser().parseFromString(text, "text/html");
   return doc.documentElement.textContent;
 }
 
+// this function is for removing tags so they don't show up in text
+// it is not for security sanitisting for innerHTML
 function unTagDescription(description) {
-  description = description.replace(/<[^>]+>/g, ''); // remove HTML tags
-  // description = "&lt;script&gt;alert(1)&lt;/script&gt;"; // the <> are display as text so this seems safe
+  description = description.replace(/<[^>]+>/g, ''); // remove HTML tags - could be flawed
   description = htmlDecode(description);
   return description;
 }
@@ -135,14 +96,14 @@ function getDate(timestamp) {
   return date.toLocaleDateString(undefined, {year: 'numeric', month: 'short', day: 'numeric' }).replace(/,/g,'')/*.toUpperCase()*/;
 }
 
-function playEpisode(event, setPlaying, episodes) {
+function playEpisode(event, setPlaying, episodes, podcastName, podcastID, episodeName) {
   let guid = event.target.getAttribute('eid');
   let episode = episodes.find(x => x.guid === guid);
   console.log(episode);
 
   console.log('playEpisode');
   // put player in footer
-  setPlaying({ src: episode.url });
+  setPlaying({ src: episode.url, podcastName: podcastName, podcastID: podcastID, episodeName: episodeName, episodeID: guid });
 }
 
 function downloadEpisode(event) {
@@ -231,6 +192,7 @@ function Description() {
 
             return (
               <li className="episode">
+                {/* make this flexbox or grid? */}
                 <div className="head">
                   <span className="date">{getDate(episode.timestamp)}</span>
                   <span className="title">{episode.title}</span>
@@ -253,27 +215,6 @@ function Description() {
           })}
         </ul>
       </div>
-
-      {/* <table id="episodes">
-        <thead>
-          <th>Name</th>
-          <th>Description</th>
-          <th>Duration</th>
-          <th>Audio file</th>
-        </thead>
-        <tbody>
-          {episodes.map(episode => {
-            console.log('episode:', Date.now());
-            return (
-            <tr>
-              <td>{episode.title}</td>
-              <td>{shortenDescription(episode.description)}</td>
-              <td>{episode.duration}</td>
-              <td><audio src={episode.url} controls preload="none"></audio></td>
-            </tr>
-          )})}
-        </tbody>
-      </table> */}
     </div>
   );
 }

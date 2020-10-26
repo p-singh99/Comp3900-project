@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import './../css/Footer.css';
 
-function storeTime() {
-  // get playtime, save in localstorage so can resume if refresh
-}
+// function storeTime() {
+//   // get playtime, save in localstorage so can resume if refresh
+// }
 
 function sendTime() {
   // get playtime, send to server

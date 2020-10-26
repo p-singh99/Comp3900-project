@@ -1,30 +1,31 @@
 import React from 'react';
-import { isLoggedIn } from './../auth-functions'
+import { isLoggedIn, getUsername } from './../auth-functions'
 import { Helmet } from 'react-helmet';
 
-function Home() {
-  // change this
-  if (isLoggedIn()) {
-    return (
-      <div>
-         <Helmet>
-          <title>Brojogan Podcasts</title>
-        </Helmet>
-
-        <h1>Welcome back, {window.localStorage.getItem("username")}</h1>
-      </div>
-    );
+// just an idea to try something
+function welcome(newUser) {
+  if (newUser) {
+    return <p>Welcome to BroJogan Podcasts, {getUsername()}</p>
+  } else if (isLoggedIn()) {
+    return <p>Welcome back, {getUsername()}</p>
   } else {
-    return (
-      <div>
-         <Helmet>
-          <title>Brojogan Podcasts</title>
-        </Helmet>
-        
-        <h1>Welcome to the Homepage</h1>
-      </div>
-    );
+    return <p>Welcome to the Homepage</p>
   }
+}
+
+function Home(props) {
+  const newUser = props.location.state ? props.location.state.newUser : false;
+  return (
+    <div>
+      <Helmet>
+        <title>Brojogan Podcasts</title>
+      </Helmet>
+
+      <h1>
+        {welcome(newUser)}
+      </h1>
+    </div>
+  );
 }
 
 export default Home;
