@@ -193,6 +193,7 @@ class Settings(Resource):
 			conn.commit()
 			close_conn(conn, cur)
 			return {"data" : "success"}, 200
+		close_conn(conn,cur)
 		return {"error" : "wrong password"}, 400
 
 	@token_required
@@ -223,6 +224,7 @@ class Settings(Resource):
 			close_conn(conn,cur)
 			return {"data" : "account deleted"}, 200
 		else:
+			close_conn(conn,cur)
 			return {"error" : "wrong password"}, 400
 
 
