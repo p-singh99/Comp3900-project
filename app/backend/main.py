@@ -122,11 +122,11 @@ class Podcasts(Resource):
 		startNum = request.args.get('offset')
 		limitNum = request.args.get('limit')
 
-		cur.execute("""SELECT count(s.userid), v.title, v.author, v.description, v.id
+		cur.execute("""SELECT count(s.podcastid), v.title, v.author, v.description, v.id
 	     			FROM   searchvector v
 	     			FULL OUTER JOIN Subscriptions s ON s.podcastId = v.id
 	     			WHERE  v.vector @@ plainto_tsquery(%s)
-	     			GROUP BY  (s.userid, v.title, v.author, v.description, v.id, v.vector)
+	     			GROUP BY  (s.podcastid, v.title, v.author, v.description, v.id, v.vector)
 				ORDER BY  ts_rank(v.vector, plainto_tsquery(%s)) desc;
 				""",
 				(search,search))
