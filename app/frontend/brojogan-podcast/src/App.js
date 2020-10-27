@@ -14,20 +14,23 @@ import Recommended from './pages/Recommended';
 import Subscriptions from './pages/Subscriptions';
 import About from './pages/About';
 import { isLoggedIn } from './auth-functions';
-import {HowlWrapper} from './playing';
 
 function App() {
   // on app load, check if token valid using useeffect?
 
-  const [playing, setPlaying] = useState(new HowlWrapper());
-  function changePlaying(episode) {
-    console.log("changed playing to " + episode);
-
-    setPlaying(() => {
-      const hw = new HowlWrapper();
-      hw.loadNew("test", "testname", 0, "https://via.placeholder.com/150");
-      return hw;
-    })
+  const [playing, setPlaying] = useState({
+    title: "No Podcast Playing",
+    podcastTitle: "",
+    src: "",
+    thumb: "",
+    guid: "",
+    podcastID: "",
+    progress: 0.0
+  });
+  function changePlaying(state) {
+    console.log("new state is");
+    console.log(state);
+    setPlaying(state);
   }
 
   const defaultComponents = () => (
@@ -48,7 +51,7 @@ function App() {
         </div>
       </div>
       <footer>
-        <Footer currentlyPlaying={playing} setPlaying={changePlaying} />
+        <Footer state={playing} setState={changePlaying} />
       </footer>
       {/* move <footer></footer> into Footer component? It breaks it for some reason, makes it overlap with content */}
     </body>

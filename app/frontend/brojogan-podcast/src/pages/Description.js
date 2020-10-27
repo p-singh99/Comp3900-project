@@ -93,16 +93,6 @@ function getDate(timestamp) {
   return date.toLocaleDateString(undefined, {year: 'numeric', month: 'short', day: 'numeric' }).replace(/,/g,'')/*.toUpperCase()*/;
 }
 
-function playEpisode(event, setPlaying, episodes, podcastName, podcastID, episodeName) {
-  let guid = event.target.getAttribute('eid');
-  let episode = episodes.find(x => x.guid === guid);
-  console.log(episode);
-
-  console.log('playEpisode');
-  // put player in footer
-  setPlaying({ src: episode.url, podcastName: podcastName, podcastID: podcastID, episodeName: episodeName, episodeID: guid });
-}
-
 function downloadEpisode(event) {
   alert(event.target.getAttribute('eid'));
 }
@@ -195,8 +185,22 @@ function Description({ setPlaying }) {
                 </div>
                 <div className="play">
                   <span className="duration">{episode.duration}</span>
-                  <button className="play" eid={episode.guid} onClick={(event) => playEpisode(event, setPlaying, episodes)}>Play</button>
-                  <audio src={episode.url} controls preload="none"></audio>
+                  <button className="play" eid={episode.guid} onClick={(event) => {
+                    console.log("podcast is");
+                    console.log(podcast);
+                    console.log("episode is");
+                    console.log(episode);
+                    setPlaying({
+                      title: episode.title,
+                      podcastTitle: podcast.title,
+                      src: episode.url,
+                      thumb: episode.image ? episode.image : podcast.image,
+                      guid: episode.guid,
+                      podcastID: podcast.id,
+                      progress: 0.0
+                    });
+                  }}>Play</button>
+                  {/*<audio src={episode.url} controls preload="none"></audio>*/}
                   <button className="download" eid={episode.guid} onClick={downloadEpisode}>Download</button>
                 </div>
                 {/* guid won't always work because some of them will contain invalid characters I think ? */}
