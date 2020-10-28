@@ -131,14 +131,22 @@ class Podcasts(Resource):
 		startNum = request.args.get('offset')
 		limitNum = request.args.get('limit')
 
-		cur.execute("""SELECT count(s.userid), p.title, p.author, p.description, p.id
-	     			FROM   Subscriptions s
-	     				FULL OUTER JOIN Podcasts p
-				ON s.podcastId = p.id
-	     			WHERE  to_tsvector(p.title || ' ' || p.author || ' ' || p.description) @@ plainto_tsquery(%s)
-	     			GROUP BY p.id;""",
-				(search,))
-
+		# cur.execute("""SELECT count(s.userid), p.title, p.author, p.description, p.id
+	    #  			FROM   Subscriptions s
+	    #  				FULL OUTER JOIN Podcasts p
+		# 		ON s.podcastId = p.id
+	    #  			WHERE  to_tsvector(p.title || ' ' || p.author || ' ' || p.description) @@ plainto_tsquery(%s)
+	    #  			GROUP BY p.id;""",
+		# 		(search,))
+		cur.execute("""SELECT count(s.userid), v.title, v.author, v.description, v.id
+	     			FROM   searchvector v
+	     			FULL OUTER JOIN Subscriptions s ON s.podcastId = v.id
+	     			WHERE  v.vector @@ plainto_tsquery(%s)
+	     			GROUP BY  (s.userid, v.title, v.author, v.description, v.id, v.vector)
+				ORDER BY  ts_rank(v.vector, plainto_tsquery(%s)) desc;
+				""",
+				(search,search)
+	   		   )
 		podcasts = cur.fetchall()
 		results = []
 		for p in podcasts:
@@ -254,24 +262,28 @@ class Recommendations(Resource):
 				order by l.listendate DESC Limit 10;" % (user_id, user_id))
 		for i in cur.fetchall():
 			recs.append(i)
+		# get last 10 search queries
+		# get 10 search results from each query
+		# compare max 100 queries with categories of subscribed podcasts and sort by most in common
 		cur.execute("select query from searchqueries where userid=%s order by searchdate DESC limit 10" % user_id)
-		
+		queries = cur.fetchall()
+		for query in queries:
+			cur.execute("CREATE OR REPLACE VIEW temp (query) AS SELECT v.title\
+				FROM   searchvector v\
+				FULL OUTER JOIN Subscriptions s ON s.podcastId = v.id\
+				WHERE  v.vector @@ plainto_tsquery(%s)\
+				GROUP BY  (s.userid, v.title, v.author, v.description, v.id, v.vector)\
+			ORDER BY  ts_rank(v.vector, plainto_tsquery(%s)) desc;", (query,query))			
+		conn.commit()
+		cur.execute("select t.query, count(t.query) from temp t, podcasts p, podcastcategories pc, categories c where p.title = t.query and\
+			 p.id = pc.podcastid and pc.categoryid=c.id and c.id in (select distinct c.id from categories c, subscriptions s, podcastcategories pc \
+				where s.userId=%s and s.podcastid = pc.podcastid and pc.categoryid = c.id) and \
+					p.title not in (select p.title from podcasts p, subscriptions s where p.id = s.podcastid and \
+						s.userid=%s) group by t.query order by count(t.query) DESC;" % (user_id, user_id))
 
-		search = "Hello"
-		# ADD sql to find podcasts from search queries
-		cur.execute("""SELECT v.title
-			FROM   searchvector v
-			FULL OUTER JOIN Subscriptions s ON s.podcastId = v.id
-			WHERE  v.vector @@ plainto_tsquery(%s)
-			GROUP BY  (v.title, v.vector)
-		ORDER BY  ts_rank(v.vector, plainto_tsquery(%s)) desc;
-		""",
-		(search,search)
-		)
-		cur.execute("CREATE OR REPLACE VIEW query_results (title) as SELECT v.title FROM searchvector v \
-			FULL OUTER JOIN Subscriptions s ON s.podcastId = v.id WHERE  v.vector @@ plainto_tsquery(%s) \
-				GROUP BY  (v.title, v.vector) ORDER BY  ts_rank(v.vector, plainto_tsquery()) desc;")
-		# Finds the podcasts that share the most amount of categories with subscribed podcasts
+		for i in cur.fetchall():
+			recs.append(i)
+
 		cur.execute("select p.title, count(p.title) from podcasts p, podcastcategories pc, categories c \
 			where p.id=pc.podcastid and pc.categoryid=c.id and c.id in (select distinct c.id from categories c, subscriptions s, podcastcategories pc \
 				where s.userId=%s and s.podcastid = pc.podcastid and pc.categoryid = c.id) and \
@@ -279,9 +291,9 @@ class Recommendations(Resource):
 						s.userid=%s) group by p.title order by count(p.title) DESC;" % (user_id, user_id))
 		for i in cur.fetchall():
 			recs.append(i)
-		recs = recs[:10]
+		#recs = recs[:10]
 		close_conn(conn, cur)
-		return {"something" : recs}
+		return {"recommendations" : recs}
 			
 
 
