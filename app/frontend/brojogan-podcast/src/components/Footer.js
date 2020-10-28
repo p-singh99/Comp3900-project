@@ -12,6 +12,9 @@ function sendTime() {
 }
 
 function Footer({ state, setState }) {
+  function pingServer(progress) {
+    console.log("pinging " + progress + " to server");
+  }
   return (
     <div id='footer-div'>
       <div id='player'>
@@ -20,6 +23,9 @@ function Footer({ state, setState }) {
         <AudioPlayer
           autoPlay
           src={state.src}
+          listenInterval="30000" /*trigger onListen every 30 seconds*/
+          onPause={e=>pingServer(Math.floor(Number(e.target.currentTime)))}
+          onListen={e=>pingServer(Math.floor(Number(e.target.currentTime)))}
         />
       </div>
     </div>
