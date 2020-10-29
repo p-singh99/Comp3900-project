@@ -216,7 +216,7 @@ class Podcast(Resource):
 		close_conn(conn,cur)
 		if res:
 			url = res[0]
-			resp = requests.get(url)
+			resp = requests.get(url, headers={'User-Agent': 'Mozilla/5.0 (X11; CrOS x86_64 8172.45.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.64 Safari/537.36'})
 			if resp.status_code == 200:
 				return {"xml": resp.text}, 200
 			else:
@@ -227,6 +227,7 @@ class Podcast(Resource):
 class Recommendations(Resource):
 	def get(self):
 		conn, cur = get_conn()
+		close_conn(conn,cur)
 
 
 
