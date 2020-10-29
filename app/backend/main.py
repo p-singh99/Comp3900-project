@@ -130,14 +130,6 @@ class Podcasts(Resource):
 		conn.commit()
 		startNum = request.args.get('offset')
 		limitNum = request.args.get('limit')
-
-		# cur.execute("""SELECT count(s.userid), p.title, p.author, p.description, p.id
-	    #  			FROM   Subscriptions s
-	    #  				FULL OUTER JOIN Podcasts p
-		# 		ON s.podcastId = p.id
-	    #  			WHERE  to_tsvector(p.title || ' ' || p.author || ' ' || p.description) @@ plainto_tsquery(%s)
-	    #  			GROUP BY p.id;""",
-		# 		(search,))
 		cur.execute("""SELECT count(s.userid), v.title, v.author, v.description, v.id
 	     			FROM   searchvector v
 	     			FULL OUTER JOIN Subscriptions s ON s.podcastId = v.id
@@ -242,7 +234,8 @@ class Podcast(Resource):
 		close_conn(conn,cur)
 		if res:
 			url = res[0]
-			resp = requests.get(url)
+			resp = requests.get(url, headers={'User-Agent': 'Mozilla/5.0 (X11; CrOS x86_64 8172.45.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.64 Safari/537.36'})
+			print(resp.status_code)
 			if resp.status_code == 200:
 				return {"xml": resp.text}, 200
 			else:
@@ -250,9 +243,15 @@ class Podcast(Resource):
 		else:
 			return {}, 404
 
+class History(Resource):
+	@token_required
+	def get(self):
+		pass
+
 class Recommendations(Resource):
 	@token_required
 	def get(self):
+		print("running")
 		recs = []
 		conn, cur = get_conn()
 		user_id = get_user_id(cur)
@@ -267,6 +266,7 @@ class Recommendations(Resource):
 		# compare max 100 queries with categories of subscribed podcasts and sort by most in common
 		cur.execute("select query from searchqueries where userid=%s order by searchdate DESC limit 10" % user_id)
 		queries = cur.fetchall()
+		print(queries)
 		for query in queries:
 			cur.execute("CREATE OR REPLACE VIEW temp (query) AS SELECT v.title\
 				FROM   searchvector v\
