@@ -167,9 +167,9 @@ function Header() {
         <div id="search-div" style={{margin: '15px 0px 0px 0px'}}>
           <form id = "search-form" onSubmit = {searchHandler}>
             <input type='text' id='search-input' name='searchComponent' placeholder='Search'/>
-            <div id="search-btn">
-              <button id="search-btn" type="submit">Search</button>
-            </div>
+            {/* <div id="search-btn"> */}
+              <button id="search-btn" type="submit">Go</button>
+            {/* </div> */}
           </form>
         </div>
         <div id="icons-div" style={{margin: '15px 25px 0px 0px'}}>

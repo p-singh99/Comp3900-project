@@ -6,6 +6,8 @@
 }
 
 #login-div {
+  margin-left: -170px;
+  margin-top: -60px;
   border-radius: 50px;
   background-image: linear-gradient(to right, #6E59D6, #E3D9D9);
   display: flex;

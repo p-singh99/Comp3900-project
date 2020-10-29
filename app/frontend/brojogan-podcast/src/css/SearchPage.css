@@ -1,0 +1,66 @@
+#search-page-div{
+  padding-top: 30px;
+  padding-left: 20px;
+  /* margin-left: -00px; */
+  padding-right: 120px;
+  color: white;
+  z-index: -1;
+  margin-bottom: 200px;
+}
+
+.card-header {
+  background-color:  #2E2B3F;
+  cursor: pointer;
+  width: 100%;
+}
+
+#card {
+  border: 1px dotted #66D0EC;
+  border-radius: 10px;
+  margin-bottom: 10px;
+  width: 100%;
+}
+
+.accordion-toggle {
+  color: #06C170;
+  font-weight: bold;
+  font-style: italic;
+  background-color:  #2E2B3F;
+  border: none;
+  width: 100%;
+}
+
+.search-page-link {
+  color: #06C170;
+}
+
+.card-header-div {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+}
+
+.subs-count {
+  margin-left: auto;
+  color: white;
+  font-weight: normal;
+}
+
+.card-body {
+  background-color: #2E2B3F;
+}
+
+#episode-list-card {
+  border-top: 1px solid #5799C3;
+  padding-top: 10px;
+  font-size: 13px;
+}
+
+#episode-list-link {
+  color: white;
+}
+
+#podcast-card-accordion {
+  margin-top: 20px;
+}
+

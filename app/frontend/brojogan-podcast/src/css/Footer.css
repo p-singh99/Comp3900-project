@@ -1,4 +1,6 @@
 #footer-div {
+  padding-top: 10px;
+  padding-bottom: 10px;
   width: 100%;
   background-color: #2E2B3F;
   justify-content: center;
@@ -6,4 +8,11 @@
   position: fixed;
   bottom: 0;
   left: 0;
+  z-index: 2;
+  margin-left: 208px;
+  border-top: 2px solid white;
+}
+
+#audio-div-footer {
+  margin-left: -250px;
 }

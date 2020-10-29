@@ -26,7 +26,7 @@ function sendTime() {
     // <div id='footer-div' style={{display: playing ? 'block' : 'none'}}>
     <div id='footer-div'>
       {/* <h1>Footer</h1> */}
-      <div><audio src='' controls autoPlay></audio>
+      <div id="audio-div-footer"><audio src='' controls autoPlay></audio>
       <button>Stop</button></div>
       {/* {playing
         ? <div><audio src={playing.src} controls autoPlay></audio>
