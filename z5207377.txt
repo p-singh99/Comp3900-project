@@ -6,3 +6,12 @@ Jira and Github pages were set up and the previously created user stories were t
 
 Week 3
 Discussed the project proposal and storyboards. We used scrum poker to discuss the user stories and assign user story points. On Friday, we had a meeting again to discuss about the proposal. We had some diagrams that we were working on and we discussed those as a team. I worked on the Class Diagram. Nicholas put everything together into the final proposal and submitted it.
+
+Week 4
+We started the coding process. I set up the basic frontend using Nodejs, Reactjs and Javascript which included the homepage for our website, the login and the signup page as well. Also worked on some of the icons on the homepage and the navbar.
+
+Week 5
+Worked on the Search widget on the homepage. Connected the UI for the homepage, login and signup page and the link on the navbar with their respective pages using a react library called React-Router.
+
+Week 6
+Fixed some UI bugs including page refreshing when searching for a podcast, navbar scrolling as the page is scrolled. Editted the UI for the description page for the podcast.
