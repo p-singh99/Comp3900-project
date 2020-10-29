@@ -51,11 +51,6 @@ export default function Search(podcasts) {
 
         ReactDOM.render(
           <PodcastCards 
-            // thumbnails={[]} 
-            // podcastTitles={podcastTitles} 
-            // podcastSubscribers={[]}
-            // podcastDescriptions={podcastDescriptions}
-            // podcastEpisodes={[[]]}
             heading={`Search Results`}
             podcasts={podcasts}
           />,
