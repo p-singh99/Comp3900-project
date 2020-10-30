@@ -93,7 +93,7 @@ function Description() {
       <div id="episodes">
         <ul>
           { episodes
-          ? <Pages itemDetails={episodes} itemsPerPage={10} Item={DescriptionEpisode} showItemIndex={29}/>
+          ? <Pages itemDetails={episodes} itemsPerPage={10} Item={DescriptionEpisode} />
           : null }
         </ul>
       </div>
