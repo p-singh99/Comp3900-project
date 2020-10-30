@@ -4,8 +4,6 @@ import { useParams } from 'react-router-dom';
 import { getPodcastFromXML } from '../rss';
 import { API_URL } from '../constants';
 import Pages from './../components/Pages';
-import DescriptionEpisode from './../components/DescriptionEpisode';
-import { sanitiseDescription, unTagDescription } from './../descriptionSanitiser';
 import './../css/Description.css';
 
 // !! what happens if the description is invalid html, will it break the whole page?
@@ -100,5 +98,113 @@ function Description() {
     </div>
   );
 }
+
+function toggleDescription(event) {
+  event.target.classList.toggle("collapsed");
+  event.target.classList.toggle("expanded");
+  // maybe want to do this fancier using js not css
+}
+
+function getDate(timestamp) {
+  let date = new Date(timestamp);
+  // return date.toDateString(); // change to custom format
+  return date.toLocaleDateString(undefined, {year: 'numeric', month: 'short', day: 'numeric' }).replace(/,/g,'')/*.toUpperCase()*/;
+}
+
+function downloadEpisode(event) {
+  alert(event.target.getAttribute('eid'));
+}
+
+function DescriptionEpisode({ details: episode }) {
+  // this is prob excessive
+  let description;
+  try {
+    description = <p className="description collapsed" onClick={toggleDescription} dangerouslySetInnerHTML={{ __html: sanitiseDescription(episode.description) }}></p>;
+  } catch {
+    description = <p className="description collapsed" onClick={toggleDescription}>{unTagDescription(episode.description)}</p>;
+  }
+
+  // weird react bug that descriptions stay expanded after changing the page,
+  // even though the entire episode div should be re-rendered with a completely new component...
+  // I think it must be reacts Virtual DOM diff, it doesn't necessarily change classes I guess
+  return (
+    <li className="episode">
+      {/* make this flexbox or grid? */}
+      <div className="head">
+        <span className="date">{getDate(episode.timestamp)}</span>
+        <span className="title">{episode.title}</span>
+      </div>
+      <div className="play">
+        <span className="duration">{episode.duration}</span>
+        {/* <button className="play" eid={episode.guid} onClick={(event) => playEpisode(event, setPlaying, episodes)}>Play</button> */}
+        {/* <audio src={episode.url} controls preload="none"></audio> */}
+        <button>Play</button>
+        <button className="download" eid={episode.guid} onClick={downloadEpisode}>Download</button>
+      </div>
+      {/* guid won't always work because some of them will contain invalid characters I think ? */}
+      {description}
+      {/* <div className='description collapsed' onClick={toggleDescription} dangerouslySetInnerHTML={{ __html: sanitiseDescription(episode.description) }}> */}
+      {/* {shortenDescription(episode.description)} */}
+      {/* {unTagDescription(episode.description)} */}
+      {/* {sanitiseDescription(episode.description)} */}
+      {/* </div> */}
+    </li>
+  )
+}
+
+// maybe use DOMPurify instead, and should try to add rel="nofollow" to links
+// also should set target = _blank on all links
+// could also do that in js - get all links and loop through setting the attributes
+// or could set base target = _blank, and then change it on the ones we control
+// this doesn't really feel secure, this third party script could get bugs or be altered
+// should put the script in local folder
+function sanitiseDescription(description) {
+  // https://www.npmjs.com/package/xss
+  // https://jsxss.com/en/options.
+
+  const onTag = (tag, html, options) => {
+    if (tag === 'p') {
+      return '<br>'; // p tags screw up the div onClick, this is easier
+    }
+    // no return, it does default
+  }
+
+  const onIgnoreTagAttr = (tag, name, value, isWhiteAttr) => {
+    if (tag === 'a' && name === 'rel') {
+      return 'rel=nofollow'; // why does this work? Shouldn't I just return nofollow?
+    } else if (tag === 'a' && name === 'target') {
+      return 'target=_blank;'
+    }
+    // no return, it does default ie remove attibute
+  }
+
+  let options = {
+    whiteList: {
+      a: ['href'], // title
+      // p: [],
+      // strong: []
+    },
+    stripIgnoreTag: true,
+    onTag: onTag,
+    onIgnoreTagAttr: onIgnoreTagAttr
+  };
+  description = window.filterXSS(description, options);
+  return description;
+}
+
+// https://stackoverflow.com/questions/1912501/unescape-html-entities-in-javascript
+function htmlDecode(text) {
+  let doc = new DOMParser().parseFromString(text, "text/html");
+  return doc.documentElement.textContent;
+}
+
+// this function is for removing tags so they don't show up in text
+// it is not for security sanitisting for innerHTML
+function unTagDescription(description) {
+  description = description.replace(/<[^>]+>/g, ''); // remove HTML tags - could be flawed
+  description = htmlDecode(description);
+  return description;
+}
+
 
 export default Description;

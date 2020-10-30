@@ -56,6 +56,7 @@ function Pages({ itemDetails, itemsPerPage, Item, showItemIndex }) {
     console.log(pages);
     console.log(pageNum);
 
+    // there needs to be a way to make big jumps to the middle when there are a lot of pages
     let paginationMiddleItems;
     if (lastPage <= 7) {
       paginationMiddleItems = <>{[2, 3, 4, 5, 6].map(num => <Pagination.Item active={pageNum === num}>{num}</Pagination.Item>)}</>;
