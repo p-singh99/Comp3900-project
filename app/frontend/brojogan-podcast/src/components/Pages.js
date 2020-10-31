@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import Pagination from 'react-bootstrap/Pagination';
+import './../css/Pages.css';
 
 function isDigits(str) {
   return str.match(/^\d+$/);
@@ -115,7 +116,7 @@ function Pages({ itemDetails, itemsPerPage, Item, showItemIndex }) {
     }
 
     setPageJSX(
-      <div ref={startRef}>
+      <div ref={startRef} className="pages">
         {pages[pageNum].map((item, index) => {
           // this onLoad scrolling doesn't work
           if (scrollIndex === index) {
