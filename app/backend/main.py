@@ -187,8 +187,10 @@ class Settings(Resource):
 			if args['newemail']:
 				# change email
 				cur.execute("SELECT email FROM users where email='%s'" % (args['newemail']))
-				if cur.fetchone() is None:
-					cur.execute("UPDATE users SET email='%s' WHERE username='%s' OR email='%s'" % (args['newemail'], username, username))
+				if cur.fetchone():
+					return {"error", "Email already exists"}, 400
+				cur.execute("UPDATE users SET email='%s' WHERE username='%s' OR email='%s'" % (args['newemail'], username, username))
+
 			conn.commit()
 			close_conn(conn, cur)
 			return {"data" : "success"}, 200
