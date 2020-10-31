@@ -130,15 +130,16 @@ class Podcasts(Resource):
 		conn.commit()
 		startNum = request.args.get('offset')
 		limitNum = request.args.get('limit')
-		cur.execute("""SELECT count(s.userid), v.title, v.author, v.description, v.id
+
+		cur.execute("""SELECT count(s.podcastid), v.title, v.author, v.description, v.id
 	     			FROM   searchvector v
 	     			FULL OUTER JOIN Subscriptions s ON s.podcastId = v.id
 	     			WHERE  v.vector @@ plainto_tsquery(%s)
-	     			GROUP BY  (s.userid, v.title, v.author, v.description, v.id, v.vector)
+	     			GROUP BY  (s.podcastid, v.title, v.author, v.description, v.id, v.vector)
 				ORDER BY  ts_rank(v.vector, plainto_tsquery(%s)) desc;
 				""",
-				(search,search)
-	   		   )
+				(search,search))
+
 		podcasts = cur.fetchall()
 		results = []
 		for p in podcasts:
@@ -235,11 +236,10 @@ class Podcast(Resource):
 		if res:
 			url = res[0]
 			resp = requests.get(url, headers={'User-Agent': 'Mozilla/5.0 (X11; CrOS x86_64 8172.45.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.64 Safari/537.36'})
-			print(resp.status_code)
 			if resp.status_code == 200:
 				return {"xml": resp.text}, 200
 			else:
-				return {}, 500 # 500 might not the right code
+				return {}, 502
 		else:
 			return {}, 404
 
