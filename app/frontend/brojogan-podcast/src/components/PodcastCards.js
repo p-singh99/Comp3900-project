@@ -13,9 +13,6 @@ function PodcastCards(props) {
   const [episodeList, setEpisdodeList] = useState([]);
   const [items, setItems] = useState([]);
   const first = useRef(true);
-  // useEffect(() => {
-  //   setDidMount(true)
-  // }, [])
 
   let episodeListTemp = [];
 
