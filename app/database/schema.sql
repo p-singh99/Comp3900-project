@@ -31,6 +31,7 @@ CREATE TABLE Podcasts (
     thumbnail           text,
     xml                 text,
     lastUpdated         timestamp,
+    badXml              boolean,
     PRIMARY KEY (id)
 );
 
