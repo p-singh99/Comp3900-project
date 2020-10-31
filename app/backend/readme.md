@@ -17,6 +17,7 @@ FLASK_APP=main.py flask run
 | GET         | `/podcasts?search_query=<query>&offset=<startNum>&limit=<limitNum>`     |                 | `[{"subscribers": subs, "title": title, "author" : author, "description" : desc}, #]`, 200<br> `[]`, 200              | Search. Request `limitNum` results starting at result number `startNum` |  
 | DELETE      | `/users/self/settings`                                                |                      |               | Delete account |
 | PUT         | `/users/self/settings`                                       | `{"oldpassword": <oldpassword>, "newpassword": <newpassword>, "newemail":<email>}` | |                                                               Change password and/or email |  
+| GET        | `/self/history/<pagenumber>`                                  |                                       | {"history": [History]}, 200<br>`{“error“ :  “bad request”}`, 400 | Check user history |
 
 ### Future endpoints, subject to change
 | HTTP Method |  Endpoint                                                    | Request body         | Response body | Action                  |
