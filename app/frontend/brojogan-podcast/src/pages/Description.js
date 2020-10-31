@@ -105,7 +105,7 @@ function toggleDescription(event) {
 
 function Description({ setPlaying }) {
   const [episodes, setEpisodes] = useState([]);
-  const [podcast, setPodcast] = useState(<h1>Loading...</h1>);
+  const [podcast, setPodcast] = useState(null);
   const [podcastTitle, setPodcastTitle] = useState(""); // overlaps with above
 
   // on page load:
@@ -135,34 +135,52 @@ function Description({ setPlaying }) {
 
   function setPodcastInfo(podcast) {
     // css grid for this? need to add rating and subscribe button
+    
+    setPodcast(podcast)
+  }
+
+  function getPodcastDescription(podcast) {
     let podcastDescription;
     try {
       podcastDescription = <p id="podcast-description" dangerouslySetInnerHTML={{ __html: sanitiseDescription(podcast.description, true) }}></p>;
     } catch {
       podcastDescription = <p id="podcast-description">{unTagDescription(podcast.description)}</p>;
     }
-    setPodcast(
-      <div>
-        <div id="podcast-info">
-          {podcast.image && <img id="podcast-img" src={podcast.image} alt="Podcast icon" style={{ height: '300px', width: '300px' }}></img>}
-          <div id="podcast-name-author">
-            <h1 id="podcast-name">{podcast.title}</h1>
-            <h3 id="podcast-author">{podcast.author}</h3>
-            {/* <p id="podcast-description" dangerouslySetInnerHTML={{ __html: sanitiseDescription(podcast.description) }}></p> */}
-            {podcastDescription}
+    return podcastDescription;
+  }
+
+  function getPodcastHTML(podcast) {
+    if (podcast === null) {
+      return (
+        <h1>Loading...</h1>
+      )
+    } else {
+      return (
+        <div>
+          <div id="podcast-info">
+            {podcast.image && <img id="podcast-img" src={podcast.image} alt="Podcast icon" style={{ height: '300px', width: '300px' }}></img>}
+            <div id="podcast-name-author">
+              <h1 id="podcast-name">{podcast.title}</h1>
+              <h3 id="podcast-author">{podcast.author}</h3>
+              {/* <p id="podcast-description" dangerouslySetInnerHTML={{ __html: sanitiseDescription(podcast.description) }}></p> */}
+              {getPodcastDescription(podcast)}
+            </div>
           </div>
         </div>
-      </div>
-    )
+      )
+    }
   }
 
   return (
     <div id="podcast">
+      {}
       <Helmet>
         <title>BroJogan Podcasts - {podcastTitle}</title>
       </Helmet>
 
-      {podcast}
+      {getPodcastHTML(podcast)}      
+      
+      
       <div id="episodes">
         <ul>
           {episodes.map(episode => {
