@@ -28,6 +28,7 @@ h1.podcast-heading{
     margin-left: 20px;
     padding: 10px 0px 0px 0px;
     margin-bottom: 10px;
+    cursor: pointer;
 }
 
 #podcast .title {
@@ -46,7 +47,7 @@ h1.podcast-heading{
 }
 
 #podcast .description {
-    cursor: pointer;
+    /* cursor: pointer; */
     font-size: 0.9em;
 }
 

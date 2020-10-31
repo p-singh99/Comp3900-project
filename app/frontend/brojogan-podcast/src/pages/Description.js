@@ -83,7 +83,7 @@ function Description() {
   return (
     <div id="podcast">
       <Helmet>
-        <title>BroJogan Podcasts - {podcastTitle}</title>
+        <title>{podcastTitle} - BroJogan Podcasts</title>
       </Helmet>
 
       {podcast}
@@ -99,9 +99,15 @@ function Description() {
 }
 
 function toggleDescription(event) {
-  event.target.classList.toggle("collapsed");
-  event.target.classList.toggle("expanded");
-  // maybe want to do this fancier using js not css
+  if (event.target.tagName.toLowerCase() !== "button") {
+    const episode = event.target.closest(".episode"); // traverses element and its parents
+    // console.log(episode);
+    const description = episode.querySelector(".description");
+    // console.log(description);
+    description.classList.toggle("collapsed");
+    description.classList.toggle("expanded");
+    // maybe want to do this fancier using js not css
+  }
 }
 
 function getDate(timestamp) {
@@ -111,6 +117,7 @@ function getDate(timestamp) {
 }
 
 function downloadEpisode(event) {
+  event.preventDefault();
   alert(event.target.getAttribute('eid'));
 }
 
@@ -118,16 +125,16 @@ function EpisodeDescription({ details: episode, id }) {
   let description;
   // in case the sanitiser fails, don't use innerHTML
   try {
-    description = <p className="description collapsed" onClick={toggleDescription} dangerouslySetInnerHTML={{ __html: sanitiseDescription(episode.description) }}></p>;
+    description = <p className="description collapsed" dangerouslySetInnerHTML={{ __html: sanitiseDescription(episode.description) }}></p>;
   } catch {
-    description = <p className="description collapsed" onClick={toggleDescription}>{unTagDescription(episode.description)}</p>;
+    description = <p className="description collapsed">{unTagDescription(episode.description)}</p>;
   }
 
   // weird react bug that descriptions stay expanded after changing the page,
   // even though the entire episode div should be re-rendered with a completely new component...
   // I think it must be reacts Virtual DOM diff, it doesn't necessarily change classes I guess
   return (
-    <li className="episode" id={id}>
+    <li className="episode" id={id} onClick={toggleDescription}>
       {/* make this flexbox or grid? */}
       <div className="head">
         <span className="title">{episode.title}</span>
