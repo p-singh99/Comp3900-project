@@ -91,7 +91,7 @@ function Description() {
       <div id="episodes">
         <ul>
           { episodes
-          ? <Pages itemDetails={episodes} itemsPerPage={10} Item={DescriptionEpisode} />
+          ? <Pages itemDetails={episodes} itemsPerPage={10} Item={EpisodeDescription} />
           : null }
         </ul>
       </div>
@@ -115,7 +115,7 @@ function downloadEpisode(event) {
   alert(event.target.getAttribute('eid'));
 }
 
-function DescriptionEpisode({ details: episode }) {
+function EpisodeDescription({ details: episode, id }) {
   // this is prob excessive
   let description;
   try {
@@ -128,7 +128,7 @@ function DescriptionEpisode({ details: episode }) {
   // even though the entire episode div should be re-rendered with a completely new component...
   // I think it must be reacts Virtual DOM diff, it doesn't necessarily change classes I guess
   return (
-    <li className="episode">
+    <li className="episode" id={id}>
       {/* make this flexbox or grid? */}
       <div className="head">
         <span className="date">{getDate(episode.timestamp)}</span>
@@ -143,11 +143,6 @@ function DescriptionEpisode({ details: episode }) {
       </div>
       {/* guid won't always work because some of them will contain invalid characters I think ? */}
       {description}
-      {/* <div className='description collapsed' onClick={toggleDescription} dangerouslySetInnerHTML={{ __html: sanitiseDescription(episode.description) }}> */}
-      {/* {shortenDescription(episode.description)} */}
-      {/* {unTagDescription(episode.description)} */}
-      {/* {sanitiseDescription(episode.description)} */}
-      {/* </div> */}
     </li>
   )
 }
