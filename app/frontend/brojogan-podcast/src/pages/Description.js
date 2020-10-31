@@ -70,17 +70,16 @@ function Description() {
     setPodcast(
       <div>
         <div id="podcast-info">
-          {podcast.image && <img id="podcast-img" src={podcast.image} alt="Podcast icon" style={{ height: '300px', width: '300px' }}></img>}
+          {podcast.image && <img id="podcast-img" src={podcast.image} alt="Podcast icon" style={{ height: '300px', width: '300px', minWidth: '300px' }}></img>}
           <div id="podcast-name-author">
-            <h1 id="podcast-name">{podcast.title}</h1>
-            <h3 id="podcast-author">{podcast.author}</h3>
+            <h1 id="podcast-name" className="podcast-heading">{podcast.title}</h1>
+            <h5 id="podcast-author">{podcast.author}</h5>
             {podcastDescription}
           </div>
         </div>
       </div>
     )
   }
-
   return (
     <div id="podcast">
       <Helmet>
@@ -90,9 +89,9 @@ function Description() {
       {podcast}
       <div id="episodes">
         <ul>
-          { episodes
-          ? <Pages itemDetails={episodes} itemsPerPage={10} Item={EpisodeDescription} />
-          : null }
+          {episodes
+            ? <Pages itemDetails={episodes} itemsPerPage={10} Item={EpisodeDescription} />
+            : null}
         </ul>
       </div>
     </div>
@@ -108,7 +107,7 @@ function toggleDescription(event) {
 function getDate(timestamp) {
   let date = new Date(timestamp);
   // return date.toDateString(); // change to custom format
-  return date.toLocaleDateString(undefined, {year: 'numeric', month: 'short', day: 'numeric' }).replace(/,/g,'')/*.toUpperCase()*/;
+  return date.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }).replace(/,/g, '')/*.toUpperCase()*/;
 }
 
 function downloadEpisode(event) {
@@ -116,8 +115,8 @@ function downloadEpisode(event) {
 }
 
 function EpisodeDescription({ details: episode, id }) {
-  // this is prob excessive
   let description;
+  // in case the sanitiser fails, don't use innerHTML
   try {
     description = <p className="description collapsed" onClick={toggleDescription} dangerouslySetInnerHTML={{ __html: sanitiseDescription(episode.description) }}></p>;
   } catch {
@@ -131,13 +130,12 @@ function EpisodeDescription({ details: episode, id }) {
     <li className="episode" id={id}>
       {/* make this flexbox or grid? */}
       <div className="head">
-        <span className="date">{getDate(episode.timestamp)}</span>
         <span className="title">{episode.title}</span>
+        <span className="date">{getDate(episode.timestamp)}</span>
       </div>
       <div className="play">
         <span className="duration">{episode.duration}</span>
         {/* <button className="play" eid={episode.guid} onClick={(event) => playEpisode(event, setPlaying, episodes)}>Play</button> */}
-        {/* <audio src={episode.url} controls preload="none"></audio> */}
         <button>Play</button>
         <button className="download" eid={episode.guid} onClick={downloadEpisode}>Download</button>
       </div>

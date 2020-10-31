@@ -53,8 +53,16 @@
   font-style: italic;
 }
 
+#password-text {
+  margin-top: 50px;
+}
+
+.login-input {
+  margin-top: 20px;
+}
+
 #username-input, #password-input   {
-  width: 200px;
+  width: 300px;
   background-color: rgba(0, 0, 0, 0);
   border: none;
   border-bottom: 2px solid #221F2E;
@@ -62,7 +70,7 @@
 
 #form-btns {
   width: 100%;
-  margin: 50px 0px 0px 0px;
+  margin: 30px 0px 0px 0px;
 }
 
 #logIn-btn, #signUp-btn {

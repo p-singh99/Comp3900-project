@@ -36,8 +36,8 @@ function App() {
           <Route path="/recommended" component={Recommended} exact />
           <Route path="/subscriptions" component={Subscriptions} exact />
           <Route path="/about" component={About} exact />
-          <Route path="/search" component={Search} exact />
-          <Route path="/settings" exact>{isLoggedIn() ? <Settings /> : <Redirect to="/" />}</Route>
+          <Route path="/search" component={Search} />
+
           {/* <Route path="/description" component={() => <Description />} exact /> */}
         </div>
       </div>
