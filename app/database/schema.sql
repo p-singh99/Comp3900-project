@@ -29,6 +29,8 @@ CREATE TABLE Podcasts (
     author              text,
     description         text,
     thumbnail           text,
+    xml                 text,
+    lastUpdated         timestamp,
     PRIMARY KEY (id)
 );
 
@@ -93,5 +95,15 @@ CREATE TABLE RejectedRecommendations (
     PRIMARY KEY (userId, podcastId)
 );
 
-
+CREATE TABLE Notifications (
+    userId              integer not null,
+    podcastId           integer not null,
+    episodeGuid         text not null,
+    epsiodeName         text not null,
+    created             timestamp,
+    opened              boolean,
+    FOREIGN KEY (userId) references Users (id),
+    FOREIGN KEY (podcastId, episodeGuid) references Episodes (podcastId, guid),
+    PRIMARY KEY (userId, podcastId, episodeGuid)
+)
 
