@@ -283,18 +283,23 @@ class Recommendations(Resource):
 								s.userid=%s) group by t.query order by count(t.query) DESC;" % (user_id, user_id))
 
 			for i in cur.fetchall():
+				print(i[0],2)
 				recs.add((i[0],2))
-		cur.execute("select p.title, count(p.title) from podcasts p, podcastcategories pc, categories c \
-			where p.id=pc.podcastid and pc.categoryid=c.id and c.id in (select distinct c.id from categories c, subscriptions s, podcastcategories pc \
-				where s.userId=%s and s.podcastid = pc.podcastid and pc.categoryid = c.id) and \
-					p.title not in (select p.title from podcasts p, subscriptions s where p.id = s.podcastid and \
-						s.userid=%s) group by p.title order by count(p.title) DESC;" % (user_id, user_id))
-		for i in cur.fetchall():
-			recs.add((i[0],1))
-		#recs = recs[:10]
+		#cur.execute("select p.title, count(p.title) from podcasts p, podcastcategories pc, categories c \
+		#	where p.id=pc.podcastid and pc.categoryid=c.id and c.id in (select distinct c.id from categories c, subscriptions s, podcastcategories pc \
+		#		where s.userId=%s and s.podcastid = pc.podcastid and pc.categoryid = c.id) and \
+		#			p.title not in (select p.title from podcasts p, subscriptions s where p.id = s.podcastid and \
+		#				s.userid=%s) group by p.title order by count(p.title) DESC;" % (user_id, user_id))
+		#for i in cur.fetchall():
+		#	recs.add((i[0],1))
+		# recs = recs[:10]
 		recsl = list(recs)
+		print(len(recs))
+		sorted(recsl,key=lambda x: x[1])
+		print(len(recsl))
+		# sprint(recsl[0])
 		close_conn(conn, cur)
-		return {"recommendations" : recsl.reverse()}
+		return {"recommendations" : recsl}
 			
 
 
