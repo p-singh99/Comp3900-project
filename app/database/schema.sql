@@ -16,8 +16,9 @@ CREATE TABLE SearchQueries (
 
 CREATE TABLE Categories (
     id                  serial,
-    name                text unique not null,
+    name                text unique not null check (lower(name) = name),
     parentCategory      integer,
+    itunes              boolean not null,
     FOREIGN KEY (parentCategory) references Categories (id),
     PRIMARY KEY (id)
 );

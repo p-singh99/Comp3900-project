@@ -6,7 +6,12 @@ on subscriptions.podcastId = podcasts.id
 group by podcasts.id
 order by subscribers desc;
 
-
+-- counts number of podcasts which have each category
+create or replace view NumPodcastsPerCategory as
+select name, count(podcastCategories.podcastId) from podcastcategories
+join categories on categories.id=podcastcategories.categoryid
+group by name
+order by count(podcastid) desc;
 
 -- HELPER FUNCTIONS --
 
