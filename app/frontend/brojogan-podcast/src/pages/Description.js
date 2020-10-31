@@ -117,7 +117,6 @@ function getDate(timestamp) {
 }
 
 function downloadEpisode(event) {
-  event.preventDefault();
   alert(event.target.getAttribute('eid'));
 }
 
