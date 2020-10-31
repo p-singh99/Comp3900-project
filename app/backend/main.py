@@ -193,10 +193,12 @@ class Settings(Resource):
 				# change email
 				cur.execute("SELECT email FROM users where email='%s'" % (args['newemail']))
 				if cur.fetchone():
-					return {"error", "Email already exists"}, 400
+					cur.execute("SELECT email FROM users where email='%s' and username='%s'" % (args['newemail'], data['user']))
+					if not cur.fetchone():
+						return {"error": "Email already exists"}, 400
 				cur.execute("UPDATE users SET email='%s' WHERE username='%s' OR email='%s'" % (args['newemail'], username, username))
-				if hashedpassword:
-					cur.execute("UPDATE users SET hashedpassword='%s' WHERE username='%s' OR email = '%s'" % (hashedpassword.decode('UTF-8'), username, username))
+			if hashedpassword:
+				cur.execute("UPDATE users SET hashedpassword='%s' WHERE username='%s' OR email = '%s'" % (hashedpassword.decode('UTF-8'), username, username))
 			conn.commit()
 			close_conn(conn, cur)
 			return {"data" : "success"}, 200
