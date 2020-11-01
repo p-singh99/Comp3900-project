@@ -128,22 +128,27 @@ function Header() {
       console.log(searched_text);
       console.log(searched_text.value);
 
-      fetch(`${API_URL}/podcasts?search_query=`+searched_text.value+'&offset=0&limit=50', {method: 'get'})
-        .then(resp => {
-          resp.json().then(podcasts => {
-            if (resp.status === 200) {
-              // console.log(podcasts[0].title);
-              history.push("/search" + "?" + searched_text.value);
+      // history.push("/search" + "?" + searched_text.value);
+      // for some reason, if you are on the search page already and do history.push(), it doesn't work...
+      // changes the url but nothing else happens
+      window.location.href = "/search" + "?" + searched_text.value;
 
-            } else {
-              // should never enter this
-              console.log('response status is not 200 after search');
-            }
-          })
-        })
-        .catch(error => { // will this catch error from resp.json()?
-        displayError(error);
-      });
+      // fetch(`${API_URL}/podcasts?search_query=`+searched_text.value+'&offset=0&limit=50', {method: 'get'})
+      //   .then(resp => {
+      //     resp.json().then(podcasts => {
+      //       if (resp.status === 200) {
+      //         // console.log(podcasts[0].title);
+      //         // history.push("/search" + "?" + searched_text.value);
+      //         // history.push("/search" + "?" + searched_text.value, {podcasts: podcasts});
+      //       } else {
+      //         // should never enter this
+      //         console.log('response status is not 200 after search');
+      //       }
+      //     })
+      //   })
+      //   .catch(error => { // will this catch error from resp.json()?
+      //   displayError(error);
+      // });
     }
   }
 

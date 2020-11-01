@@ -21,6 +21,11 @@ function Pages({ itemDetails, itemsPerPage, Item, showItemIndex }) {
     console.log(itemDetails);
     console.log(itemsPerPage);
     console.log("showItemIndex:", showItemIndex);
+
+    if (itemDetails.length === 0) {
+      return;
+    }
+
     showItemIndex = parseInt(showItemIndex, 10);
     if (showItemIndex) {
       showItemIndex = itemDetails.length - showItemIndex; // it's reversed to the indexes of the array so that eg episode=1 takes you to the first episodes instead of the most recent

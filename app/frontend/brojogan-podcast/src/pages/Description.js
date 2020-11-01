@@ -29,7 +29,7 @@ async function getRSS(id) {
 }
 
 // function Description({ setPlaying }) {
-function Description() {
+function Description(props) {
   const [episodes, setEpisodes] = useState(); // []
   const [podcast, setPodcast] = useState(<h1>Loading...</h1>);
   const [podcastTitle, setPodcastTitle] = useState(""); // overlaps with above
@@ -51,15 +51,27 @@ function Description() {
         console.log('Received RSS :' + Date.now());
         const podcast = getPodcastFromXML(xml);
         console.log('parsed XML: ' + Date.now());
-        setPodcastInfo(podcast);
-        setPodcastTitle(podcast.title);
-        setEpisodes({episodes: podcast.episodes, showEpisode: episodeNum});
+        setPodcastStuff(podcast, episodeNum);
       } catch (error) {
         displayError(error);
       }
     }
-    fetchPodcast();
+
+    console.log(props);
+    const podcastObj = props.location.state.podcastObj;
+    
+    if (podcastObj) {
+      setPodcastStuff(podcastObj, episodeNum);
+    } else {
+      fetchPodcast();
+    }
   }, [id]);
+
+  function setPodcastStuff(podcast, episodeNum) {
+    setPodcastInfo(podcast);
+    setPodcastTitle(podcast.title);
+    setEpisodes({ episodes: podcast.episodes, showEpisode: episodeNum });
+  }
 
   function displayError(msg) {
     setPodcast(<h1>{msg.toString()}</h1>);
@@ -96,7 +108,7 @@ function Description() {
       <div id="episodes">
         <ul>
           {episodes
-            ? <Pages itemDetails={episodes.episodes} itemsPerPage={10} Item={EpisodeDescription} showItemIndex={episodes.showEpisode}/>
+            ? <Pages itemDetails={episodes.episodes} itemsPerPage={10} Item={EpisodeDescription} showItemIndex={episodes.showEpisode} />
             : null}
         </ul>
       </div>
