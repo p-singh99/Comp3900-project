@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import {API_URL} from './../constants';
-import PodcastCards from './../components/PodcastCards';
+import PodcastCards from './../components/PodcastCards2';
 import './../css/SearchPage.css';
 
 

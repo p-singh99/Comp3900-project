@@ -5,9 +5,14 @@ import SubCard from './../components/Card';
 
 function PodcastCards(props) {
 
-  const renderItems = () => {
-    return <Accordion id="podcast-card-accordion" defaultActiveKey = {null}>
-      {props.podcasts.map((podcast) => (
+  return (
+    <React.Fragment>
+      <h3>
+        {props.heading}
+      </h3>
+      <div id="podcast-card-accordion">
+        <Accordion id="podcast-card-accordion" defaultActiveKey={null}>
+        {props.podcasts.map((podcast) => (
         <SubCard 
           pid={String(podcast.pid)} 
           title={podcast.title} 
@@ -15,28 +20,43 @@ function PodcastCards(props) {
           episodes={[]}
         />
       ))}
-    </Accordion>
-  }
-
-  useEffect(() => {
-    ReactDOM.render(
-      renderItems(),
-      document.getElementById("podcast-card-accordion")
-    );
-  });
-
-  return (
-    <React.Fragment>
-      <h3>
-        {props.heading}
-      </h3>
-      <div id="podcast-card-accordion">
-        <p>
-          Loading ...
-        </p>
+        </Accordion>
       </div>
     </React.Fragment>
   )
+
+  // const renderItems = () => {
+  //   return <Accordion id="podcast-card-accordion" defaultActiveKey = {null}>
+  //     {props.podcasts.map((podcast) => (
+  //       <SubCard 
+  //         pid={String(podcast.pid)} 
+  //         title={podcast.title} 
+  //         subscribers={podcast.subscribers}
+  //         episodes={[]}
+  //       />
+  //     ))}
+  //   </Accordion>
+  // }
+
+  // useEffect(() => {
+  //   ReactDOM.render(
+  //     renderItems(),
+  //     document.getElementById("podcast-card-accordion")
+  //   );
+  // });
+
+  // return (
+  //   <React.Fragment>
+  //     <h3>
+  //       {props.heading}
+  //     </h3>
+  //     <div id="podcast-card-accordion">
+  //       <p>
+  //         Loading ...
+  //       </p>
+  //     </div>
+  //   </React.Fragment>
+  // )
 }
 
 export default PodcastCards;
