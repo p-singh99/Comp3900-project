@@ -165,6 +165,7 @@ for (let item of episodeNodes) {
           // there is one more: content:encoded
       }
       episodes.push(episode);
+      break;
   }
   episodes.sort(compareEpisodes); // is this actually necessary? The rss feed creators have their own order and its normal (always?) the same as this
   return episodes;
