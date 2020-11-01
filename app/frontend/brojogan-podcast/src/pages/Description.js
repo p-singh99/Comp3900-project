@@ -58,7 +58,12 @@ function Description(props) {
     }
 
     console.log(props);
-    const podcastObj = props.location.state.podcastObj;
+    let podcastObj;
+    try {
+      podcastObj = props.location.state.podcastObj;
+    } catch {
+      podcastObj = null;
+    }
     
     if (podcastObj) {
       setPodcastStuff(podcastObj, episodeNum);

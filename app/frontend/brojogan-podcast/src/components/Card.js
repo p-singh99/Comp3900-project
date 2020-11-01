@@ -69,8 +69,12 @@ function SubCard({ details: podcast }) {
   //   }
   // }
 
+  // so when you do something like <Item props={state} />, when the state changes,
+  // it doesn't make a new Item, it just changes the props
+  // so you have to add a useEffect trigger on the props and setState to null while it's loading
   useEffect(() => {
     const setCard = async () => {
+      setPodcastObj(null);
       try {
         const xml = await getRSS(podcast.pid);
         console.log('Received RSS :' + Date.now());
@@ -89,7 +93,7 @@ function SubCard({ details: podcast }) {
       }
     };
     setCard();
-  }, []);
+  }, [podcast]);
 
   function displayError(msg) {
     console.log('Error loading episodes');
@@ -105,6 +109,7 @@ function SubCard({ details: podcast }) {
         <Accordion.Toggle className={'accordion-toggle'} as={Card.Header} variant="link" eventKey={podcast.pid}>
           <div className='card-header-div'>
             <img src={podcastObj ? podcastObj.image : 'https://i.pinimg.com/originals/92/63/04/926304843ea8e8b9bc22c52c755ec34f.gif'} style={{width: '50px', height: '50px'}} />
+            {/* {podcastObj ? podcastObj.image : podcastObj} */}
             {/* Random loading gif from google, totally dodge */}
             {/* change to use image returned with search results */}
             {/* <a className={'search-page-link'} href={"/podcast/" + podcast.pid}>
