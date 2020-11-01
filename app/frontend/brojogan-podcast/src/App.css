@@ -26,5 +26,5 @@ html, body {
   height: 100%;
   display: flex;
   flex-direction: row;
-  border: 5px solid gold; /* just here so i can see where the div ends */
+  /* border: 5px solid gold; /* just here so i can see where the div ends */
 }

@@ -13,7 +13,9 @@ import History from './pages/History';
 import Recommended from './pages/Recommended';
 import Subscriptions from './pages/Subscriptions';
 import About from './pages/About';
+import Settings from './pages/Settings'
 import { isLoggedIn } from './auth-functions';
+
 
 function App() {
   // on app load, check if token valid using useeffect?
@@ -46,7 +48,8 @@ function App() {
           <Route path="/recommended" component={Recommended} exact />
           <Route path="/subscriptions" component={Subscriptions} exact />
           <Route path="/about" component={About} exact />
-          <Route path="/search" component={Search} exact />
+          <Route path="/search" component={Search} />
+
           {/* <Route path="/description" component={() => <Description />} exact /> */}
         </div>
       </div>

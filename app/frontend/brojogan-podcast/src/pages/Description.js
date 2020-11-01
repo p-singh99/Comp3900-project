@@ -3,8 +3,12 @@ import { Helmet } from 'react-helmet';
 import { useParams } from 'react-router-dom';
 import { getPodcastFromXML } from '../rss';
 import { API_URL } from '../constants';
+import AudioPlayer from 'react-h5-audio-player';
 import './../css/Description.css';
 import { isLoggedIn, fetchAPI } from '../auth-functions';
+
+// !! what happens if the description is invalid html, will it break the whole page?
+// eg the a tag doesn't close
 
 // CORS bypass
 async function getRSS(id) {
@@ -134,6 +138,9 @@ function Description({ setPlaying }) {
           const podcast = getPodcastFromXML(xml.xml);
           console.log('parsed XML: ' + Date.now());
           
+          console.log("in start of use effect podcast is:");
+          console.log(podcast);
+
           // we might not have times since its only if we're logged in
           if (times) {
             console.log("times are: ");
@@ -147,11 +154,10 @@ function Description({ setPlaying }) {
                 console.error("episode with guid " + time.episodeGuid + " did not have a match in the fetched feed");
               }
             }
-
-            setPodcastInfo(podcast);
-            setPodcastTitle(podcast.title);
-            setEpisodes(podcast.episodes);
           }
+          setPodcastInfo(podcast);
+          setPodcastTitle(podcast.title);
+          setEpisodes(podcast.episodes);
         });
       } catch (error) {
         displayError(error);
@@ -201,7 +207,8 @@ function Description({ setPlaying }) {
       )
     }
   }
-
+  let e = [];
+  e.push(episodes[0]);
   return (
     <div id="podcast">
       {}
@@ -229,8 +236,8 @@ function Description({ setPlaying }) {
               <li className="episode">
                 {/* make this flexbox or grid? */}
                 <div className="head">
-                  <span className="date">{getDate(episode.timestamp)}</span>
                   <span className="title">{episode.title}</span>
+                  <span className="date">{getDate(episode.timestamp)}</span>
                 </div>
                 <div className="play">
                   <span className="duration">{episode.duration}</span>

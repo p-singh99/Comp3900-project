@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import './../css/Footer.css';
 import AudioPlayer from 'react-h5-audio-player';
 import 'react-h5-audio-player/lib/styles.css';
-import { fetchAPI } from './../auth-functions';
+import { fetchAPI, isLoggedIn } from './../auth-functions';
 
 // function storeTime() {
 //   // get playtime, save in localstorage so can resume if refresh
@@ -14,10 +14,12 @@ function sendTime() {
 
 function Footer({ state, setState }) {
   function pingServer(progress) {
-    console.log("pinging " + progress + " to server episodeguid = " + state.guid + ", podcastid = " + state.podcastID);
-    let uri = '/users/self/podcasts/'+state.podcastID+'/episodes/time';
-    console.log("sending to " + uri);
-    fetchAPI(uri, 'put', {'time': progress, 'episodeGuid': state.guid}).then(() => console.log("updated"))
+    if (isLoggedIn()) {
+      console.log("pinging " + progress + " to server episodeguid = " + state.guid + ", podcastid = " + state.podcastID);
+      let uri = '/users/self/podcasts/'+state.podcastID+'/episodes/time';
+      console.log("sending to " + uri);
+      fetchAPI(uri, 'put', {'time': progress, 'episodeGuid': state.guid}).then(() => console.log("updated"))
+    }
   }
   let setPlayed=false;
   return (
@@ -57,3 +59,5 @@ function Footer({ state, setState }) {
 }
 
 export default Footer;
+
+
