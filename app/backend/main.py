@@ -38,9 +38,6 @@ def get_user_id(cur):
 		return cur.fetchone()[0]
 	return None
 
-def get_xml(cur, ):
-	cur.execute()
-
 def create_token(username):
 	token = jwt.encode({'user' : username, 'exp' : datetime.datetime.utcnow() + datetime.timedelta(minutes=20)}, app.config['SECRET_KEY'])
 	return token.decode('UTF-8')
@@ -195,6 +192,7 @@ class Settings(Resource):
 				if cur.fetchone():
 					cur.execute("SELECT email FROM users where email='%s' and username='%s'" % (args['newemail'], data['user']))
 					if not cur.fetchone():
+						close_conn(conn, cur)
 						return {"error": "Email already exists"}, 400
 				cur.execute("UPDATE users SET email='%s' WHERE username='%s' OR email='%s'" % (args['newemail'], username, username))
 			if hashedpassword:
@@ -308,7 +306,14 @@ class Recommendations(Resource):
 		recsl = list(recs)
 		close_conn(conn, cur)
 		return {"recommendations" : recsl}
-			
+		
+class Notifications(Resource):
+	def get(self):
+		conn, cur = get_conn()
+		user_id = get_user_id(cur)
+		cur.execute("select * from notifications where user='%s'" % user_id)
+		close_conn(conn, cur)
+		return {"notifications": cur.fetchall()}
 
 
 api.add_resource(Unprotected, "/unprotected")
@@ -320,6 +325,7 @@ api.add_resource(Podcasts, "/podcasts")
 api.add_resource(Podcast, "/podcasts/<int:id>")
 api.add_resource(Recommendations, "/self/recommendations")
 api.add_resource(History, "/self/history/<int:id>")
+api.add_resource(Notifications, "/users/notifications")
 
 
 if __name__ == '__main__':
