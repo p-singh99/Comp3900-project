@@ -21,3 +21,5 @@ dist/
 .env
 
 app/package-lock.json
+
+*.sh

@@ -7,7 +7,7 @@ import DropDownMenu from './../components/DropDownMenu';
 import Search from './../components/SearchPage.js';
 import notifications from './../images/notifications.png';
 import settings from './../images/settings.png';
-import {logoutHandler, authFailed, isLoggedIn} from './../auth-functions';
+import {logoutHandler, authFailed, isLoggedIn, getUsername} from './../auth-functions';
 import { useHistory } from 'react-router-dom';
 import {API_URL} from './../constants';
 
@@ -34,7 +34,7 @@ function Header() {
   const settingsOptions = isLoggedIn() ?
   [
     {text: 'Logout', onClick: logoutHandler},
-    {text: 'Change email', onClick: () => alert('Change email')}
+    {text: 'Account settings', onClick: () => history.push("/settings")}
   ]
   :
   [
@@ -132,9 +132,9 @@ function Header() {
         .then(resp => {
           resp.json().then(podcasts => {
             if (resp.status === 200) {
-              // console.log(podcasts[0].title);
+              console.log(podcasts[0].title);
+              history.push("/search" + "?" + searched_text.value);
 
-             window.location.replace("/search" + "?" + searched_text.value);
             } else {
               // should never enter this
               console.log('response status is not 200 after search');
@@ -173,6 +173,7 @@ function Header() {
           </form>
         </div>
         <div id="icons-div" style={{margin: '15px 25px 0px 0px'}}>
+        <div id="username">{getUsername()}</div>
           <button id="notification-button" onClick={() => {
             setNotificationClicked(!notificationClicked);
             setSelectedIcon(Icons.NOTIFICATION);

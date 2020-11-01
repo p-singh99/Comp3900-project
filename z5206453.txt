@@ -17,3 +17,11 @@ First sprint is starting this week. The roles have been delegated and the actual
 Week 5
 
 Finished the login/register backend. Preparing for demo
+
+Week 6
+
+Worked on API side user settings.
+
+Week 7
+
+Worked on the recommendation system. Fixed several bugs and updated functions to support database connectivity.

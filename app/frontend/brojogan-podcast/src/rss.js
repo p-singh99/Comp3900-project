@@ -119,7 +119,6 @@ for (let item of episodeNodes) {
               case "itunes:image": episode["image"] = node.attributes["href"].textContent; break;
               case "itunes:keywords": episode["keywords"] = node.textContent.split(","); break;
               case "itunes:duration": // need to convert duration to common format - it may be seconds or something like "00:09:12" (hh:mm:ss)
-                  // or maybe just display as they give it for now
                   if (isDigits(node.textContent)) { // by the specification, if this is the case then the field should be seconds
                     // the provided duration seconds seem to frequently be wrong though
                     // console.log(episode.title);
@@ -160,12 +159,13 @@ for (let item of episodeNodes) {
                       episode["description"] = node.textContent;
                   }
                   break;
-              case "link": episode["link"] = node.textContent;
+              case "link": episode["link"] = node.textContent; break;
               default: break;
           }
           // there is one more: content:encoded
       }
       episodes.push(episode);
+      break;
   }
   episodes.sort(compareEpisodes); // is this actually necessary? The rss feed creators have their own order and its normal (always?) the same as this
   return episodes;

@@ -1,0 +1,93 @@
+
+
+#settings {
+  padding-left: 10px;
+  font-family: sans-serif;
+}
+
+label {
+  display: inline-block;
+  min-width: 200px;
+}
+
+/* https://codepen.io/andybelldesign/pen/Vxpjvo */
+.settings-btn {
+  display: inline-block;
+  border: 1px solid #535353;
+  /* width: 120px; */
+  padding: 6px 20px;
+  border-radius: 10px;
+  /* padding: 1rem 2rem; */
+  /* margin: 0; */
+  /* text-decoration: none; */
+  /* background: maroon; */
+  /* font-family: sans-serif; */
+  font-size: 1rem;
+  cursor: pointer;
+  text-align: center;
+  transition: background 250ms ease-in-out, transform 150ms ease;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+}
+
+.settings-btn:not(:disabled):hover, .settings-btn:not(:disabled):focus {
+  outline: none;
+  background: #bbbbbb;
+  /* outline: 1px solid #fff;
+  outline-offset: -4px; */
+}
+
+.settings-btn:active:not(:disabled) {
+  transform: scale(0.99);
+}
+
+
+.delete-btn.delete-btn { /* the double class is only for specificity, there must be a better way */
+  display: inline-block;
+  color: darkred;
+  transition: none;
+}
+
+.delete-btn.delete-btn:not(:disabled):hover, .delete-btn.delete-btn:not(:disabled):focus {
+  background: darkred;
+  color: white;
+  border-color: #85144b;
+}
+
+.delete-btn:active:not(:disabled) {
+  background: #85144b;
+}
+
+.delete-btn:disabled {
+  color: rgba(255, 65, 54, 0.5);
+  cursor: default;
+}
+
+.delete-btn:disabled:hover { /* this is an actual state in firefox */
+}
+
+#delete-heading {
+  color: #ff4136;
+}
+
+input.settings {
+  background-color: #e0e0e0;
+  min-width: 200px;
+  border: 1px solid #111111;
+  border-radius: 5px;
+  padding: 8px;
+}
+
+.modal-header {
+  background-color: #ff4136;
+}
+
+.modal.modal button {
+  margin: 0 5px;
+}
+
+.settings-error {
+  color: #b10dc9;
+  font-weight: bold;
+  font-size: 1.1rem;
+}

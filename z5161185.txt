@@ -14,3 +14,13 @@ Week 5
 I continued working on the database. I improved the sql schema and added a python script that populates and depopulates the database with test data, based on real podcast rss feeds.
 I also helped with troubleshooting some problems with the search functionality. I did a bit on the description page for downloading the podcast episodes but justin already implemented it by the time I finished it (and his implementation was better).
 For next week: Keep going on rss parsing, maybe add more podcast details/episode details to the database? I also need to learn react so I can help more with the frontend stuff.
+
+Week 6
+Spent a fair bit of time making an rss scraper so the database would have a bunch of podcasts in it (ended up with 2000+ podcasts). The code will be useful for later when we allow users to add their own rss feeds to the database.
+Also began work on the playback on the front end, but I'm still learning react so I didn't get much of that done.
+For next week: Keep working on playback
+
+Week 7
+Spent more time working with the data in the database. I ran a script to properly extract categories from the rss feeds and store them all in the database. Previously my script would only extract 1 category and that was causing issues for the recommendation algorithm. The script to extract categories took over 5 hours to run on all 2000 podcasts! Then spent more time going through the podcasts again to add the raw xml data for each, so it's faster to get it from the frontend.
+Finished off the playback so now it saves progress as it plays through and resumes where the user left off.
+For next week: the next sprint starts!
