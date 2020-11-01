@@ -89,6 +89,11 @@ h1.podcast-heading{
   margin-top: 20px;
 }
 
-#podcast #episodes .pagination {
-    justify-content: center;
+#podcast li.episode {
+  scroll-margin-top: 50px;
+  /* Because the topbar confuses Pages' scrollTo function I think */
 }
+
+/* #podcast #episodes .pagination {
+  justify-content: center;
+} */
