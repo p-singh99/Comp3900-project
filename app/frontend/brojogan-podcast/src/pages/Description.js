@@ -4,13 +4,15 @@ import { useParams } from 'react-router-dom';
 import { getPodcastFromXML } from '../rss';
 import { API_URL } from '../constants';
 import './../css/Description.css';
+import { isLoggedIn, fetchAPI } from '../auth-functions';
 
 // CORS bypass
 async function getRSS(id) {
+  return fetch(`${API_URL}/podcasts/${id}`).then(resp => resp.json());
+  /*
   let resp, data;
   try {
-    resp = await fetch(`${API_URL}/podcasts/${id}`);
-    data = await resp.json();
+    resp = 
   } catch {
     throw Error("Network error");
   }
@@ -21,7 +23,7 @@ async function getRSS(id) {
     throw Error("Podcast does not exist");
   } else {
     throw Error("Error in retrieving podcast");
-  }
+  }*/
 }
 
 function onTag(tag, html, options) {
@@ -115,13 +117,42 @@ function Description({ setPlaying }) {
     console.log('Start useeffect: ' + Date.now());
     const fetchPodcast = async () => {
       try {
-        const xml = await getRSS(id);
-        console.log('Received RSS :' + Date.now());
-        const podcast = getPodcastFromXML(xml);
-        console.log('parsed XML: ' + Date.now());
-        setPodcastInfo(podcast);
-        setPodcastTitle(podcast.title);
-        setEpisodes(podcast.episodes);
+        // TODO: need to figure out how to check for 401s etc, here.
+        const xmlPromise = getRSS(id);
+        let promises = [xmlPromise];
+
+        // if we're logged in we'll get the listened data for this podcast
+        if (isLoggedIn()) {
+          let timesPromise = fetchAPI('/users/self/podcasts/'+id+'/time', 'get');
+          promises.push(timesPromise);
+        }
+
+        // have both promises running until we can resolve both
+        Promise.all(promises).then(([xml, times]) => {
+          console.log('Received RSS :' + Date.now());
+          console.log(xml);
+          const podcast = getPodcastFromXML(xml.xml);
+          console.log('parsed XML: ' + Date.now());
+          
+          // we might not have times since its only if we're logged in
+          if (times) {
+            console.log("times are: ");
+            console.log(times);
+            for (let time of times) {
+              let episode = podcast.episodes.find(e => e.guid===time.episodeGuid);
+              if (episode !== undefined) {
+                episode.progress = time.timestamp;
+                episode.listenDate = time.listenDate;
+              } else {
+                console.error("episode with guid " + time.episodeGuid + " did not have a match in the fetched feed");
+              }
+            }
+
+            setPodcastInfo(podcast);
+            setPodcastTitle(podcast.title);
+            setEpisodes(podcast.episodes);
+          }
+        });
       } catch (error) {
         displayError(error);
       }
@@ -214,8 +245,9 @@ function Description({ setPlaying }) {
                       src: episode.url,
                       thumb: episode.image ? episode.image : podcast.image,
                       guid: episode.guid,
-                      podcastID: podcast.id,
-                      progress: 0.0
+                      podcastID: id,
+                      listenDate: episode.listenDate ? episode.listenDate : undefined,
+                      progress: episode.progress ? episode.progress : 0.0
                     });
                   }}>Play</button>
                   {/*<audio src={episode.url} controls preload="none"></audio>*/}
