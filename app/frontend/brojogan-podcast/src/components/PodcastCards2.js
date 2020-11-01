@@ -2,6 +2,7 @@ import React, {useEffect} from 'react';
 import Accordion from 'react-bootstrap/Accordion';
 import ReactDOM from 'react-dom';
 import SubCard from './../components/Card';
+import Pages from './../components/Pages';
 
 function PodcastCards(props) {
 
@@ -12,14 +13,16 @@ function PodcastCards(props) {
       </h3>
       <div id="podcast-card-accordion">
         <Accordion id="podcast-card-accordion" defaultActiveKey={null}>
-        {props.podcasts.map((podcast) => (
-        <SubCard 
-          pid={String(podcast.pid)} 
-          title={podcast.title} 
-          subscribers={podcast.subscribers}
-          episodes={[]}
+          <Pages Item={SubCard} itemDetails={props.podcasts} itemsPerPage={10} />
+        {/* {props.podcasts.map((podcast) => (
+        <SubCard
+          details={podcast}
+          // pid={String(podcast.pid)} 
+          // title={podcast.title} 
+          // subscribers={podcast.subscribers}
+          // episodes={[]}
         />
-      ))}
+      ))} */}
         </Accordion>
       </div>
     </React.Fragment>

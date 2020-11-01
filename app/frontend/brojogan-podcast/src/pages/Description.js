@@ -33,12 +33,18 @@ function Description() {
   const [episodes, setEpisodes] = useState(); // []
   const [podcast, setPodcast] = useState(<h1>Loading...</h1>);
   const [podcastTitle, setPodcastTitle] = useState(""); // overlaps with above
+  // const [showEpisodeNum, setShowEpisodeNum] = useState();
 
   // on page load:
   // send some props from search page like title, thumbnail etc., so that stuff appears faster
+  // since the search page uses the whole rss feed, could send that if have it
   const { id } = useParams();
   useEffect(() => {
     console.log('Start useeffect: ' + Date.now());
+    const queryParams = new URLSearchParams(window.location.search);
+    const episodeNum = queryParams.get("episode");
+    console.log("episodeNum:", episodeNum);
+
     const fetchPodcast = async () => {
       try {
         const xml = await getRSS(id);
@@ -47,7 +53,7 @@ function Description() {
         console.log('parsed XML: ' + Date.now());
         setPodcastInfo(podcast);
         setPodcastTitle(podcast.title);
-        setEpisodes(podcast.episodes);
+        setEpisodes({episodes: podcast.episodes, showEpisode: episodeNum});
       } catch (error) {
         displayError(error);
       }
@@ -90,7 +96,7 @@ function Description() {
       <div id="episodes">
         <ul>
           {episodes
-            ? <Pages itemDetails={episodes} itemsPerPage={10} Item={EpisodeDescription} />
+            ? <Pages itemDetails={episodes.episodes} itemsPerPage={10} Item={EpisodeDescription} showItemIndex={episodes.showEpisode}/>
             : null}
         </ul>
       </div>

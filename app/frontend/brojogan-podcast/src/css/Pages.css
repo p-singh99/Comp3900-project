@@ -1,3 +1,12 @@
 div.pages {
     scroll-margin-top: 80px;
 }
+
+.pagination {
+    margin-top: 30px;
+}
+
+/* Overriding bootsrap css which adds a high z-index to active page. idk why but its very annoying */
+.page-item.active.page-item.active .page-link.page-link {
+    z-index: auto;
+}
