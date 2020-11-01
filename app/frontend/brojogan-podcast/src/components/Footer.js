@@ -37,6 +37,7 @@ function Footer({ state, setState }) {
 
         </table>
         <AudioPlayer
+          autoPlay
           src={state.src}
           currentTime={state.progress}
           listenInterval="30000" /*trigger onListen every 30 seconds*/
