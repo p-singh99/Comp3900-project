@@ -4,6 +4,7 @@ div.pages {
 
 .pagination {
     margin-top: 30px;
+    justify-content: center;
 }
 
 /* Overriding bootsrap css which adds a high z-index to active page. idk why but its very annoying */
