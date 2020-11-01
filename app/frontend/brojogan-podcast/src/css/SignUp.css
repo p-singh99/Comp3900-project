@@ -42,16 +42,27 @@
 }
 
 #username-input, .password-input, #email-input {
-  width: 200px;
+  width: 300px;
   background-color: rgba(0, 0, 0, 0);
   border: none;
   border-bottom: 2px solid #221F2E;
 }
 
+#confirm-pswd {
+  margin-top: 50px;
+}
+
+#confirm-pswd-input {
+  margin-top: 20px;;
+}
+
+#email-input {
+  margin-top: 20px;
+}
+
 #signUp-btn-2 {
   width: 150px;
-  /* margin-top: 20%; */
-  margin-left: 25px;
+  margin-left: 90px;
   height: 30px;
   background-color: #6E59D6; 
   border-radius: 50px;
@@ -62,8 +73,32 @@
   color: white;
 }
 
+.signup-help-btn {
+  width: 15px;
+  height: 15px;
+  background-color: transparent;
+  border: none;
+  font-weight: bold;
+  font-size: 10px;
+  color: white;
+  cursor: pointer;
+}
+
+.help-text {
+  margin: 0px 0px 0px 10px;
+  font-size: 9px;
+  visibility: hidden;
+  color: black;
+  border: 2px dotted #6E59D6;
+}
+
+#username-text, .password-text {
+  display: flex;
+  flex-direction: row;
+}
+
 .error {
   visibility: hidden;
-  color: blue;
+  color: red;
   font-weight: bold;
 }

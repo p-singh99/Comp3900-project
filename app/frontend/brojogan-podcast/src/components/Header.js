@@ -133,8 +133,8 @@ function Header() {
           resp.json().then(podcasts => {
             if (resp.status === 200) {
               // console.log(podcasts[0].title);
+              history.push("/search" + "?" + searched_text.value);
 
-             window.location.replace("/search" + "?" + searched_text.value);
             } else {
               // should never enter this
               console.log('response status is not 200 after search');
