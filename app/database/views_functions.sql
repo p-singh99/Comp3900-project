@@ -63,3 +63,13 @@ begin
 ) as bar;
 end;
 $$ language plpgsql;
+
+
+-- search vector view
+create or replace view searchvector as
+    select
+    setweight(to_tsvector(title), 'A') ||
+        setweight(to_tsvector(coalesce(author, '')), 'B') ||
+        setweight(to_tsvector(coalesce(description)), 'C') as vector,
+    podcasts.*
+    from podcasts;

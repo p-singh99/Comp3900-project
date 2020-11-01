@@ -20,7 +20,20 @@ import { isLoggedIn } from './auth-functions';
 function App() {
   // on app load, check if token valid using useeffect?
 
-  // const [playing, setPlaying] = useState();
+  const [playing, setPlaying] = useState({
+    title: "No Podcast Playing",
+    podcastTitle: "",
+    src: "",
+    thumb: "",
+    guid: "",
+    podcastID: "",
+    progress: 0.0
+  });
+  function changePlaying(state) {
+    console.log("new state is");
+    console.log(state);
+    setPlaying(state);
+  }
 
   const defaultComponents = () => (
 
@@ -31,8 +44,7 @@ function App() {
           <NavBar />
           <Route path="/" component={Home} exact />
           <Route path="/history" component={History} exact />
-          <Route path="/podcast/:id" component={Description} exact />
-          {/* <Route path="/podcast/:id" exact render={(props) => (<Description {...props} setPlaying={setPlaying} />)}/> */}
+          <Route path="/podcast/:id" exact render={(props) => (<Description {...props} setPlaying={changePlaying} />)}/>
           <Route path="/recommended" component={Recommended} exact />
           <Route path="/subscriptions" component={Subscriptions} exact />
           <Route path="/about" component={About} exact />
@@ -42,8 +54,7 @@ function App() {
         </div>
       </div>
       <footer>
-        <Footer />
-        {/* <Footer playing={playing} setPlaying={setPlaying} /> */}
+        <Footer state={playing} setState={changePlaying} />
       </footer>
       {/* move <footer></footer> into Footer component? It breaks it for some reason, makes it overlap with content */}
     </body>

@@ -8,6 +8,8 @@ import bcrypt
 import datetime
 from functools import wraps
 import requests
+import feedparser
+import urllib.parse
 
 
 app = Flask(__name__)
@@ -132,7 +134,6 @@ class Podcasts(Resource):
 				(search,search))
 
 		podcasts = cur.fetchall()
-		cur.close()
 		results = []
 		for p in podcasts:
 			subscribers = p[0]
@@ -224,6 +225,83 @@ class Podcast(Resource):
 		else:
 			return {}, 404
 
+class Listens(Resource):
+	@token_required
+	def get(self, podcastId):
+		conn, cur = get_conn()
+		user_id = get_user_id(cur)
+		episodeGuid = request.json.get("episodeGuid")
+		if episodeGuid is None:
+			cur.close()
+			pool.putconn()
+			return {"data": "episodeGuid not included"}, 400
+
+		cur.execute("""
+			SELECT timestamp from listens where
+			podcastId=%s and episodeGuid=%s and userId=%s
+		""",
+		(podcastId, episodeGuid, user_id))
+		res = cur.fetchone()
+		close_conn(conn, cur)
+		if res is None:
+			return {"data":"invalid podcastId or episodeGuid"}, 400
+		return {"time", int(res[0])}, 200
+
+	@token_required
+	def put(self, podcastId):
+		conn, cur = get_conn()
+		user_id = get_user_id(cur)
+		timestamp = request.json.get("time")
+		episodeGuid = request.json.get("episodeGuid")
+		if timestamp is None:
+			close_conn(conn,cur)
+			return {"data": "timestamp not included"}, 400
+		if not isinstance(timestamp, int):
+			close_conn(conn,cur)
+			return {"data": "timestamp must be an integer"}, 400
+		if episodeGuid is None:
+			close_conn(conn,cur)
+			return {"data": "episodeGuid not included"}, 400
+
+		# we're touching episodes so insert new episode (if it doesn't already exist)
+		cur.execute("""
+			INSERT INTO episodes (podcastId, guid)
+			values (%s, %s)
+			ON CONFLICT DO NOTHING
+		""",
+		(podcastId, episodeGuid))
+
+		cur.execute("""
+			INSERT INTO listens (userId, podcastId, episodeGuid, listenDate, timestamp)
+			values (%s, %s, %s, now(), %s)
+			ON CONFLICT ON CONSTRAINT listens_pkey DO UPDATE set listenDate=now(), timestamp=%s;
+		""",
+		(user_id, podcastId, episodeGuid, timestamp, timestamp))
+		conn.commit()
+		close_conn(conn,cur)
+		return {}, 200
+
+class ManyListens(Resource):
+	@token_required
+	def get(self, podcastId):
+		conn, cur = get_conn()
+		user_id = get_user_id(cur)
+		cur.execute("""
+			select episodeGuid, listenDate, timestamp
+			from listens where userid=%s and podcastid=%s
+		""",
+		(user_id, podcastId))
+		res = cur.fetchall()
+		close_conn(conn,cur)
+		jsonready = [{
+			"episodeGuid": x[0],
+			"listenDate": str(x[1]),
+			"timestamp": x[2]
+		    } for x in res]
+		print("got res")
+		print(jsonready)
+		return jsonready, 200
+		
 class Recommendations(Resource):
 	def get(self):
 		conn, cur = get_conn()
@@ -237,7 +315,8 @@ api.add_resource(Users, "/users")
 api.add_resource(Settings, "/users/self/settings")
 api.add_resource(Podcasts, "/podcasts")
 api.add_resource(Podcast, "/podcasts/<int:id>")
-
+api.add_resource(Listens, "/users/self/podcasts/<int:podcastId>/episodes/time")
+api.add_resource(ManyListens, "/users/self/podcasts/<int:podcastId>/time")
 
 if __name__ == '__main__':
 	app.run(debug=True)
