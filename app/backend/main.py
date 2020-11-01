@@ -8,6 +8,8 @@ import bcrypt
 import datetime
 from functools import wraps
 import requests
+import feedparser
+import urllib.parse
 
 app = Flask(__name__)
 api = Api(app)
@@ -15,6 +17,7 @@ CORS(app)
 
 #CHANGE SECRET KEY 
 app.config['SECRET_KEY'] = 'secret_key'
+
 conn_pool = psycopg2.pool.ThreadedConnectionPool(1, 3,\
 	 dbname="ultracast", user="brojogan", password="GbB8j6Op", host="polybius.bowdens.me", port=5432)
 
@@ -41,9 +44,11 @@ def get_user_id(cur):
 def get_xml(cur, ):
 	cur.execute()
 
+
 def create_token(username):
 	token = jwt.encode({'user' : username, 'exp' : datetime.datetime.utcnow() + datetime.timedelta(minutes=20)}, app.config['SECRET_KEY'])
 	return token.decode('UTF-8')
+
 
 def token_required(f):
 	@wraps(f)
@@ -57,6 +62,17 @@ def token_required(f):
 			return {'error' : 'token is invalid'}, 401
 		return f(*args, **kwargs)
 	return decorated
+
+def get_user_id(cur):
+	token = request.headers.get('token')
+	if token:
+		try:
+			data = jwt.decode(token, app.config['SECRET_KEY'])
+			cur.execute("SELECT id FROM users WHERE username ='%s' or email = '%s'" % (data['user'], data['user']))
+		except:
+			return None
+		return cur.fetchone()[0]
+	return None
 
 
 
@@ -157,6 +173,23 @@ class Podcasts(Resource):
 		close_conn(conn, cur)
 		return results, 200
 
+
+		for category in categories:
+			cur.execute("select id from categories where name=%s", (category,))
+			res = cur.fetchone()
+			categoryId = -1
+			if res is None:
+				# we need to add the new category
+				cur.execute("insert into categories (name) values (%s) returning id", (category,))
+				categoryId = cur.fetchone()[0]
+			else:
+				categoryId = res[0]
+			# we now have a category id and podcast id
+			cur.execute("insert into podcastCategories (podcastId, categoryId) values (%s,%s)",
+				(podcastId, categoryId))
+		return {"podcastId": podcastId}
+
+
 class Settings(Resource):
 	@token_required
 	def get(self):
@@ -253,6 +286,86 @@ class Podcast(Resource):
 		else:
 			return {}, 404
 
+
+class Listens(Resource):
+	@token_required
+	def get(self, podcastId):
+    conn, cur = get_conn()
+		user_id = get_user_id(cur)
+		episodeGuid = request.json.get("episodeGuid")
+		if episodeGuid is None:
+			cur.close()
+			pool.putconn()
+			return {"data": "episodeGuid not included"}, 400
+
+		cur.execute("""
+			SELECT timestamp from listens where
+			podcastId=%s and episodeGuid=%s and userId=%s
+		""",
+		(podcastId, episodeGuid, user_id))
+		res = cur.fetchone()
+		close_conn(conn,cur)
+		if res is None:
+			return {"data":"invalid podcastId or episodeGuid"}, 400
+		return {"time", int(res[0])}, 200
+
+	@token_required
+	def put(self, podcastId):
+    conn, cur = get_conn()
+		user_id = get_user_id(cur)
+		timestamp = request.json.get("time")
+		episodeGuid = request.json.get("episodeGuid")
+		if timestamp is None:
+			cur.close()
+			pool.putconn()
+			return {"data": "timestamp not included"}, 400
+		if not isinstance(timestamp, int):
+			close_conn(conn,cur)
+			return {"data": "timestamp must be an integer"}, 400
+		if episodeGuid is None:
+      close_conn(conn,cur)
+			return {"data": "episodeGuid not included"}, 400
+
+		# we're touching episodes so insert new episode (if it doesn't already exist)
+		cur.execute("""
+			INSERT INTO episodes (podcastId, guid)
+			values (%s, %s)
+			ON CONFLICT DO NOTHING
+		""",
+		(podcastId, episodeGuid))
+
+		cur.execute("""
+			INSERT INTO listens (userId, podcastId, episodeGuid, listenDate, timestamp)
+			values (%s, %s, %s, now(), %s)
+			ON CONFLICT ON CONSTRAINT listens_pkey DO UPDATE set listenDate=now(), timestamp=%s;
+		""",
+		(user_id, podcastId, episodeGuid, timestamp, timestamp))
+		cur.close()
+		conn.commit()
+		pool.putconn(conn)
+		return {}, 200
+
+class ManyListens(Resource):
+	@token_required
+	def get(self, podcastId):
+    conn, cur = get_conn()
+		user_id = get_user_id(cur)
+		cur.execute("""
+			select episodeGuid, listenDate, timestamp
+			from listens where userid=%s and podcastid=%s
+		""",
+		(user_id, podcastId))
+		res = cur.fetchall()
+    close_conn(conn,cur)
+		jsonready = [{
+			"episodeGuid": x[0],
+			"listenDate": str(x[1]),
+			"timestamp": x[2]
+		    } for x in res]
+		print("got res")
+		print(jsonready)
+		return jsonready, 200
+
 class History(Resource):
 	@token_required
 	def get(self, id):
@@ -311,6 +424,7 @@ class Recommendations(Resource):
 			
 
 
+
 api.add_resource(Unprotected, "/unprotected")
 api.add_resource(Protected, "/protected")
 api.add_resource(Login, "/login")
@@ -318,9 +432,11 @@ api.add_resource(Users, "/users")
 api.add_resource(Settings, "/users/self/settings")
 api.add_resource(Podcasts, "/podcasts")
 api.add_resource(Podcast, "/podcasts/<int:id>")
+api.add_resource(Listens, "/users/self/podcasts/<int:podcastId>/episodes/time")
+api.add_resource(ManyListens, "/users/self/podcasts/<int:podcastId>/time")
+
 api.add_resource(Recommendations, "/self/recommendations")
 api.add_resource(History, "/self/history/<int:id>")
-
 
 if __name__ == '__main__':
 	app.run(debug=True)

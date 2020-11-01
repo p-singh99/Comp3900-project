@@ -28,9 +28,11 @@ export const isLoggedIn = () => {
   return (window.localStorage.getItem("token") !== null)
 }
 
+
 export const getUsername = () => {
   return window.localStorage.getItem("username");
 }
+
 
 export const getToken = () => {
   return window.localStorage.getItem("token");
@@ -60,4 +62,5 @@ export async function fetchAPI(endpoint, method, body, failAuth=true) {
   } else {
     throw Error(data.error);
   }
+
 }
