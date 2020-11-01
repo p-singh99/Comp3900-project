@@ -262,9 +262,6 @@ function Description({ setPlaying }) {
 
                   <button className="download" eid={episode.guid} onClick={downloadEpisode}>Download</button>
                 </div>
-                <div>
-                  <AudioPlayer onPlay={console.log(`URL: ${episode.url}`)} src={episode.url} showFilledProgress={true}/>
-                </div>
                 {/* guid won't always work because some of them will contain invalid characters I think ? */}
                 {description}
                 {/* <div className='description collapsed' onClick={toggleDescription} dangerouslySetInnerHTML={{ __html: sanitiseDescription(episode.description) }}> */}
