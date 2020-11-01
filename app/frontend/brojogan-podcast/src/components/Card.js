@@ -100,6 +100,7 @@ function SubCard({details: podcast}) {
                   <p id="episode-list-card">
                     <a id="episode-list-link" className={'search-page-link'} href={`/podcast/${podcast.pid}?episode=${episodes.length-index}`}>
                       {episode.title}
+                      {/* Think should use Link or history.push() bc ahref causes restart of app I think */}
                     </a>
                   </p>
                 </div>
