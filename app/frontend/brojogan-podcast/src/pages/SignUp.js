@@ -179,11 +179,11 @@ function SignUp() {
                 </p>
               </p>
               { <p className="form-info"></p> }
-              <input type="password" className="password-input" name="password1" onInput={checkPassword} required minLength="10" maxLength="64" pattern="(?=.*[a-z])((?=.*\d)|(?=.*[A-Z])|(?=.*[!@#$%^&amp;*()_\-+=\{}\]:;'&quot;<,>.?\/|\\~`])).{0,}"/>
+              <input type="password" className="password-input" name="password1" onInput={(event) => checkPassword(event, document.forms["signUp-form"])} required minLength="10" maxLength="64" pattern="(?=.*[a-z])((?=.*\d)|(?=.*[A-Z])|(?=.*[!@#$%^&amp;*()_\-+=\{}\]:;'&quot;<,>.?\/|\\~`])).{0,}"/>
             </div>
             <div>
               <p className="password-text" id="confirm-pswd">Confirm Password</p> {/* two have the same id */}
-              <input id="confirm-pswd-input" type="password" className="password-input" name="password2" onInput={checkPasswordsMatch}/> {/* should use once attribute */}
+              <input id="confirm-pswd-input" type="password" className="password-input" name="password2" onInput={(event) => checkPasswordsMatch(event, document.forms["signUp-form"])}/> {/* should use once attribute */}
 
               { <p id="password-error" className="error">Placeholder</p> }
             </div>
