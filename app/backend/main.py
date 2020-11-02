@@ -273,18 +273,52 @@ class Settings(Resource):
 class Podcast(Resource):
 	def get(self, id):
 		conn, cur = get_conn()
+		uid = get_user_id(cur)
+		cur.execute("SELECT * FROM subscriptions WHERE userid = %s AND podcastid = %s;", (uid, id))
+		flag = False
+		if cur.rowcount != 0:
+			flag = True
 		cur.execute("SELECT rssFeed FROM Podcasts WHERE id=(%s)", (id,))
 		res = cur.fetchone()
 		close_conn(conn,cur)
 		if res:
 			url = res[0]
 			resp = requests.get(url, headers={'User-Agent': 'Mozilla/5.0 (X11; CrOS x86_64 8172.45.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.64 Safari/537.36'})
-			if resp.status_code == 200:
-				return {"xml": resp.text}, 200
+			if resp.status_code == 200 and flag:
+				return {"xml": resp.text, "subscription": True}, 200
+			elif resp.status_code == 200 and not flag:
+				return {"xml": resp.text, "subscription": False}, 200
 			else:
 				return {}, 502
 		else:
 			return {}, 404
+
+	@token_required
+	def post(self, id):
+	conn, cur = get_conn()
+		userID = get_user_id(cur)
+		parser = reqparse.RequestParser(bundle_errors=True)
+		parser.add_argument('podcastid', type=str, location="json")
+		args = parser.parse_args()
+		podcastID = args["podcastid"]
+		cur.execute("INSERT INTO subscriptions(userid, podcastid) VALUES (%s,%s);",(userID, podcastID))
+		conn.commit()
+		close_conn(conn, cur)
+		return {'data' : "subscription successful"}, 200
+
+	@token_required
+	def delete(self,id):
+		conn, cur = get_conn()
+		userID = get_user_id(cur)
+		parser = reqparse.RequestParser(bundle_errors=True)
+		parser.add_argument('podcastid', type=str, location="json")
+		args = parser.parse_args()
+		podcastID = args["podcastid"]
+		cur.execute("DELETE FROM subscriptions WHERE userid = %s AND podcastid = %s;", (userID, podcastID))
+		conn.commit()
+		close_conn(conn,cur)
+		return {"data" : "subscription deleted"}, 200
+
 
 
 class Listens(Resource):
