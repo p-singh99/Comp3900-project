@@ -13,12 +13,16 @@
   padding: 15px;
   text-align: center;
   background-color: #2E2B3F;
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 1;
+  border-bottom: 2px solid white;
 }
 
 #dropDownDiv {
   position: absolute;
   right: 20px;
-  /* border: 1px solid #09BC6D; */
   width: 150px;
 }
 
@@ -36,7 +40,7 @@
 #search-input {
   border-radius: 50px;
   width: 50%;
-  height: 25px;
+  height: 30px;
   background-color: #2E2B3F;
   border-color: #64CFEB;
   color: #64CFEB;
@@ -44,6 +48,21 @@
   font-weight: bold;
   padding-left: 20px;
   padding-right: 20px;
+  border-style: solid;
+}
+
+#search-btn {
+  border-radius: 10px;
+  border-color: teal;
+  background-color: transparent;
+  margin-left: 20px;
+  font-size: 12px;
+  width: 60px;
+  padding-top: 2px;
+  padding-bottom: 2px;
+  color: white;
+  font-weight: bold;
+  border-style: solid;
 }
 
 #notification-button, #settings-button, 

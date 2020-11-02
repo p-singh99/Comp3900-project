@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
 import './../css/Footer.css';
+import AudioPlayer from 'react-h5-audio-player';
+import 'react-h5-audio-player/lib/styles.css';
+import { fetchAPI, isLoggedIn } from './../auth-functions';
 
 // function storeTime() {
 //   // get playtime, save in localstorage so can resume if refresh
@@ -9,30 +12,48 @@ function sendTime() {
   // get playtime, send to server
 }
 
-// function Footer({ playing, setPlaying }) {
-  function Footer() {
-  // const [episode, setEpisode] = useState({src: "https://dts.podtrac.com/redirect.mp3/feeds.soundcloud.com/stream/911699122-chapo-trap-house-463-teaser-mods-will-not-save-us.mp3", podcastId: null, episodeGuid: null});
-  // window.setTimeout(storeTime, 10*1000);
-  // window.setTimeout(sendTime, 30*1000);
-
-  // edit src from other components somehow
-  // and only display if set
-
-  // if (!playing) {
-  //   return null;
-  // }
-  
+function Footer({ state, setState }) {
+  function pingServer(progress) {
+    if (isLoggedIn()) {
+      console.log("pinging " + progress + " to server episodeguid = " + state.guid + ", podcastid = " + state.podcastID);
+      let uri = '/users/self/podcasts/'+state.podcastID+'/episodes/time';
+      console.log("sending to " + uri);
+      fetchAPI(uri, 'put', {'time': progress, 'episodeGuid': state.guid}).then(() => console.log("updated"))
+    }
+  }
+  let setPlayed=false;
   return (
-    // <div id='footer-div' style={{display: playing ? 'block' : 'none'}}>
     <div id='footer-div'>
-      {/* <h1>Footer</h1> */}
-      <div><audio src='' controls autoPlay></audio>
-      <button>Stop</button></div>
-      {/* {playing
-        ? <div><audio src={playing.src} controls autoPlay></audio>
-          <button onClick={() => setPlaying()}>Stop</button></div>
-        : null
-      } */}
+      <div id='player'>
+        <table className="player-table">
+          <tr>
+            <td className="image-col" rowSpan="2">
+              <img src={state.thumb} className="thumbnail"></img>
+            </td>
+            <td>{state.title}</td>
+          </tr>
+          <tr>
+            <td>{state.podcastTitle}</td>
+          </tr>
+
+
+        </table>
+        <AudioPlayer
+          autoPlay
+          src={state.src}
+          currentTime={state.progress}
+          listenInterval="30000" /*trigger onListen every 30 seconds*/
+          onPause={e=>pingServer(Math.floor(Number(e.target.currentTime)))}
+          onListen={e=>pingServer(Math.floor(Number(e.target.currentTime)))}
+          onSeeked={e=>pingServer(Math.floor(Number(e.target.currentTime)))}
+          onCanPlay={e=>{
+            if (! setPlayed) {
+              setPlayed = true;
+              console.log("can play!");
+              e.target.currentTime=state.progress
+            }}}
+        />
+      </div>
     </div>
   )
 }

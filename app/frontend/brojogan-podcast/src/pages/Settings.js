@@ -85,7 +85,7 @@ function Settings() {
           // refresh?
         })
         .catch(err => {
-          displayMessage(err);
+          displayMessage(err + ". " + "No changes were made to your account.");
         });
     }
   }

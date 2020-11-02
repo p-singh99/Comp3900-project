@@ -30,21 +30,8 @@ function DropDownMenu(props) {
   return (
     <React.Fragment>
       <div id='dropDown-div' ref={menuRef}>
-        {/* <Link to="/login">home</Link> */}
         {props.items.options.map(item => {
-          // return <p>{item}</p>
-          // const link = '/' + {item};
-          //if ({item} == 'login') {
-            // return <a id = "login-home-header" href='/login'>{item}</a>
-            // return <Link to={item.link}>{item.text}</Link>
-            // return <a id = "login-home-header" href={item.link}>{item.text}</a>
-            return <p onClick={item.onClick} style={{cursor: 'pointer'}}>{item.text}</p>
-            // would be good to do item.onClick ? onClick = item.onClick : <Link to={item.ink}>
-            // if that is possible
-          // } else {
-          //   return <a href='#'>{item}</a>
-          // }
-          
+            return <p onClick={item.onClick} style={{cursor: 'pointer'}}>{item.text}</p>          
         })}
       </div>
     </React.Fragment>

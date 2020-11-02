@@ -8,6 +8,9 @@ import bcrypt
 import datetime
 from functools import wraps
 import requests
+import feedparser
+import urllib.parse
+from SemaThreadPool import SemaThreadPool
 
 app = Flask(__name__)
 api = Api(app)
@@ -15,7 +18,7 @@ CORS(app)
 
 #CHANGE SECRET KEY 
 app.config['SECRET_KEY'] = 'secret_key'
-conn_pool = psycopg2.pool.ThreadedConnectionPool(1, 3,\
+conn_pool = SemaThreadPool(1, 50,\
 	 dbname="ultracast", user="brojogan", password="GbB8j6Op", host="polybius.bowdens.me", port=5432)
 
 def get_conn():
@@ -164,7 +167,7 @@ class Settings(Resource):
 		email = cur.fetchone()[0]
 		close_conn(conn, cur)
 		return {"email" : email}
-		
+
 	@token_required
 	def put(self):
 		data = jwt.decode(request.headers['token'], app.config['SECRET_KEY'])
@@ -194,6 +197,10 @@ class Settings(Resource):
 					if not cur.fetchone():
 						close_conn(conn, cur)
 						return {"error": "Email already exists"}, 400
+<<<<<<< HEAD
+=======
+
+>>>>>>> new_master
 				cur.execute("UPDATE users SET email='%s' WHERE username='%s' OR email='%s'" % (args['newemail'], username, username))
 			if hashedpassword:
 				cur.execute("UPDATE users SET hashedpassword='%s' WHERE username='%s' OR email = '%s'" % (hashedpassword.decode('UTF-8'), username, username))
@@ -238,18 +245,51 @@ class Settings(Resource):
 class Podcast(Resource):
 	def get(self, id):
 		conn, cur = get_conn()
+		uid = get_user_id(cur)
+		cur.execute("SELECT * FROM subscriptions WHERE userid = %s AND podcastid = %s;", (uid, id))
+		flag = False
+		if cur.rowcount != 0:
+			flag = True
 		cur.execute("SELECT rssFeed FROM Podcasts WHERE id=(%s)", (id,))
 		res = cur.fetchone()
 		close_conn(conn,cur)
 		if res:
 			url = res[0]
 			resp = requests.get(url, headers={'User-Agent': 'Mozilla/5.0 (X11; CrOS x86_64 8172.45.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.64 Safari/537.36'})
-			if resp.status_code == 200:
-				return {"xml": resp.text}, 200
+			if resp.status_code == 200 and flag:
+				return {"xml": resp.text, "subscription": True}, 200
+			elif resp.status_code == 200 and not flag:
+				return {"xml": resp.text, "subscription": False}, 200
 			else:
 				return {}, 502
 		else:
 			return {}, 404
+
+	@token_required
+	def post(self, id):
+		conn, cur = get_conn()
+		userID = get_user_id(cur)
+		parser = reqparse.RequestParser(bundle_errors=True)
+		parser.add_argument('podcastid', type=str, location="json")
+		args = parser.parse_args()
+		podcastID = args["podcastid"]
+		cur.execute("INSERT INTO subscriptions(userid, podcastid) VALUES (%s,%s);",(userID, podcastID))
+		conn.commit()
+		close_conn(conn, cur)
+		return {'data' : "subscription successful"}, 200
+
+	@token_required
+	def delete(self,id):
+		conn, cur = get_conn()
+		userID = get_user_id(cur)
+		parser = reqparse.RequestParser(bundle_errors=True)
+		parser.add_argument('podcastid', type=str, location="json")
+		args = parser.parse_args()
+		podcastID = args["podcastid"]
+		cur.execute("DELETE FROM subscriptions WHERE userid = %s AND podcastid = %s;", (userID, podcastID))
+		conn.commit()
+		close_conn(conn,cur)
+		return {"data" : "subscription deleted"}, 200
 
 class History(Resource):
 	@token_required
@@ -266,7 +306,86 @@ class History(Resource):
 		close_conn(conn, cur)
 		return {"history" : eps}, 200
 
+<<<<<<< HEAD
+=======
+class Listens(Resource):
+	@token_required
+	def get(self, podcastId):
+		conn, cur = get_conn()
+		user_id = get_user_id(cur)
+		episodeGuid = request.json.get("episodeGuid")
+		if episodeGuid is None:
+			cur.close()
+			conn_pool.putconn()
+			return {"data": "episodeGuid not included"}, 400
 
+		cur.execute("""
+			SELECT timestamp from listens where
+			podcastId=%s and episodeGuid=%s and userId=%s
+		""",
+		(podcastId, episodeGuid, user_id))
+		res = cur.fetchone()
+		close_conn(conn, cur)
+		if res is None:
+			return {"data":"invalid podcastId or episodeGuid"}, 400
+		return {"time", int(res[0])}, 200
+
+	@token_required
+	def put(self, podcastId):
+		conn, cur = get_conn()
+		user_id = get_user_id(cur)
+		timestamp = request.json.get("time")
+		episodeGuid = request.json.get("episodeGuid")
+		if timestamp is None:
+			close_conn(conn,cur)
+			return {"data": "timestamp not included"}, 400
+		if not isinstance(timestamp, int):
+			close_conn(conn,cur)
+			return {"data": "timestamp must be an integer"}, 400
+		if episodeGuid is None:
+			close_conn(conn,cur)
+			return {"data": "episodeGuid not included"}, 400
+>>>>>>> new_master
+
+		# we're touching episodes so insert new episode (if it doesn't already exist)
+		cur.execute("""
+			INSERT INTO episodes (podcastId, guid)
+			values (%s, %s)
+			ON CONFLICT DO NOTHING
+		""",
+		(podcastId, episodeGuid))
+
+		cur.execute("""
+			INSERT INTO listens (userId, podcastId, episodeGuid, listenDate, timestamp)
+			values (%s, %s, %s, now(), %s)
+			ON CONFLICT ON CONSTRAINT listens_pkey DO UPDATE set listenDate=now(), timestamp=%s;
+		""",
+		(user_id, podcastId, episodeGuid, timestamp, timestamp))
+		conn.commit()
+		close_conn(conn,cur)
+		return {}, 200
+
+class ManyListens(Resource):
+	@token_required
+	def get(self, podcastId):
+		conn, cur = get_conn()
+		user_id = get_user_id(cur)
+		cur.execute("""
+			select episodeGuid, listenDate, timestamp
+			from listens where userid=%s and podcastid=%s
+		""",
+		(user_id, podcastId))
+		res = cur.fetchall()
+		close_conn(conn,cur)
+		jsonready = [{
+			"episodeGuid": x[0],
+			"listenDate": str(x[1]),
+			"timestamp": x[2]
+		    } for x in res]
+		print("got res")
+		print(jsonready)
+		return jsonready, 200
+		
 class Recommendations(Resource):
 	@token_required
 	def get(self):
@@ -277,7 +396,12 @@ class Recommendations(Resource):
 		cur.execute("select p.xml, %s from podcasts p, listens l where p.id = l.podcastid and l.userid=%s and \
 			p.id not in (select p.id from podcasts p, subscriptions s where s.userid=%s and s.podcastid=p.id) \
 				order by l.listendate DESC Limit 10;" % (1, user_id, user_id))
+<<<<<<< HEAD
 		recs.update(cur.fetchall())
+=======
+		for i in cur.fetchall():
+			recs.add((i[0], 1))
+>>>>>>> new_master
 		cur.execute("select query from searchqueries where userid=%s order by searchdate DESC limit 10" % user_id)
 		queries = cur.fetchall()
 		for query in queries:
@@ -304,6 +428,10 @@ class Recommendations(Resource):
 			recs.add((i[0],3))
 		# recs = recs[:10]
 		recsl = list(recs)
+<<<<<<< HEAD
+=======
+		sorted(recsl,key=lambda x: x[1])
+>>>>>>> new_master
 		close_conn(conn, cur)
 		return {"recommendations" : recsl}
 		
@@ -325,8 +453,13 @@ api.add_resource(Podcasts, "/podcasts")
 api.add_resource(Podcast, "/podcasts/<int:id>")
 api.add_resource(Recommendations, "/self/recommendations")
 api.add_resource(History, "/self/history/<int:id>")
+<<<<<<< HEAD
 api.add_resource(Notifications, "/users/notifications")
 
+=======
+api.add_resource(Listens, "/users/self/podcasts/<int:podcastId>/episodes/time")
+api.add_resource(ManyListens, "/users/self/podcasts/<int:podcastId>/time")
+>>>>>>> new_master
 
 if __name__ == '__main__':
 	app.run(debug=True)
