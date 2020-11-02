@@ -36,7 +36,7 @@ function unSubscribeHandler(event) {
 
 // CORS bypass
 async function getRSS(id) {
-  return fetch(`/podcasts/${id}`,'get',null);
+  return fetchAPI(`/podcasts/${id}`,'get',null);
   //return fetch(`${API_URL}/podcasts/${id}`).then(resp => resp.json());
   /*
   let resp, data;
