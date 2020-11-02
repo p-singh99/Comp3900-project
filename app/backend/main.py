@@ -10,6 +10,7 @@ from functools import wraps
 import requests
 import feedparser
 import urllib.parse
+from SemaThreadPool import SemaThreadPool
 
 app = Flask(__name__)
 api = Api(app)
@@ -17,7 +18,7 @@ CORS(app)
 
 #CHANGE SECRET KEY 
 app.config['SECRET_KEY'] = 'secret_key'
-conn_pool = psycopg2.pool.ThreadedConnectionPool(1, 3,\
+conn_pool = SemaThreadPool(1, 50,\
 	 dbname="ultracast", user="brojogan", password="GbB8j6Op", host="polybius.bowdens.me", port=5432)
 
 def get_conn():
@@ -336,49 +337,38 @@ class Recommendations(Resource):
 		conn, cur = get_conn()
 		user_id = get_user_id(cur)
 		# Finds the most recently listened to podcasts that are not subscribed to
-		cur.execute("select p.title from podcasts p, listens l where p.id = l.podcastid and l.userid=%s and \
+		cur.execute("select p.xml, %s from podcasts p, listens l where p.id = l.podcastid and l.userid=%s and \
 			p.id not in (select p.id from podcasts p, subscriptions s where s.userid=%s and s.podcastid=p.id) \
-				order by l.listendate DESC Limit 10;" % (user_id, user_id))
+				order by l.listendate DESC Limit 10;" % (1, user_id, user_id))
 		for i in cur.fetchall():
-		 	recs.add((i[0],3))
-		# get last 10 search queries
-		# get 10 search results from each query
-		# compare max 100 queries with categories of subscribed podcasts and sort by most in common
+			recs.add((i[0], 1))
 		cur.execute("select query from searchqueries where userid=%s order by searchdate DESC limit 10" % user_id)
 		queries = cur.fetchall()
-		# for i in queries:
-		# 	print(i[0])
-		print("start view")
 		for query in queries:
-			cur.execute("CREATE OR REPLACE VIEW temp (query) AS SELECT v.title\
+			cur.execute("select p.title, count(p.xml) from podcasts p, podcastcategories pc, categories c where p.title in (SELECT v.title\
 				FROM   searchvector v\
 				FULL OUTER JOIN Subscriptions s ON s.podcastId = v.id\
 				WHERE  v.vector @@ plainto_tsquery(%s)\
 				GROUP BY  (s.userid, v.title, v.author, v.description, v.id, v.vector)\
-			ORDER BY  ts_rank(v.vector, plainto_tsquery(%s)) desc;", (query[0],query[0]))
-			conn.commit()
-			cur.execute("select t.query, count(t.query) from temp t, podcasts p, podcastcategories pc, categories c where p.title = t.query and\
-					p.id = pc.podcastid and pc.categoryid=c.id and c.id in (select distinct c.id from categories c, subscriptions s, podcastcategories pc \
-						where s.userId=%s and s.podcastid = pc.podcastid and pc.categoryid = c.id) and \
-							p.title not in (select p.title from podcasts p, subscriptions s where p.id = s.podcastid and \
-								s.userid=%s) group by t.query order by count(t.query) DESC;" % (user_id, user_id))
+			ORDER BY  ts_rank(v.vector, plainto_tsquery(%s)) desc LIMIT 10) and\
+				p.id = pc.podcastid and pc.categoryid=c.id and c.id in (select distinct c.id from categories c, subscriptions s, podcastcategories pc \
+					where s.userId=%s and s.podcastid = pc.podcastid and pc.categoryid = c.id) and \
+						p.title not in (select p.title from podcasts p, subscriptions s where p.id = s.podcastid and \
+							s.userid=%s) group by p.title order by count(p.xml) DESC", (query[0],query[0], user_id, user_id))
 
 			for i in cur.fetchall():
-				print(i[0],2)
 				recs.add((i[0],2))
-		#cur.execute("select p.title, count(p.title) from podcasts p, podcastcategories pc, categories c \
-		#	where p.id=pc.podcastid and pc.categoryid=c.id and c.id in (select distinct c.id from categories c, subscriptions s, podcastcategories pc \
-		#		where s.userId=%s and s.podcastid = pc.podcastid and pc.categoryid = c.id) and \
-		#			p.title not in (select p.title from podcasts p, subscriptions s where p.id = s.podcastid and \
-		#				s.userid=%s) group by p.title order by count(p.title) DESC;" % (user_id, user_id))
-		#for i in cur.fetchall():
-		#	recs.add((i[0],1))
+						
+		cur.execute("select p.title, count(p.title) from podcasts p, podcastcategories pc, categories c \
+			where p.id=pc.podcastid and pc.categoryid=c.id and c.id in (select distinct c.id from categories c, subscriptions s, podcastcategories pc \
+				where s.userId=%s and s.podcastid = pc.podcastid and pc.categoryid = c.id) and \
+					p.title not in (select p.title from podcasts p, subscriptions s where p.id = s.podcastid and \
+						s.userid=%s) group by p.title order by count(p.title) DESC;" % (user_id, user_id))
+		for i in cur.fetchall():
+			recs.add((i[0],3))
 		# recs = recs[:10]
 		recsl = list(recs)
-		print(len(recs))
 		sorted(recsl,key=lambda x: x[1])
-		print(len(recsl))
-		# sprint(recsl[0])
 		close_conn(conn, cur)
 		return {"recommendations" : recsl}
 			
