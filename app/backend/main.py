@@ -309,7 +309,7 @@ class Listens(Resource):
 		episodeGuid = request.json.get("episodeGuid")
 		if episodeGuid is None:
 			cur.close()
-			pool.putconn()
+			conn_pool.putconn()
 			return {"data": "episodeGuid not included"}, 400
 
 		cur.execute("""
@@ -431,7 +431,6 @@ api.add_resource(Podcasts, "/podcasts")
 api.add_resource(Podcast, "/podcasts/<int:id>")
 api.add_resource(Recommendations, "/self/recommendations")
 api.add_resource(History, "/self/history/<int:id>")
-
 api.add_resource(Listens, "/users/self/podcasts/<int:podcastId>/episodes/time")
 api.add_resource(ManyListens, "/users/self/podcasts/<int:podcastId>/time")
 
