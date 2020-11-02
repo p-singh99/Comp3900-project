@@ -10,9 +10,34 @@ import { isLoggedIn, fetchAPI } from '../auth-functions';
 // !! what happens if the description is invalid html, will it break the whole page?
 // eg the a tag doesn't close
 
+// subscription button
+function SubscribeHandler(event) {
+  console.log("entered into subhandler");
+  var podcastID = window.location.pathname.substring(9);
+  console.log(podcastID);
+  let body = {};
+  body.podcastid = podcastID;
+  fetchAPI(`/podcasts/${podcastID}`, 'post', body)
+    .then(data => {
+    })
+}
+
+// unsubscription button
+function unSubscribeHandler(event) {
+  console.log("entered into Unsubhandler");
+  var podcastID = window.location.pathname.substring(9);
+  console.log(podcastID);
+  let body = {};
+  body.podcastid = podcastID;
+  fetchAPI(`/podcasts/${podcastID}`, 'delete', body)
+    .then(data => {
+    })
+}
+
 // CORS bypass
 async function getRSS(id) {
-  return fetch(`${API_URL}/podcasts/${id}`).then(resp => resp.json());
+  return fetchAPI(`/podcasts/${id}`,'get',null);
+  //return fetch(`${API_URL}/podcasts/${id}`).then(resp => resp.json());
   /*
   let resp, data;
   try {
@@ -131,7 +156,7 @@ function Description({ setPlaying }) {
 
         // if we're logged in we'll get the listened data for this podcast
         if (isLoggedIn()) {
-          let timesPromise = fetchAPI('/users/self/podcasts/'+id+'/time', 'get');
+          let timesPromise = fetchAPI('/users/self/podcasts/'+id+'/time', 'get', null);
           promises.push(timesPromise);
         }
 
@@ -211,6 +236,11 @@ function Description({ setPlaying }) {
             <div id="podcast-name-author">
               <h1 id="podcast-name">{podcast.title}</h1>
               <h3 id="podcast-author">{podcast.author}</h3>
+              <form id="subscribe-form" onClick={SubscribeHandler}>
+                <div id="subscribe-btns">
+                  <button id="subscribe-btn" type="button">Subscribe</button>
+                </div>
+              </form>
               {/* <p id="podcast-description" dangerouslySetInnerHTML={{ __html: sanitiseDescription(podcast.description) }}></p> */}
               {getPodcastDescription(podcast)}
             </div>

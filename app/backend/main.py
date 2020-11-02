@@ -166,8 +166,75 @@ class Settings(Resource):
 		close_conn(conn, cur)
 		return {"email" : email}
 		
+	# @token_required
+	# def put(self):
+	# 	data = jwt.decode(request.headers['token'], app.config['SECRET_KEY'])
+	# 	username = data['user']
+	# 	conn, cur = get_conn()
+	# 	parser = reqparse.RequestParser(bundle_errors=True)
+	# 	parser.add_argument('oldpassword', type=str, required=True, help="Need old password", location="json")
+	# 	parser.add_argument('newpassword', type=str, location="json")
+	# 	parser.add_argument('newemail', type=str, location="json")
+	# 	args = parser.parse_args()
+	# 	# check current password
+	# 	cur.execute("SELECT hashedpassword FROM users WHERE username='%s'" % username)
+	# 	old_pw = cur.fetchone()[0].strip()
+	# 	if bcrypt.checkpw(args["oldpassword"].encode('UTF-8'), old_pw.encode('utf-8')):
+	# 		if args["newpassword"]:
+	# 			if args["oldpassword"] != args["newpassword"]:
+	# 				# change password
+	# 				password = args["newpassword"]
+	# 				password = password.encode('UTF-8')
+	# 				hashedpassword = bcrypt.hashpw(password, bcrypt.gensalt())
+	# 				cur.execute("UPDATE users SET hashedpassword='%s' WHERE username='%s' OR email = '%s'" % (hashedpassword.decode('UTF-8'), username, username))
+	# 		if args['newemail']:
+	# 			# change email
+	# 			cur.execute("SELECT email FROM users where email='%s'" % (args['newemail']))
+	# 			if cur.fetchone():
+	# 				return {"error", "Email already exists"}, 400
+	# 			cur.execute("UPDATE users SET email='%s' WHERE username='%s' OR email='%s'" % (args['newemail'], username, username))
+
+	# 		conn.commit()
+	# 		close_conn(conn, cur)
+	# 		return {"data" : "success"}, 200
+	# 	close_conn(conn,cur)
+	# 	return {"error" : "wrong password"}, 400
+
 	@token_required
 	def put(self):
+		# data = jwt.decode(request.headers['token'], app.config['SECRET_KEY'])
+		# username = data['user']
+		# conn, cur = get_conn()
+		# parser = reqparse.RequestParser(bundle_errors=True)
+		# parser.add_argument('oldpassword', type=str, required=True, help="Need old password", location="json")
+		# parser.add_argument('newpassword', type=str, location="json")
+		# parser.add_argument('newemail', type=str, location="json")
+		# args = parser.parse_args()
+		# hashedpassword = ""
+		# # check current password
+		# cur.execute("SELECT hashedpassword FROM users WHERE username='%s'" % username)
+		# old_pw = cur.fetchone()[0].strip()
+		# if bcrypt.checkpw(args["oldpassword"].encode('UTF-8'), old_pw.encode('utf-8')):
+		# 	if args["newpassword"]:
+		# 		if args["oldpassword"] != args["newpassword"]:
+		# 			# change password
+		# 			password = args["newpassword"]
+		# 			password = password.encode('UTF-8')
+		# 			hashedpassword = bcrypt.hashpw(password, bcrypt.gensalt())
+		# 	if args['newemail']:
+		# 		# change email
+		# 		cur.execute("SELECT email FROM users where email='%s'" % (args['newemail']))
+		# 		if cur.fetchone():
+		# 			return {"error", "Email already exists"}, 400
+		# 		cur.execute("UPDATE users SET email='%s' WHERE username='%s' OR email='%s'" % (args['newemail'], username, username))
+		# 	if hashedpassword:
+		# 		cur.execute("UPDATE users SET hashedpassword='%s' WHERE username='%s' OR email = '%s'" % (hashedpassword.decode('UTF-8'), username, username))
+		# 	conn.commit()
+		# 	close_conn(conn, cur)
+		# 	return {"data" : "success"}, 200
+		# close_conn(conn,cur)
+		# return {"error" : "wrong password"}, 400
+
 		data = jwt.decode(request.headers['token'], app.config['SECRET_KEY'])
 		username = data['user']
 		conn, cur = get_conn()
@@ -176,6 +243,7 @@ class Settings(Resource):
 		parser.add_argument('newpassword', type=str, location="json")
 		parser.add_argument('newemail', type=str, location="json")
 		args = parser.parse_args()
+		hashedpassword = ""
 		# check current password
 		cur.execute("SELECT hashedpassword FROM users WHERE username='%s'" % username)
 		old_pw = cur.fetchone()[0].strip()
@@ -186,14 +254,18 @@ class Settings(Resource):
 					password = args["newpassword"]
 					password = password.encode('UTF-8')
 					hashedpassword = bcrypt.hashpw(password, bcrypt.gensalt())
-					cur.execute("UPDATE users SET hashedpassword='%s' WHERE username='%s' OR email = '%s'" % (hashedpassword.decode('UTF-8'), username, username))
 			if args['newemail']:
 				# change email
 				cur.execute("SELECT email FROM users where email='%s'" % (args['newemail']))
 				if cur.fetchone():
-					return {"error", "Email already exists"}, 400
-				cur.execute("UPDATE users SET email='%s' WHERE username='%s' OR email='%s'" % (args['newemail'], username, username))
+					cur.execute("SELECT email FROM users where email='%s' and username='%s'" % (args['newemail'], data['user']))
+					if not cur.fetchone():
+						close_conn(conn, cur)
+						return {"error": "Email already exists"}, 400
 
+				cur.execute("UPDATE users SET email='%s' WHERE username='%s' OR email='%s'" % (args['newemail'], username, username))
+			if hashedpassword:
+				cur.execute("UPDATE users SET hashedpassword='%s' WHERE username='%s' OR email = '%s'" % (hashedpassword.decode('UTF-8'), username, username))
 			conn.commit()
 			close_conn(conn, cur)
 			return {"data" : "success"}, 200
@@ -235,23 +307,66 @@ class Settings(Resource):
 class Podcast(Resource):
 	def get(self, id):
 		conn, cur = get_conn()
+		uid = get_user_id(cur)
+		cur.execute("SELECT * FROM subscriptions WHERE userid = %s AND podcastid = %s;", (uid, id))
+		flag = False
+		if cur.rowcount != 0:
+			flag = True
 		cur.execute("SELECT rssFeed FROM Podcasts WHERE id=(%s)", (id,))
 		res = cur.fetchone()
 		close_conn(conn,cur)
 		if res:
 			url = res[0]
 			resp = requests.get(url, headers={'User-Agent': 'Mozilla/5.0 (X11; CrOS x86_64 8172.45.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.64 Safari/537.36'})
-			if resp.status_code == 200:
-				return {"xml": resp.text}, 200
+			if resp.status_code == 200 and flag:
+				return {"xml": resp.text, "subscription": True}, 200
+			elif resp.status_code == 200 and not flag:
+				return {"xml": resp.text, "subscription": False}, 200
 			else:
 				return {}, 502
 		else:
 			return {}, 404
 
+	@token_required
+	def post(self, id):
+		conn, cur = get_conn()
+		userID = get_user_id(cur)
+		parser = reqparse.RequestParser(bundle_errors=True)
+		parser.add_argument('podcastid', type=str, location="json")
+		args = parser.parse_args()
+		podcastID = args["podcastid"]
+		cur.execute("INSERT INTO subscriptions(userid, podcastid) VALUES (%s,%s);",(userID, podcastID))
+		conn.commit()
+		close_conn(conn, cur)
+		return {'data' : "subscription successful"}, 200
+
+	@token_required
+	def delete(self,id):
+		conn, cur = get_conn()
+		userID = get_user_id(cur)
+		parser = reqparse.RequestParser(bundle_errors=True)
+		parser.add_argument('podcastid', type=str, location="json")
+		args = parser.parse_args()
+		podcastID = args["podcastid"]
+		cur.execute("DELETE FROM subscriptions WHERE userid = %s AND podcastid = %s;", (userID, podcastID))
+		conn.commit()
+		close_conn(conn,cur)
+		return {"data" : "subscription deleted"}, 200
+
 class History(Resource):
 	@token_required
-	def get(self):
-		pass
+	def get(self, id):
+		if id < 0:
+			return {"error": "bad request"}, 400
+		range = 50
+		offset = (id - 1) * range
+		conn, cur = get_conn()
+		user_id = get_user_id(cur)
+		cur.execute("SELECT p.xml, l.episodeguid FROM listens l, podcasts p where l.userid=%s and \
+			p.id = l.podcastid ORDER BY l.listenDate LIMIT %s OFFSET %s" % (user_id, range, offset))
+		eps = cur.fetchall()
+		close_conn(conn, cur)
+		return {"history" : eps}, 200
 
 class Listens(Resource):
 	@token_required
@@ -382,6 +497,7 @@ api.add_resource(Settings, "/users/self/settings")
 api.add_resource(Podcasts, "/podcasts")
 api.add_resource(Podcast, "/podcasts/<int:id>")
 api.add_resource(Recommendations, "/self/recommendations")
+api.add_resource(History, "/self/history/<int:id>")
 
 api.add_resource(Listens, "/users/self/podcasts/<int:podcastId>/episodes/time")
 api.add_resource(ManyListens, "/users/self/podcasts/<int:podcastId>/time")

@@ -56,6 +56,7 @@ CREATE TABLE Listens (
     episodeGuid         text,
     listenDate          timestamp not null,
     timestamp           integer not null,
+    complete            boolean,
     FOREIGN KEY (userId) references Users (id),
     FOREIGN KEY (podcastId, episodeGuid) references Episodes (podcastId, guid),
     PRIMARY KEY (userId, podcastId, episodeGuid)
