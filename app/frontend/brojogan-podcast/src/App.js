@@ -49,7 +49,8 @@ function App() {
           <Route path="/subscriptions" component={Subscriptions} exact />
           <Route path="/about" component={About} exact />
           <Route path="/search" component={Search} />
-
+          {/* <Route path="/settings" component={Settings} exact /> */}
+          <Route path="/settings" exact>{isLoggedIn() ? <Settings /> : <Redirect to="/" />}</Route>
           {/* <Route path="/description" component={() => <Description />} exact /> */}
         </div>
       </div>
