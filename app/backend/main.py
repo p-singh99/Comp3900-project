@@ -165,8 +165,75 @@ class Settings(Resource):
 		close_conn(conn, cur)
 		return {"email" : email}
 		
+	# @token_required
+	# def put(self):
+	# 	data = jwt.decode(request.headers['token'], app.config['SECRET_KEY'])
+	# 	username = data['user']
+	# 	conn, cur = get_conn()
+	# 	parser = reqparse.RequestParser(bundle_errors=True)
+	# 	parser.add_argument('oldpassword', type=str, required=True, help="Need old password", location="json")
+	# 	parser.add_argument('newpassword', type=str, location="json")
+	# 	parser.add_argument('newemail', type=str, location="json")
+	# 	args = parser.parse_args()
+	# 	# check current password
+	# 	cur.execute("SELECT hashedpassword FROM users WHERE username='%s'" % username)
+	# 	old_pw = cur.fetchone()[0].strip()
+	# 	if bcrypt.checkpw(args["oldpassword"].encode('UTF-8'), old_pw.encode('utf-8')):
+	# 		if args["newpassword"]:
+	# 			if args["oldpassword"] != args["newpassword"]:
+	# 				# change password
+	# 				password = args["newpassword"]
+	# 				password = password.encode('UTF-8')
+	# 				hashedpassword = bcrypt.hashpw(password, bcrypt.gensalt())
+	# 				cur.execute("UPDATE users SET hashedpassword='%s' WHERE username='%s' OR email = '%s'" % (hashedpassword.decode('UTF-8'), username, username))
+	# 		if args['newemail']:
+	# 			# change email
+	# 			cur.execute("SELECT email FROM users where email='%s'" % (args['newemail']))
+	# 			if cur.fetchone():
+	# 				return {"error", "Email already exists"}, 400
+	# 			cur.execute("UPDATE users SET email='%s' WHERE username='%s' OR email='%s'" % (args['newemail'], username, username))
+
+	# 		conn.commit()
+	# 		close_conn(conn, cur)
+	# 		return {"data" : "success"}, 200
+	# 	close_conn(conn,cur)
+	# 	return {"error" : "wrong password"}, 400
+
 	@token_required
 	def put(self):
+		# data = jwt.decode(request.headers['token'], app.config['SECRET_KEY'])
+		# username = data['user']
+		# conn, cur = get_conn()
+		# parser = reqparse.RequestParser(bundle_errors=True)
+		# parser.add_argument('oldpassword', type=str, required=True, help="Need old password", location="json")
+		# parser.add_argument('newpassword', type=str, location="json")
+		# parser.add_argument('newemail', type=str, location="json")
+		# args = parser.parse_args()
+		# hashedpassword = ""
+		# # check current password
+		# cur.execute("SELECT hashedpassword FROM users WHERE username='%s'" % username)
+		# old_pw = cur.fetchone()[0].strip()
+		# if bcrypt.checkpw(args["oldpassword"].encode('UTF-8'), old_pw.encode('utf-8')):
+		# 	if args["newpassword"]:
+		# 		if args["oldpassword"] != args["newpassword"]:
+		# 			# change password
+		# 			password = args["newpassword"]
+		# 			password = password.encode('UTF-8')
+		# 			hashedpassword = bcrypt.hashpw(password, bcrypt.gensalt())
+		# 	if args['newemail']:
+		# 		# change email
+		# 		cur.execute("SELECT email FROM users where email='%s'" % (args['newemail']))
+		# 		if cur.fetchone():
+		# 			return {"error", "Email already exists"}, 400
+		# 		cur.execute("UPDATE users SET email='%s' WHERE username='%s' OR email='%s'" % (args['newemail'], username, username))
+		# 	if hashedpassword:
+		# 		cur.execute("UPDATE users SET hashedpassword='%s' WHERE username='%s' OR email = '%s'" % (hashedpassword.decode('UTF-8'), username, username))
+		# 	conn.commit()
+		# 	close_conn(conn, cur)
+		# 	return {"data" : "success"}, 200
+		# close_conn(conn,cur)
+		# return {"error" : "wrong password"}, 400
+
 		data = jwt.decode(request.headers['token'], app.config['SECRET_KEY'])
 		username = data['user']
 		conn, cur = get_conn()
@@ -175,6 +242,7 @@ class Settings(Resource):
 		parser.add_argument('newpassword', type=str, location="json")
 		parser.add_argument('newemail', type=str, location="json")
 		args = parser.parse_args()
+		hashedpassword = ""
 		# check current password
 		cur.execute("SELECT hashedpassword FROM users WHERE username='%s'" % username)
 		old_pw = cur.fetchone()[0].strip()
@@ -185,14 +253,18 @@ class Settings(Resource):
 					password = args["newpassword"]
 					password = password.encode('UTF-8')
 					hashedpassword = bcrypt.hashpw(password, bcrypt.gensalt())
-					cur.execute("UPDATE users SET hashedpassword='%s' WHERE username='%s' OR email = '%s'" % (hashedpassword.decode('UTF-8'), username, username))
 			if args['newemail']:
 				# change email
 				cur.execute("SELECT email FROM users where email='%s'" % (args['newemail']))
 				if cur.fetchone():
-					return {"error", "Email already exists"}, 400
-				cur.execute("UPDATE users SET email='%s' WHERE username='%s' OR email='%s'" % (args['newemail'], username, username))
+					cur.execute("SELECT email FROM users where email='%s' and username='%s'" % (args['newemail'], data['user']))
+					if not cur.fetchone():
+						close_conn(conn, cur)
+						return {"error": "Email already exists"}, 400
 
+				cur.execute("UPDATE users SET email='%s' WHERE username='%s' OR email='%s'" % (args['newemail'], username, username))
+			if hashedpassword:
+				cur.execute("UPDATE users SET hashedpassword='%s' WHERE username='%s' OR email = '%s'" % (hashedpassword.decode('UTF-8'), username, username))
 			conn.commit()
 			close_conn(conn, cur)
 			return {"data" : "success"}, 200
@@ -249,8 +321,18 @@ class Podcast(Resource):
 
 class History(Resource):
 	@token_required
-	def get(self):
-		pass
+	def get(self, id):
+		if id < 0:
+			return {"error": "bad request"}, 400
+		range = 50
+		offset = (id - 1) * range
+		conn, cur = get_conn()
+		user_id = get_user_id(cur)
+		cur.execute("SELECT p.xml, l.episodeguid FROM listens l, podcasts p where l.userid=%s and \
+			p.id = l.podcastid ORDER BY l.listenDate LIMIT %s OFFSET %s" % (user_id, range, offset))
+		eps = cur.fetchall()
+		close_conn(conn, cur)
+		return {"history" : eps}, 200
 
 class Listens(Resource):
 	@token_required
@@ -336,51 +418,91 @@ class Recommendations(Resource):
 		conn, cur = get_conn()
 		user_id = get_user_id(cur)
 		# Finds the most recently listened to podcasts that are not subscribed to
-		cur.execute("select p.title from podcasts p, listens l where p.id = l.podcastid and l.userid=%s and \
+		cur.execute("select p.xml, %s from podcasts p, listens l where p.id = l.podcastid and l.userid=%s and \
 			p.id not in (select p.id from podcasts p, subscriptions s where s.userid=%s and s.podcastid=p.id) \
-				order by l.listendate DESC Limit 10;" % (user_id, user_id))
-		for i in cur.fetchall():
-		 	recs.add((i[0],3))
-		# get last 10 search queries
-		# get 10 search results from each query
-		# compare max 100 queries with categories of subscribed podcasts and sort by most in common
+				order by l.listendate DESC Limit 10;" % (1, user_id, user_id))
+		recs.update(cur.fetchall())
 		cur.execute("select query from searchqueries where userid=%s order by searchdate DESC limit 10" % user_id)
 		queries = cur.fetchall()
-		# for i in queries:
-		# 	print(i[0])
-		print("start view")
 		for query in queries:
-			cur.execute("CREATE OR REPLACE VIEW temp (query) AS SELECT v.title\
+			cur.execute("select p.title, count(p.xml) from podcasts p, podcastcategories pc, categories c where p.title in (SELECT v.title\
 				FROM   searchvector v\
 				FULL OUTER JOIN Subscriptions s ON s.podcastId = v.id\
 				WHERE  v.vector @@ plainto_tsquery(%s)\
 				GROUP BY  (s.userid, v.title, v.author, v.description, v.id, v.vector)\
-			ORDER BY  ts_rank(v.vector, plainto_tsquery(%s)) desc;", (query[0],query[0]))
-			conn.commit()
-			cur.execute("select t.query, count(t.query) from temp t, podcasts p, podcastcategories pc, categories c where p.title = t.query and\
-					p.id = pc.podcastid and pc.categoryid=c.id and c.id in (select distinct c.id from categories c, subscriptions s, podcastcategories pc \
-						where s.userId=%s and s.podcastid = pc.podcastid and pc.categoryid = c.id) and \
-							p.title not in (select p.title from podcasts p, subscriptions s where p.id = s.podcastid and \
-								s.userid=%s) group by t.query order by count(t.query) DESC;" % (user_id, user_id))
+			ORDER BY  ts_rank(v.vector, plainto_tsquery(%s)) desc LIMIT 10) and\
+				p.id = pc.podcastid and pc.categoryid=c.id and c.id in (select distinct c.id from categories c, subscriptions s, podcastcategories pc \
+					where s.userId=%s and s.podcastid = pc.podcastid and pc.categoryid = c.id) and \
+						p.title not in (select p.title from podcasts p, subscriptions s where p.id = s.podcastid and \
+							s.userid=%s) group by p.title order by count(p.xml) DESC", (query[0],query[0], user_id, user_id))
 
 			for i in cur.fetchall():
-				print(i[0],2)
 				recs.add((i[0],2))
-		#cur.execute("select p.title, count(p.title) from podcasts p, podcastcategories pc, categories c \
-		#	where p.id=pc.podcastid and pc.categoryid=c.id and c.id in (select distinct c.id from categories c, subscriptions s, podcastcategories pc \
-		#		where s.userId=%s and s.podcastid = pc.podcastid and pc.categoryid = c.id) and \
-		#			p.title not in (select p.title from podcasts p, subscriptions s where p.id = s.podcastid and \
-		#				s.userid=%s) group by p.title order by count(p.title) DESC;" % (user_id, user_id))
-		#for i in cur.fetchall():
-		#	recs.add((i[0],1))
+						
+		cur.execute("select p.title, count(p.title) from podcasts p, podcastcategories pc, categories c \
+			where p.id=pc.podcastid and pc.categoryid=c.id and c.id in (select distinct c.id from categories c, subscriptions s, podcastcategories pc \
+				where s.userId=%s and s.podcastid = pc.podcastid and pc.categoryid = c.id) and \
+					p.title not in (select p.title from podcasts p, subscriptions s where p.id = s.podcastid and \
+						s.userid=%s) group by p.title order by count(p.title) DESC;" % (user_id, user_id))
+		for i in cur.fetchall():
+			recs.add((i[0],3))
 		# recs = recs[:10]
 		recsl = list(recs)
-		print(len(recs))
-		sorted(recsl,key=lambda x: x[1])
-		print(len(recsl))
-		# sprint(recsl[0])
 		close_conn(conn, cur)
 		return {"recommendations" : recsl}
+
+
+	# @token_required
+	# def get(self):
+	# 	recs = set()
+	# 	conn, cur = get_conn()
+	# 	user_id = get_user_id(cur)
+	# 	# Finds the most recently listened to podcasts that are not subscribed to
+	# 	cur.execute("select p.title from podcasts p, listens l where p.id = l.podcastid and l.userid=%s and \
+	# 		p.id not in (select p.id from podcasts p, subscriptions s where s.userid=%s and s.podcastid=p.id) \
+	# 			order by l.listendate DESC Limit 10;" % (user_id, user_id))
+	# 	for i in cur.fetchall():
+	# 	 	recs.add((i[0],3))
+	# 	# get last 10 search queries
+	# 	# get 10 search results from each query
+	# 	# compare max 100 queries with categories of subscribed podcasts and sort by most in common
+	# 	cur.execute("select query from searchqueries where userid=%s order by searchdate DESC limit 10" % user_id)
+	# 	queries = cur.fetchall()
+	# 	# for i in queries:
+	# 	# 	print(i[0])
+	# 	print("start view")
+	# 	for query in queries:
+	# 		cur.execute("CREATE OR REPLACE VIEW temp (query) AS SELECT v.title\
+	# 			FROM   searchvector v\
+	# 			FULL OUTER JOIN Subscriptions s ON s.podcastId = v.id\
+	# 			WHERE  v.vector @@ plainto_tsquery(%s)\
+	# 			GROUP BY  (s.userid, v.title, v.author, v.description, v.id, v.vector)\
+	# 		ORDER BY  ts_rank(v.vector, plainto_tsquery(%s)) desc;", (query[0],query[0]))
+	# 		conn.commit()
+	# 		cur.execute("select t.query, count(t.query) from temp t, podcasts p, podcastcategories pc, categories c where p.title = t.query and\
+	# 				p.id = pc.podcastid and pc.categoryid=c.id and c.id in (select distinct c.id from categories c, subscriptions s, podcastcategories pc \
+	# 					where s.userId=%s and s.podcastid = pc.podcastid and pc.categoryid = c.id) and \
+	# 						p.title not in (select p.title from podcasts p, subscriptions s where p.id = s.podcastid and \
+	# 							s.userid=%s) group by t.query order by count(t.query) DESC;" % (user_id, user_id))
+
+	# 		for i in cur.fetchall():
+	# 			print(i[0],2)
+	# 			recs.add((i[0],2))
+	# 	#cur.execute("select p.title, count(p.title) from podcasts p, podcastcategories pc, categories c \
+	# 	#	where p.id=pc.podcastid and pc.categoryid=c.id and c.id in (select distinct c.id from categories c, subscriptions s, podcastcategories pc \
+	# 	#		where s.userId=%s and s.podcastid = pc.podcastid and pc.categoryid = c.id) and \
+	# 	#			p.title not in (select p.title from podcasts p, subscriptions s where p.id = s.podcastid and \
+	# 	#				s.userid=%s) group by p.title order by count(p.title) DESC;" % (user_id, user_id))
+	# 	#for i in cur.fetchall():
+	# 	#	recs.add((i[0],1))
+	# 	# recs = recs[:10]
+	# 	recsl = list(recs)
+	# 	print(len(recs))
+	# 	sorted(recsl,key=lambda x: x[1])
+	# 	print(len(recsl))
+	# 	# sprint(recsl[0])
+	# 	close_conn(conn, cur)
+	# 	return {"recommendations" : recsl}
 			
 
 
@@ -392,6 +514,7 @@ api.add_resource(Settings, "/users/self/settings")
 api.add_resource(Podcasts, "/podcasts")
 api.add_resource(Podcast, "/podcasts/<int:id>")
 api.add_resource(Recommendations, "/self/recommendations")
+api.add_resource(History, "/self/history/<int:id>")
 
 api.add_resource(Listens, "/users/self/podcasts/<int:podcastId>/episodes/time")
 api.add_resource(ManyListens, "/users/self/podcasts/<int:podcastId>/time")
