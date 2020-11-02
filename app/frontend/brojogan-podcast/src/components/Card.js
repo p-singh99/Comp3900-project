@@ -76,6 +76,8 @@ function SubCard({ details: podcast }) {
     const setCard = async () => {
       setPodcastObj(null);
       try {
+        // need to make this a cancellable promise so when page changes to podB while podA is still fetching, 
+        // podcastObj doesn't get to set to null and then set to podA when the response returns
         const xml = await getRSS(podcast.pid);
         console.log('Received RSS :' + Date.now());
         const pod = getPodcastFromXML(xml);
