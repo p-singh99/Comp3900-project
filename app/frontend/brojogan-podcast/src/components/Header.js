@@ -38,7 +38,6 @@ function Header() {
   ]
   :
   [
-    // {text: 'login', onClick: () => window.location.href = "/login"} // do react redirect instead
     {text: 'Login', onClick: () => history.push("/login")},
     {text: 'Signup', onClick: () => history.push("/signup")}
   ];
@@ -133,6 +132,7 @@ function Header() {
       // changes the url but nothing else happens
       window.location.href = "/search" + "?" + searched_text.value;
 
+      // being fetched both here and on the actual search page?
       // fetch(`${API_URL}/podcasts?search_query=`+searched_text.value+'&offset=0&limit=50', {method: 'get'})
       //   .then(resp => {
       //     resp.json().then(podcasts => {
@@ -172,9 +172,7 @@ function Header() {
         <div id="search-div" style={{margin: '15px 0px 0px 0px'}}>
           <form id = "search-form" onSubmit = {searchHandler}>
             <input type='text' id='search-input' name='searchComponent' placeholder='Search'/>
-            {/* <div id="search-btn"> */}
               <button id="search-btn" type="submit">Go</button>
-            {/* </div> */}
           </form>
         </div>
         <div id="icons-div" style={{margin: '15px 25px 0px 0px'}}>

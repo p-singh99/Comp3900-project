@@ -5,16 +5,18 @@ import { getPodcastFromXML } from '../rss';
 import { API_URL } from '../constants';
 import Pages from './../components/Pages';
 import './../css/Description.css';
+import { isLoggedIn, fetchAPI } from '../auth-functions';
 
 // !! what happens if the description is invalid html, will it break the whole page?
 // eg the a tag doesn't close
 
 // CORS bypass
 async function getRSS(id) {
+  return fetch(`${API_URL}/podcasts/${id}`).then(resp => resp.json());
+  /*
   let resp, data;
   try {
-    resp = await fetch(`${API_URL}/podcasts/${id}`);
-    data = await resp.json();
+    resp = 
   } catch {
     throw Error("Network error");
   }
@@ -25,15 +27,16 @@ async function getRSS(id) {
     throw Error("Podcast does not exist");
   } else {
     throw Error("Error in retrieving podcast");
-  }
+  }*/
 }
 
 // function Description({ setPlaying }) {
 function Description(props) {
   const [episodes, setEpisodes] = useState(); // []
-  const [podcast, setPodcast] = useState(<h1>Loading...</h1>);
+  const [podcast, setPodcast] = useState(null);
   const [podcastTitle, setPodcastTitle] = useState(""); // overlaps with above
   // const [showEpisodeNum, setShowEpisodeNum] = useState();
+  const setPlaying = props.setPlaying;
 
   // on page load:
   // send some props from search page like title, thumbnail etc., so that stuff appears faster
@@ -45,13 +48,66 @@ function Description(props) {
     const episodeNum = queryParams.get("episode");
     console.log("episodeNum:", episodeNum);
 
-    const fetchPodcast = async () => {
+    const fetchPodcast = async (prefetchedPodcast) => {
       try {
-        const xml = await getRSS(id);
-        console.log('Received RSS :' + Date.now());
-        const podcast = getPodcastFromXML(xml);
-        console.log('parsed XML: ' + Date.now());
-        setPodcastStuff(podcast, episodeNum);
+        console.log("prefetched:", prefetchedPodcast);
+        // const xml = await getRSS(id);
+        // console.log('Received RSS :' + Date.now());
+        // const podcast = getPodcastFromXML(xml);
+        // console.log('parsed XML: ' + Date.now());
+        // setPodcastStuff(podcast, episodeNum);
+
+        // TODO: need to figure out how to check for 401s etc, here.
+        let promises = [];
+        if (!prefetchedPodcast) {
+          const xmlPromise = getRSS(id);
+          promises.push(xmlPromise);
+        } else {
+          setPodcastInfo(prefetchedPodcast);
+          setPodcastTitle(prefetchedPodcast.title);
+        }
+
+        // if we're logged in we'll get the listened data for this podcast
+        if (isLoggedIn()) {
+          let timesPromise = fetchAPI('/users/self/podcasts/'+id+'/time', 'get');
+          promises.push(timesPromise);
+        }
+
+        console.log(promises);
+        // have both promises running until we can resolve both
+        Promise.all(promises).then(([xml, times]) => {
+          let podcast = prefetchedPodcast;
+          if (xml) {
+            console.log('Received RSS :' + Date.now());
+            console.log(xml);
+            podcast = getPodcastFromXML(xml.xml);
+            console.log('parsed XML: ' + Date.now());
+
+            console.log("in start of use effect podcast is:");
+            console.log(podcast);
+
+            setPodcastInfo(podcast);
+            setPodcastTitle(podcast.title);
+          }
+
+          // we might not have times since its only if we're logged in
+          if (times) {
+            console.log("times are: ");
+            console.log(times);
+            for (let time of times) {
+              let episode = podcast.episodes.find(e => e.guid===time.episodeGuid);
+              if (episode !== undefined) {
+                episode.progress = time.timestamp;
+                episode.listenDate = time.listenDate;
+              } else {
+                console.error("episode with guid " + time.episodeGuid + " did not have a match in the fetched feed");
+              }
+            }
+          }
+          
+          setEpisodes({ episodes: podcast.episodes, showEpisode: episodeNum });
+          console.log(episodes);
+        });
       } catch (error) {
         displayError(error);
       }
@@ -64,19 +120,20 @@ function Description(props) {
     } catch {
       podcastObj = null;
     }
-    
-    if (podcastObj) {
-      setPodcastStuff(podcastObj, episodeNum);
-    } else {
-      fetchPodcast();
-    }
+    fetchPodcast(podcastObj);
+
+    // if (podcastObj) {
+    //   setPodcastStuff(podcastObj, episodeNum);
+    // } else {
+    //   fetchPodcast();
+    // }
   }, [id]);
 
-  function setPodcastStuff(podcast, episodeNum) {
-    setPodcastInfo(podcast);
-    setPodcastTitle(podcast.title);
-    setEpisodes({ episodes: podcast.episodes, showEpisode: episodeNum });
-  }
+  // function setPodcastStuff(podcast, episodeNum) {
+  //   setPodcastInfo(podcast);
+  //   setPodcastTitle(podcast.title);
+  //   setEpisodes({ episodes: podcast.episodes, showEpisode: episodeNum });
+  // }
 
   function displayError(msg) {
     setPodcast(<h1>{msg.toString()}</h1>);
@@ -84,36 +141,63 @@ function Description(props) {
 
   function setPodcastInfo(podcast) {
     // css grid for this? need to add rating and subscribe button
+
+    setPodcast(podcast)
+  }
+
+  function getPodcastDescription(podcast) {
     let podcastDescription;
     try {
       podcastDescription = <p id="podcast-description" dangerouslySetInnerHTML={{ __html: sanitiseDescription(podcast.description, true) }}></p>;
     } catch {
       podcastDescription = <p id="podcast-description">{unTagDescription(podcast.description)}</p>;
     }
-    setPodcast(
-      <div>
-        <div id="podcast-info">
-          {podcast.image && <img id="podcast-img" src={podcast.image} alt="Podcast icon" style={{ height: '300px', width: '300px', minWidth: '300px' }}></img>}
-          <div id="podcast-name-author">
-            <h1 id="podcast-name" className="podcast-heading">{podcast.title}</h1>
-            <h5 id="podcast-author">{podcast.author}</h5>
-            {podcastDescription}
+    // setPodcast(
+    //   <div>
+    //     <div id="podcast-info">
+    //       {podcast.image && <img id="podcast-img" src={podcast.image} alt="Podcast icon" style={{ height: '300px', width: '300px', minWidth: '300px' }}></img>}
+    //       <div id="podcast-name-author">
+    //         <h1 id="podcast-name" className="podcast-heading">{podcast.title}</h1>
+    //         <h5 id="podcast-author">{podcast.author}</h5>
+    //         {podcastDescription}
+    return podcastDescription;
+  }
+
+  function getPodcastHTML(podcast) {
+    if (podcast === null) {
+      return (
+        <h1>Loading...</h1>
+      )
+    } else {
+      return (
+        <div>
+          <div id="podcast-info">
+            {podcast.image && <img id="podcast-img" src={podcast.image} alt="Podcast icon" style={{ height: '300px', width: '300px' }}></img>}
+            <div id="podcast-name-author">
+              <h1 id="podcast-name">{podcast.title}</h1>
+              <h3 id="podcast-author">{podcast.author}</h3>
+              {/* <p id="podcast-description" dangerouslySetInnerHTML={{ __html: sanitiseDescription(podcast.description) }}></p> */}
+              {getPodcastDescription(podcast)}
+            </div>
           </div>
         </div>
-      </div>
-    )
+      )
+    }
   }
   return (
     <div id="podcast">
+      {}
       <Helmet>
         <title>{podcastTitle} - BroJogan Podcasts</title>
       </Helmet>
 
-      {podcast}
+      {getPodcastHTML(podcast)}
+
+
       <div id="episodes">
         <ul>
-          {episodes
-            ? <Pages itemDetails={episodes.episodes} itemsPerPage={10} Item={EpisodeDescription} showItemIndex={episodes.showEpisode} />
+          {episodes && episodes.episodes.length > 0
+            ? <Pages itemDetails={episodes.episodes} context={{ podcast: podcast, setPlaying: setPlaying }} itemsPerPage={10} Item={EpisodeDescription} showItemIndex={episodes.showEpisode} />
             : null}
         </ul>
       </div>
@@ -143,7 +227,7 @@ function downloadEpisode(event) {
   alert(event.target.getAttribute('eid'));
 }
 
-function EpisodeDescription({ details: episode, id }) {
+function EpisodeDescription({ details: episode, context: { podcast, setPlaying }, id }) {
   let description;
   // in case the sanitiser fails, don't use innerHTML
   try {
@@ -165,7 +249,22 @@ function EpisodeDescription({ details: episode, id }) {
       <div className="play">
         <span className="duration">{episode.duration}</span>
         {/* <button className="play" eid={episode.guid} onClick={(event) => playEpisode(event, setPlaying, episodes)}>Play</button> */}
-        <button>Play</button>
+        <button className="play" eid={episode.guid} onClick={(event) => {
+          console.log("podcast is");
+          console.log(podcast);
+          console.log("episode is");
+          console.log(episode);
+          setPlaying({
+            title: episode.title,
+            podcastTitle: podcast.title,
+            src: episode.url,
+            thumb: episode.image ? episode.image : podcast.image,
+            guid: episode.guid,
+            podcastID: id,
+            listenDate: episode.listenDate ? episode.listenDate : undefined,
+            progress: episode.progress ? episode.progress : 0.0
+          });
+        }}>Play</button>
         <button className="download" eid={episode.guid} onClick={downloadEpisode}>Download</button>
       </div>
       {/* guid won't always work because some of them will contain invalid characters I think ? */}

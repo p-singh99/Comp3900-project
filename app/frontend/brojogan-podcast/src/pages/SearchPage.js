@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
 import { Helmet } from 'react-helmet';
 import { API_URL } from './../constants';
-import PodcastCards from './../components/PodcastCards2';
+import PodcastCards from './../components/PodcastCards';
 import './../css/SearchPage.css';
 
 

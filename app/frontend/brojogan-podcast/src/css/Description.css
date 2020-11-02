@@ -1,8 +1,9 @@
 #podcast {
     font-family: sans-serif;
     /* padding-left: 20px; */
-    padding-bottom: 150px; /* to not clash with footer */
-    padding-right: 150px; /* stuff getting cut off on right */
+    /* padding-bottom: 150px; */ /* to not clash with footer */
+    /* padding-right: 150px; */ /* stuff getting cut off on right */
+    /* padding-bottom: 200px; */
 }
 
 h1.podcast-heading{
