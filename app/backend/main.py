@@ -165,76 +165,9 @@ class Settings(Resource):
 		email = cur.fetchone()[0]
 		close_conn(conn, cur)
 		return {"email" : email}
-		
-	# @token_required
-	# def put(self):
-	# 	data = jwt.decode(request.headers['token'], app.config['SECRET_KEY'])
-	# 	username = data['user']
-	# 	conn, cur = get_conn()
-	# 	parser = reqparse.RequestParser(bundle_errors=True)
-	# 	parser.add_argument('oldpassword', type=str, required=True, help="Need old password", location="json")
-	# 	parser.add_argument('newpassword', type=str, location="json")
-	# 	parser.add_argument('newemail', type=str, location="json")
-	# 	args = parser.parse_args()
-	# 	# check current password
-	# 	cur.execute("SELECT hashedpassword FROM users WHERE username='%s'" % username)
-	# 	old_pw = cur.fetchone()[0].strip()
-	# 	if bcrypt.checkpw(args["oldpassword"].encode('UTF-8'), old_pw.encode('utf-8')):
-	# 		if args["newpassword"]:
-	# 			if args["oldpassword"] != args["newpassword"]:
-	# 				# change password
-	# 				password = args["newpassword"]
-	# 				password = password.encode('UTF-8')
-	# 				hashedpassword = bcrypt.hashpw(password, bcrypt.gensalt())
-	# 				cur.execute("UPDATE users SET hashedpassword='%s' WHERE username='%s' OR email = '%s'" % (hashedpassword.decode('UTF-8'), username, username))
-	# 		if args['newemail']:
-	# 			# change email
-	# 			cur.execute("SELECT email FROM users where email='%s'" % (args['newemail']))
-	# 			if cur.fetchone():
-	# 				return {"error", "Email already exists"}, 400
-	# 			cur.execute("UPDATE users SET email='%s' WHERE username='%s' OR email='%s'" % (args['newemail'], username, username))
-
-	# 		conn.commit()
-	# 		close_conn(conn, cur)
-	# 		return {"data" : "success"}, 200
-	# 	close_conn(conn,cur)
-	# 	return {"error" : "wrong password"}, 400
 
 	@token_required
 	def put(self):
-		# data = jwt.decode(request.headers['token'], app.config['SECRET_KEY'])
-		# username = data['user']
-		# conn, cur = get_conn()
-		# parser = reqparse.RequestParser(bundle_errors=True)
-		# parser.add_argument('oldpassword', type=str, required=True, help="Need old password", location="json")
-		# parser.add_argument('newpassword', type=str, location="json")
-		# parser.add_argument('newemail', type=str, location="json")
-		# args = parser.parse_args()
-		# hashedpassword = ""
-		# # check current password
-		# cur.execute("SELECT hashedpassword FROM users WHERE username='%s'" % username)
-		# old_pw = cur.fetchone()[0].strip()
-		# if bcrypt.checkpw(args["oldpassword"].encode('UTF-8'), old_pw.encode('utf-8')):
-		# 	if args["newpassword"]:
-		# 		if args["oldpassword"] != args["newpassword"]:
-		# 			# change password
-		# 			password = args["newpassword"]
-		# 			password = password.encode('UTF-8')
-		# 			hashedpassword = bcrypt.hashpw(password, bcrypt.gensalt())
-		# 	if args['newemail']:
-		# 		# change email
-		# 		cur.execute("SELECT email FROM users where email='%s'" % (args['newemail']))
-		# 		if cur.fetchone():
-		# 			return {"error", "Email already exists"}, 400
-		# 		cur.execute("UPDATE users SET email='%s' WHERE username='%s' OR email='%s'" % (args['newemail'], username, username))
-		# 	if hashedpassword:
-		# 		cur.execute("UPDATE users SET hashedpassword='%s' WHERE username='%s' OR email = '%s'" % (hashedpassword.decode('UTF-8'), username, username))
-		# 	conn.commit()
-		# 	close_conn(conn, cur)
-		# 	return {"data" : "success"}, 200
-		# close_conn(conn,cur)
-		# return {"error" : "wrong password"}, 400
-
 		data = jwt.decode(request.headers['token'], app.config['SECRET_KEY'])
 		username = data['user']
 		conn, cur = get_conn()
