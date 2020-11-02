@@ -52,8 +52,8 @@ export async function fetchAPI(endpoint, method, body=null) {
   try {
     resp = await fetch(`${API_URL}${endpoint}`, args);
     data = await resp.json();
-  } catch {
-    throw Error("Network or other error");
+  } catch (error) {
+    throw error;
   }
   if (resp.ok) {
     return data;

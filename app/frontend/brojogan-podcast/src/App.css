@@ -7,6 +7,8 @@ html, body {
 body {
   padding-left: 110px;
   padding-top: 50px;
+  padding-bottom: 100px;
+  padding-right: 110px;
 }
 
 .App {
