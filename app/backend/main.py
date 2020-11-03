@@ -441,6 +441,23 @@ class Notifications(Resource):
 		return {"notifications": cur.fetchall()}
 
 class Ratings(Resource):
+	def get(self, id):
+		conn, cur = get_conn()
+		cur.execute("SELECT AVG(rating) FROM podcastratings WHERE podcastid=%s" % (id))
+		rating = cur.fetchone()[0]
+		close_conn(conn,cur)
+		return {"rating": str(round(rating,1))}
+
+	def put(self,id):
+		conn, cur = get_conn()
+		user_id = get_user_id(cur)
+		parser = reqparse.RequestParser()
+		parser.add_argument('rating', type=int, required=True, choices=(1,2,3,4,5), help="Rating not valid", location="json")
+		args = parser.parse_args()
+		cur.execute("INSERT INTO podcastratings (userid, podcastid, rating) VALUES (%s, %s, %s)" % (user_id, id, args["rating"]))
+		conn.commit()
+		return {"success": "added"}
+
 
 
 api.add_resource(Unprotected, "/unprotected")
@@ -454,6 +471,7 @@ api.add_resource(Recommendations, "/self/recommendations")
 api.add_resource(History, "/self/history/<int:id>")
 api.add_resource(Listens, "/users/self/podcasts/<int:podcastId>/episodes/time")
 api.add_resource(ManyListens, "/users/self/podcasts/<int:podcastId>/time")
+api.add_resource(Ratings, "/podcasts/<int:id>/rating")
 
 if __name__ == '__main__':
 	app.run(debug=True)
