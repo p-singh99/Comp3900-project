@@ -197,10 +197,6 @@ class Settings(Resource):
 					if not cur.fetchone():
 						close_conn(conn, cur)
 						return {"error": "Email already exists"}, 400
-<<<<<<< HEAD
-=======
-
->>>>>>> new_master
 				cur.execute("UPDATE users SET email='%s' WHERE username='%s' OR email='%s'" % (args['newemail'], username, username))
 			if hashedpassword:
 				cur.execute("UPDATE users SET hashedpassword='%s' WHERE username='%s' OR email = '%s'" % (hashedpassword.decode('UTF-8'), username, username))
@@ -306,8 +302,6 @@ class History(Resource):
 		close_conn(conn, cur)
 		return {"history" : eps}, 200
 
-<<<<<<< HEAD
-=======
 class Listens(Resource):
 	@token_required
 	def get(self, podcastId):
@@ -345,7 +339,6 @@ class Listens(Resource):
 		if episodeGuid is None:
 			close_conn(conn,cur)
 			return {"data": "episodeGuid not included"}, 400
->>>>>>> new_master
 
 		# we're touching episodes so insert new episode (if it doesn't already exist)
 		cur.execute("""
@@ -395,13 +388,10 @@ class Recommendations(Resource):
 		# Finds the most recently listened to podcasts that are not subscribed to
 		cur.execute("select p.xml, %s from podcasts p, listens l where p.id = l.podcastid and l.userid=%s and \
 			p.id not in (select p.id from podcasts p, subscriptions s where s.userid=%s and s.podcastid=p.id) \
-				order by l.listendate DESC Limit 10;" % (1, user_id, user_id))
-<<<<<<< HEAD
-		recs.update(cur.fetchall())
-=======
+				and p.id not in (select podcastid from rejectedrecommendations) \
+					order by l.listendate DESC Limit 10;" % (1, user_id, user_id))
 		for i in cur.fetchall():
 			recs.add((i[0], 1))
->>>>>>> new_master
 		cur.execute("select query from searchqueries where userid=%s order by searchdate DESC limit 10" % user_id)
 		queries = cur.fetchall()
 		for query in queries:
@@ -414,7 +404,7 @@ class Recommendations(Resource):
 				p.id = pc.podcastid and pc.categoryid=c.id and c.id in (select distinct c.id from categories c, subscriptions s, podcastcategories pc \
 					where s.userId=%s and s.podcastid = pc.podcastid and pc.categoryid = c.id) and \
 						p.title not in (select p.title from podcasts p, subscriptions s where p.id = s.podcastid and \
-							s.userid=%s) group by p.title order by count(p.xml) DESC", (query[0],query[0], user_id, user_id))
+							s.userid=%s) and p.id not in (select podcastid from rejectedrecommendations) group by p.title order by count(p.xml) DESC", (query[0],query[0], user_id, user_id))
 
 			for i in cur.fetchall():
 				recs.add((i[0],2))
@@ -423,17 +413,24 @@ class Recommendations(Resource):
 			where p.id=pc.podcastid and pc.categoryid=c.id and c.id in (select distinct c.id from categories c, subscriptions s, podcastcategories pc \
 				where s.userId=%s and s.podcastid = pc.podcastid and pc.categoryid = c.id) and \
 					p.title not in (select p.title from podcasts p, subscriptions s where p.id = s.podcastid and \
-						s.userid=%s) group by p.title order by count(p.title) DESC;" % (user_id, user_id))
+						s.userid=%s) and p.id not in (select podcastid from rejectedrecommendations)\
+							group by p.title order by count(p.title) DESC;" % (user_id, user_id))
 		for i in cur.fetchall():
 			recs.add((i[0],3))
 		# recs = recs[:10]
 		recsl = list(recs)
-<<<<<<< HEAD
-=======
 		sorted(recsl,key=lambda x: x[1])
->>>>>>> new_master
 		close_conn(conn, cur)
 		return {"recommendations" : recsl}
+
+class RejectRecommendations(Resource):
+	@token_required
+	def put(self, id):
+		conn, cur = get_conn()
+		user_id = get_user_id(cur)
+		cur.execute("INSERT INTO rejectedrecommendations (userid, podcastid) VALUES (%s, %s)" % (user_id, id))
+		conn.commit()
+		close_conn(conn,cur)
 		
 class Notifications(Resource):
 	def get(self):
@@ -442,6 +439,8 @@ class Notifications(Resource):
 		cur.execute("select * from notifications where user='%s'" % user_id)
 		close_conn(conn, cur)
 		return {"notifications": cur.fetchall()}
+
+class Ratings(Resource):
 
 
 api.add_resource(Unprotected, "/unprotected")
@@ -453,13 +452,8 @@ api.add_resource(Podcasts, "/podcasts")
 api.add_resource(Podcast, "/podcasts/<int:id>")
 api.add_resource(Recommendations, "/self/recommendations")
 api.add_resource(History, "/self/history/<int:id>")
-<<<<<<< HEAD
-api.add_resource(Notifications, "/users/notifications")
-
-=======
 api.add_resource(Listens, "/users/self/podcasts/<int:podcastId>/episodes/time")
 api.add_resource(ManyListens, "/users/self/podcasts/<int:podcastId>/time")
->>>>>>> new_master
 
 if __name__ == '__main__':
 	app.run(debug=True)
