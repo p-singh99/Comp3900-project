@@ -75,7 +75,18 @@ function Description(props) {
 
         console.log(promises);
         // have both promises running until we can resolve both
-        Promise.all(promises).then(([xml, times]) => {
+        Promise.all(promises).then(([first, second]) => {
+          // this [xml, times] thing won't work now that both are optional
+          // will fail if times is used but xml isn't, because times will get assigned as xml
+          let times, xml;
+          if (prefetchedPodcast) {
+            xml = null;
+            times = first;
+          } else {
+            xml = first;
+            times = second;
+          }
+
           let podcast = prefetchedPodcast;
           if (xml) {
             console.log('Received RSS :' + Date.now());
