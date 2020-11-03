@@ -40,6 +40,9 @@ function SubCard({ details: podcast }) {
       xhr.abort();
       console.log("cleanup card");
     }
+
+    // could still use fetch for aborting 
+    // https://medium.com/javascript-in-plain-english/an-absolute-guide-to-javascript-http-requests-44c685edfa51
   }, [podcast]);
 
   
