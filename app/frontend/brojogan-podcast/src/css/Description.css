@@ -25,10 +25,12 @@ h1.podcast-heading{
 
 #podcast li.episode {
     background-color: #2E2B3F;
+    
     margin: 20px 0;
     margin-left: 20px;
     padding: 10px 0px 0px 0px;
-    margin-bottom: 10px;
+    padding-bottom: 0px;
+    margin-bottom: 0px;
     cursor: pointer;
 }
 
@@ -43,14 +45,48 @@ h1.podcast-heading{
   /* margin-right: 50px; */
 }
 
-#podcast .head, #podcast .play, #podcast .description {
+#podcast .head, #podcast .play-div, #podcast .description {
     padding: 0 20px 0 10px;
+}
+
+.play-div {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: row;
+  height: 20px;
+  width: 100%;
+}
+
+
+#subscribe-btn {
+  z-index: 1;
 }
 
 #podcast .description {
     /* cursor: pointer; */
     font-size: 0.9em;
 }
+
+#subscribe-btn, .download, .play {
+  background-color: #6E59D6;
+  border: none;
+}
+
+.download, .play {
+  margin-left: 10px;
+  font-size: 13px;
+  border: #9860db;
+  background-color: #47ada3;
+  border-radius: 20px;
+  /* width: 75px; */
+  /* text-align: left; */
+}
+
+.download {
+  margin-left: auto;
+  background-color: none;
+ }
+ 
 
 #podcast .description.collapsed {
     max-height: 50px;

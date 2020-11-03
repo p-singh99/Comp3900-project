@@ -8,12 +8,13 @@
   height: 100%;
   min-height: 100%;
   background-color: #2E2B3F;
+  /* background-color: #221F2E; */
   font-size: 20px;
   color: #90C1CE;
   left: 0;
   top: 0;
   z-index: 1;
-  border-right: 2px solid white;
+  border-right: 1px solid white;
 }
 /* need to make navbar go down the whole page */
 
