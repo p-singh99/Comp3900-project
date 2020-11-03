@@ -4,7 +4,7 @@ import './../css/Header.css';
 import logo from './../images/logo.png';
 import DropDownMenu from './../components/DropDownMenu';
 //import Search from './../components/Search.js';
-import Search from './../components/SearchPage.js';
+// import Search from './../components/SearchPage.js';
 import notifications from './../images/notifications.png';
 import settings from './../images/settings.png';
 import {logoutHandler, authFailed, isLoggedIn, getUsername} from './../auth-functions';
@@ -127,10 +127,10 @@ function Header() {
       console.log(searched_text);
       console.log(searched_text.value);
 
-      // history.push("/search" + "?" + searched_text.value);
+      history.push("/search" + "?" + searched_text.value);
       // for some reason, if you are on the search page already and do history.push(), it doesn't work...
       // changes the url but nothing else happens
-      window.location.href = "/search" + "?" + searched_text.value;
+      // window.location.href = "/search" + "?" + searched_text.value;
 
       // being fetched both here and on the actual search page?
       // fetch(`${API_URL}/podcasts?search_query=`+searched_text.value+'&offset=0&limit=50', {method: 'get'})
