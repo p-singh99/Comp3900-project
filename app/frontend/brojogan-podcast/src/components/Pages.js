@@ -145,6 +145,8 @@ function Pages({ itemDetails, context, itemsPerPage, Item, showItemIndex }) {
     console.log(scrollElem);
     if (scrollElem) {
       scrollElem.scrollIntoView({ behavior: 'smooth' });
+      scrollElem.id = null;
+      // don't want to scroll again on every re-render, it's either this or keep more state like firstRender bool
     }
   })
 
