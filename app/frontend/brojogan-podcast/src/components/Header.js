@@ -127,21 +127,23 @@ function Header() {
       console.log(searched_text);
       console.log(searched_text.value);
 
-      fetch(`${API_URL}/podcasts?search_query=`+searched_text.value+'&offset=0&limit=50', {method: 'get'})
-        .then(resp => {
-          resp.json().then(podcasts => {
-            if (resp.status === 200) {
-              history.push("/search" + "?" + searched_text.value);
+      history.push("/search" + "?" + searched_text.value);
 
-            } else {
-              // should never enter this
-              console.log('response status is not 200 after search');
-            }
-          })
-        })
-        .catch(error => { // will this catch error from resp.json()?
-        displayError(error);
-      });
+      // fetch(`${API_URL}/podcasts?search_query=`+searched_text.value+'&offset=0&limit=50', {method: 'get'})
+      //   .then(resp => {
+      //     resp.json().then(podcasts => {
+      //       if (resp.status === 200) {
+      //         history.push("/search" + "?" + searched_text.value);
+
+      //       } else {
+      //         // should never enter this
+      //         console.log('response status is not 200 after search');
+      //       }
+      //     })
+      //   })
+      //   .catch(error => { // will this catch error from resp.json()?
+      //   displayError(error);
+      // });
     }
   }
 
