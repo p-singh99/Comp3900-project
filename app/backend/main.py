@@ -287,6 +287,30 @@ class Podcast(Resource):
 		close_conn(conn,cur)
 		return {"data" : "subscription deleted"}, 200
 
+class Subscriptions(Resource):
+	@token_required
+	def get(self):
+		conn, cur = get_conn()
+		uid = get_user_id(cur)
+		cur.execute("""SELECT p.title, p.author, p.description, p.id
+		               FROM   podcasts p
+		               FULL OUTER JOIN   subscriptions s
+		                       on s.podcastId = p.id
+		               WHERE  s.userID = %s;
+		            """, (uid,))
+		podcasts = cur.fetchall()
+		results = []
+		for p in podcasts:
+			cur.execute("select count(podcastId) FROM subscriptions where podcastId = %s GROUP BY podcastId;", (p[3],))
+			subscribers = cur.fetchone()
+			title = p[0]
+			author = p[1]
+			description = p[2]
+			pID = p[3]
+			results.append({"subscribers" : subscribers, "title" : title, "author" : author, "description" : description, "pid" : pID})
+		close_conn(conn, cur)
+		return results, 200
+
 class History(Resource):
 	@token_required
 	def get(self, id):
@@ -468,6 +492,7 @@ api.add_resource(Settings, "/users/self/settings")
 api.add_resource(Podcasts, "/podcasts")
 api.add_resource(Podcast, "/podcasts/<int:id>")
 api.add_resource(Recommendations, "/self/recommendations")
+api.add_resource(Subscriptions, "/subscriptions")
 api.add_resource(History, "/self/history/<int:id>")
 api.add_resource(Listens, "/users/self/podcasts/<int:podcastId>/episodes/time")
 api.add_resource(ManyListens, "/users/self/podcasts/<int:podcastId>/time")
