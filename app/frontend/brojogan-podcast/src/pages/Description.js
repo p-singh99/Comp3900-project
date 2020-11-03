@@ -14,8 +14,8 @@ import { isLoggedIn, fetchAPI } from '../auth-functions';
 
 // CORS bypass
 async function getRSS(id) {
-  return fetch(`${API_URL}/podcasts/${id}`).then(resp => resp.json());
-  // return fetchAPI(`/podcasts/${id}`,'get',null);
+  // return fetch(`${API_URL}/podcasts/${id}`).then(resp => resp.json());
+  return fetchAPI(`/podcasts/${id}`,'get',null);
 
   /*
   let resp, data;
