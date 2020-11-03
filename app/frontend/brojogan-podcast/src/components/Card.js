@@ -44,6 +44,7 @@ function SubCard({ details: podcast }) {
   // const [episodes, setEpisodes] = useState(props.episodes);
   // const [episodes, setEpisodes] = useState();
   const [podcastObj, setPodcastObj] = useState();
+  const [xhrRequest, setXhrRequest] = useState(); // {xhr: xhr, reset: true/false}
   // const [podcastPromise, setPodcastPromise] = useState();
   // const [image, setImage] = useState();
   // const history = useHistory();
@@ -73,27 +74,60 @@ function SubCard({ details: podcast }) {
   // it doesn't make a new Item, it just changes the props
   // so you have to add a useEffect trigger on the props and setState to null while it's loading
   useEffect(() => {
+    if (xhrRequest) {
+      console.log(`${podcast.title}: xhrRequest exists, aborting`);
+      console.log(xhrRequest);
+      xhrRequest.abort();
+      setXhrRequest(null);
+    }
+      
     const setCard = async () => {
       setPodcastObj(null);
-      try {
-        // need to make this a cancellable promise so when page changes to podB while podA is still fetching, 
-        // podcastObj doesn't get to set to null and then set to podA when the response returns
-        const xml = await getRSS(podcast.pid);
-        // console.log('Received RSS :' + Date.now());
-        const pod = getPodcastFromXML(xml);
-        // episodeListTemp = pod.episodes;
-        // setEpisodes(pod.episodes);
-        setPodcastObj(pod);
-        // setImage(pod.image);
-        // console.log('parsed XML: ' + Date.now());
-        // console.log(`Episodes for ${podcast.pid}: ${pod.episodes}`);
-        console.log(`Episodes for ${podcast.pid}`);
-        // console.log(`Episodes 1 for ${podcast.pid}: ${JSON.stringify(pod.episodes[0])}`);
-        // console.log(podcast.image);
-      } catch (error) {
-        console.log(`Error is ${error}`);
-        displayError(error);
+      let xhr = new XMLHttpRequest();
+      xhr.open("GET", `${API_URL}/podcasts/${podcast.pid}`);
+      xhr.responseType = 'json';
+      xhr.send();
+      setXhrRequest(xhr);
+      xhr.onload = () => {
+        console.log(xhr);
+        if (xhr.status === 200) {
+          const pod = getPodcastFromXML(xhr.response.xml);
+          console.log(`Episodes for ${podcast.pid}`);
+          console.log(pod);
+          setPodcastObj(pod);
+        } else if (xhr.status === 404) {
+          displayError("Podcast does not exist");
+        } else {
+          displayError("Error in retrieving podcast");
+        }
+        // setXhrRequest(null) // not sure if necessary
       }
+      xhr.onerror = () => {
+        console.log("xhr error");
+        console.log(xhr);
+        displayError("Network or other error");
+        // setXhrRequest(null) // not sure if necessary
+      }
+
+      // try {
+      //   // need to make this a cancellable promise so when page changes to podB while podA is still fetching, 
+      //   // podcastObj doesn't get to set to null and then set to podA when the response returns
+      //   const xml = await getRSS(podcast.pid);
+      //   // console.log('Received RSS :' + Date.now());
+      //   const pod = getPodcastFromXML(xml);
+      //   // episodeListTemp = pod.episodes;
+      //   // setEpisodes(pod.episodes);
+      //   setPodcastObj(pod);
+      //   // setImage(pod.image);
+      //   // console.log('parsed XML: ' + Date.now());
+      //   // console.log(`Episodes for ${podcast.pid}: ${pod.episodes}`);
+      //   console.log(`Episodes for ${podcast.pid}`);
+      //   // console.log(`Episodes 1 for ${podcast.pid}: ${JSON.stringify(pod.episodes[0])}`);
+      //   // console.log(podcast.image);
+      // } catch (error) {
+      //   console.log(`Error is ${error}`);
+      //   displayError(error);
+      // }
     };
     setCard();
   }, [podcast]);

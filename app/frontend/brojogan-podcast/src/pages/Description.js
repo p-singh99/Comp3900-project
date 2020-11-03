@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet';
-import { useParams } from 'react-router-dom';
+// import { useParams } from 'react-router-dom';
 import { getPodcastFromXML } from '../rss';
 import { API_URL } from '../constants';
 import Pages from './../components/Pages';
