@@ -6,6 +6,8 @@ import { API_URL } from '../constants';
 import Pages from './../components/Pages';
 import './../css/Description.css';
 import { isLoggedIn, fetchAPI } from '../auth-functions';
+// import GetAppIcon from '@material-ui/icons/GetApp';
+// import {Icon} from '@material-ui/icons';
 
 // !! what happens if the description is invalid html, will it break the whole page?
 // eg the a tag doesn't close
@@ -13,6 +15,8 @@ import { isLoggedIn, fetchAPI } from '../auth-functions';
 // CORS bypass
 async function getRSS(id) {
   return fetch(`${API_URL}/podcasts/${id}`).then(resp => resp.json());
+  // return fetchAPI(`/podcasts/${id}`,'get',null);
+
   /*
   let resp, data;
   try {
@@ -35,14 +39,55 @@ function Description(props) {
   const [episodes, setEpisodes] = useState(); // []
   const [podcast, setPodcast] = useState(null);
   const [podcastTitle, setPodcastTitle] = useState(""); // overlaps with above
+  const [subscribeBtn, setSubscribeBtn] = useState("Subscribe");
+  // const [episodes, setEpisodes] = useState([]);
   // const [showEpisodeNum, setShowEpisodeNum] = useState();
+
   const setPlaying = props.setPlaying;
 
+  function subscribeHandler() {
+    console.log("entered into subhandler");
+    var podcastID = window.location.pathname.substring(9);
+    console.log(podcastID);
+    let body = {};
+    body.podcastid = podcastID;
+    fetchAPI(`/podcasts/${podcastID}`, 'post', body)
+      .then(data => {
+
+      })
+  }
+
+  // unsubscription button
+  function unSubscribeHandler() {
+    console.log("entered into Unsubhandler");
+    var podcastID = window.location.pathname.substring(9);
+    console.log(podcastID);
+    let body = {};
+    body.podcastid = podcastID;
+    fetchAPI(`/podcasts/${podcastID}`, 'delete', body)
+      .then(data => {
+        setSubscribeBtn("Subscribe");
+      })
+  }
+
+  const handleClickRequest = (event) => {
+    if (subscribeBtn == 'Unsubscribe') {
+      /** User clicked to unsubscribe */
+      unSubscribeHandler();
+      setSubscribeBtn("Subscribe");
+    } else {
+      /** User clicked to Subscribe */
+      subscribeHandler();
+      setSubscribeBtn("Unsubscribe");
+    }
+  }
+
   // on page load:
-  // send some props from search page like title, thumbnail etc., so that stuff appears faster
-  // since the search page uses the whole rss feed, could send that if have it
-  const { id } = useParams();
+  // const { id } = useParams(); 
+  // useParams is insane and depending on whether the page is accessed by typing in the link, or by clicking on a link from somewhere else in the app,
+  // it sometimes does and sometimes doesn't include query parameters in the result
   useEffect(() => {
+    const id = window.location.pathname.split("/").pop();
     console.log('Start useeffect: ' + Date.now());
     const queryParams = new URLSearchParams(window.location.search);
     const episodeNum = queryParams.get("episode");
@@ -56,6 +101,12 @@ function Description(props) {
         let promises = [];
         if (!prefetchedPodcast) {
           const xmlPromise = getRSS(id);
+          // const xmlPromise = getRSS(id)//.then(data => {console.log(`Subs: ${data.subscription}`)});
+
+          // bool isn't used, I don't know what it's for so I might have merged it to the wrong place
+          let bool;
+          xmlPromise.then(data => { bool = data.subscription });
+
           promises.push(xmlPromise);
         } else {
           setPodcastInfo(prefetchedPodcast);
@@ -64,7 +115,7 @@ function Description(props) {
 
         // if we're logged in we'll get the listened data for this podcast
         if (isLoggedIn()) {
-          let timesPromise = fetchAPI('/users/self/podcasts/'+id+'/time', 'get');
+          let timesPromise = fetchAPI('/users/self/podcasts/' + id + '/time', 'get');
           promises.push(timesPromise);
         }
 
@@ -74,27 +125,28 @@ function Description(props) {
           // this [xml, times] thing won't work now that both are optional
           // will fail if times is used but xml isn't, because times will get assigned as xml
           // hence the below bad code
-          let times, xml;
+          console.log("Promises all");
+          let times;
+          let podcast = prefetchedPodcast;
           if (prefetchedPodcast) {
-            xml = null;
             times = first;
           } else {
-            xml = first;
-            times = second;
-          }
-
-          let podcast = prefetchedPodcast;
-          if (xml) {
-            console.log('Received RSS :' + Date.now());
+            const xml = first;
+            // console.log('Received RSS :' + Date.now());
             console.log(xml);
             podcast = getPodcastFromXML(xml.xml);
-            console.log('parsed XML: ' + Date.now());
+            // console.log('parsed XML: ' + Date.now());
+            console.log(`Subscribed: ${xml.subscription}`);
+            if (xml.subscription) {
+              setSubscribeBtn('Unsubscribe');
+            }
 
             console.log("in start of use effect podcast is:");
             console.log(podcast);
 
             setPodcastInfo(podcast);
             setPodcastTitle(podcast.title);
+            times = second;
           }
 
           // we might not have times since its only if we're logged in
@@ -102,7 +154,7 @@ function Description(props) {
             console.log("times are: ");
             console.log(times);
             for (let time of times) {
-              let episode = podcast.episodes.find(e => e.guid===time.episodeGuid);
+              let episode = podcast.episodes.find(e => e.guid === time.episodeGuid);
               if (episode !== undefined) {
                 episode.progress = time.timestamp;
                 episode.listenDate = time.listenDate;
@@ -111,7 +163,8 @@ function Description(props) {
               }
             }
           }
-          
+
+          console.log("podcast:", podcast);
           setEpisodes({ episodes: podcast.episodes, showEpisode: episodeNum });
           console.log(episodes);
         });
@@ -129,7 +182,7 @@ function Description(props) {
     }
     fetchPodcast(podcastObj);
 
-  }, [id]);
+  }, [window.location]);
 
   function displayError(msg) {
     setPodcast(<h1>{msg.toString()}</h1>);
@@ -137,7 +190,6 @@ function Description(props) {
 
   function setPodcastInfo(podcast) {
     // css grid for this? need to add rating and subscribe button
-
     setPodcast(podcast)
   }
 
@@ -164,6 +216,11 @@ function Description(props) {
             <div id="podcast-name-author">
               <h1 id="podcast-name">{podcast.title}</h1>
               <h3 id="podcast-author">{podcast.author}</h3>
+              <form id="subscribe-form" onClick={() => handleClickRequest()}>
+                <div id="subscribe-btns">
+                  <button id="subscribe-btn" type="button">{subscribeBtn}</button>
+                </div>
+              </form>
               {/* <p id="podcast-description" dangerouslySetInnerHTML={{ __html: sanitiseDescription(podcast.description) }}></p> */}
               {getPodcastDescription(podcast)}
               {podcast.link && <h6><a href={podcast.link}>Podcast website</a></h6>}
@@ -181,7 +238,6 @@ function Description(props) {
       </Helmet>
 
       {getPodcastHTML(podcast)}
-
 
       <div id="episodes">
         <ul>
@@ -235,7 +291,7 @@ function EpisodeDescription({ details: episode, context: { podcast, setPlaying }
         <span className="title">{episode.title}</span>
         <span className="date">{getDate(episode.timestamp)}</span>
       </div>
-      <div className="play">
+      <div className="play-div">
         <span className="duration">{episode.duration}</span>
         {/* <button className="play" eid={episode.guid} onClick={(event) => playEpisode(event, setPlaying, episodes)}>Play</button> */}
         <button className="play" eid={episode.guid} onClick={(event) => {
