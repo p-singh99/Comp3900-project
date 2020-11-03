@@ -79,16 +79,17 @@ function SubCard({ details: podcast }) {
         // need to make this a cancellable promise so when page changes to podB while podA is still fetching, 
         // podcastObj doesn't get to set to null and then set to podA when the response returns
         const xml = await getRSS(podcast.pid);
-        console.log('Received RSS :' + Date.now());
+        // console.log('Received RSS :' + Date.now());
         const pod = getPodcastFromXML(xml);
         // episodeListTemp = pod.episodes;
         // setEpisodes(pod.episodes);
         setPodcastObj(pod);
         // setImage(pod.image);
-        console.log('parsed XML: ' + Date.now());
-        console.log(`Episodes for ${podcast.pid}: ${pod.episodes}`);
+        // console.log('parsed XML: ' + Date.now());
+        // console.log(`Episodes for ${podcast.pid}: ${pod.episodes}`);
+        console.log(`Episodes for ${podcast.pid}`);
         // console.log(`Episodes 1 for ${podcast.pid}: ${JSON.stringify(pod.episodes[0])}`);
-        console.log(podcast.image);
+        // console.log(podcast.image);
       } catch (error) {
         console.log(`Error is ${error}`);
         displayError(error);

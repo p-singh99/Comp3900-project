@@ -52,6 +52,7 @@ function Pages({ itemDetails, context, itemsPerPage, Item, showItemIndex }) {
     console.assert(numPages === (pgIndex === 0 ? pgNum - 1 : pgNum));
     setPageState({ pages: pages, lastPage: numPages, pageNum: startingPageNum, scrollIndex: startingScroll });
   }, []);
+  // itemDetails, itemsPerPage, context, Item, showItemIndex 
 
   function pageChanged(event) {
     console.log(event.target);

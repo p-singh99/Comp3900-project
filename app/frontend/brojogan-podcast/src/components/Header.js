@@ -128,8 +128,6 @@ function Header() {
       console.log(searched_text.value);
 
       history.push("/search" + "?" + searched_text.value);
-      // for some reason, if you are on the search page already and do history.push(), it doesn't work...
-      // changes the url but nothing else happens
       // window.location.href = "/search" + "?" + searched_text.value;
 
       // being fetched both here and on the actual search page?
