@@ -1,15 +1,34 @@
 import React from 'react';
-import { Helmet } from 'react-helmet';
+import ReactDOM from 'react-dom';
+import {API_URL} from './../constants';
+import {fetchAPI} from '../auth-functions';
+import PodcastCards from '../components/PodcastCards';
+import './../css/SearchPage.css';
 
 function Subscriptions() {
+  fetchAPI(`/subscriptions`,'get',null)
+    .then(podcasts => {
+      let i = 0;
+      let cards = [];
+      let podcastTitles = [];
+      let podcastDescriptions = [];
+      for (let p of podcasts) {
+        console.log(`I is: ${i}`);
+        podcastTitles.push(p.title);
+        podcastDescriptions.push(p.description);
+      }
+
+      ReactDOM.render(
+        <PodcastCards
+          heading={`Subscriptions`}
+          podcasts={podcasts}
+        />,
+        document.getElementById('subscription-page-div')
+      );
+    });
+
   return (
-    <div>
-      <Helmet>
-        <title>Brojogan Podcasts - Subscriptions</title>
-      </Helmet>
-      
-      <h1>Subscriptions Page</h1>
-    </div>
+    <div id = "subscription-page-div"></div>
   )
 }
 
