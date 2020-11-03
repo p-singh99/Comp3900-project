@@ -38,7 +38,7 @@ async function getRSS(id) {
 function Description(props) {
   const [episodes, setEpisodes] = useState(); // []
   const [podcast, setPodcast] = useState(null);
-  const [podcastTitle, setPodcastTitle] = useState(""); // overlaps with above
+  // const [podcastTitle, setPodcastTitle] = useState(""); // overlaps with above
   const [subscribeBtn, setSubscribeBtn] = useState("Subscribe");
   // const [episodes, setEpisodes] = useState([]);
   // const [showEpisodeNum, setShowEpisodeNum] = useState();
@@ -93,24 +93,35 @@ function Description(props) {
     const episodeNum = queryParams.get("episode");
     console.log("episodeNum:", episodeNum);
 
+    function updatePodcastDetails(podcast, subscription) {
+      setPodcastInfo(podcast);
+      console.log(`Subscribed: ${subscription}`);
+      if (subscription) {
+        setSubscribeBtn('Unsubscribe');
+      }
+    }
+
     const fetchPodcast = async (prefetchedPodcast) => {
       try {
         console.log("prefetched:", prefetchedPodcast);
 
         // TODO: need to figure out how to check for 401s etc, here.
         let promises = [];
-        if (!prefetchedPodcast) {
+        if (prefetchedPodcast) {
+          updatePodcastDetails(prefetchedPodcast.podcast, prefetchedPodcast.subscription);
+          // setPodcastInfo(prefetchedPodcast.podcast);
+          // if (prefetchedPodcast.subscription) {
+          //   setSubscribeBtn('Unsubscribe');
+          // }
+        } else {
           const xmlPromise = getRSS(id);
           // const xmlPromise = getRSS(id)//.then(data => {console.log(`Subs: ${data.subscription}`)});
 
           // bool isn't used, I don't know what it's for so I might have merged it to the wrong place
-          let bool;
-          xmlPromise.then(data => { bool = data.subscription });
+          // let bool;
+          // xmlPromise.then(data => { bool = data.subscription });
 
           promises.push(xmlPromise);
-        } else {
-          setPodcastInfo(prefetchedPodcast);
-          setPodcastTitle(prefetchedPodcast.title);
         }
 
         // if we're logged in we'll get the listened data for this podcast
@@ -127,25 +138,26 @@ function Description(props) {
           // hence the below bad code
           console.log("Promises all");
           let times;
-          let podcast = prefetchedPodcast;
+          let podcast;
           if (prefetchedPodcast) {
+            podcast = prefetchedPodcast.podcast;
             times = first;
           } else {
             const xml = first;
             // console.log('Received RSS :' + Date.now());
             console.log(xml);
             podcast = getPodcastFromXML(xml.xml);
-            // console.log('parsed XML: ' + Date.now());
-            console.log(`Subscribed: ${xml.subscription}`);
-            if (xml.subscription) {
-              setSubscribeBtn('Unsubscribe');
-            }
-
-            console.log("in start of use effect podcast is:");
             console.log(podcast);
+            // console.log('parsed XML: ' + Date.now());
+            // if (xml.subscription) {
+            //   setSubscribeBtn('Unsubscribe');
+            // }
+            updatePodcastDetails(podcast, xml.subscription);
 
-            setPodcastInfo(podcast);
-            setPodcastTitle(podcast.title);
+            // console.log("in start of use effect podcast is:");
+            // console.log(podcast);
+
+            // setPodcastInfo(podcast);
             times = second;
           }
 
@@ -216,14 +228,17 @@ function Description(props) {
             <div id="podcast-name-author">
               <h1 id="podcast-name">{podcast.title}</h1>
               <h3 id="podcast-author">{podcast.author}</h3>
-              <form id="subscribe-form" onClick={() => handleClickRequest()}>
-                <div id="subscribe-btns">
-                  <button id="subscribe-btn" type="button">{subscribeBtn}</button>
-                </div>
-              </form>
+              {isLoggedIn()
+                ?
+                <form id="subscribe-form" onClick={() => handleClickRequest()}>
+                  <div id="subscribe-btns">
+                    <button id="subscribe-btn" type="button">{subscribeBtn}</button>
+                  </div>
+                </form>
+                : null}
               {/* <p id="podcast-description" dangerouslySetInnerHTML={{ __html: sanitiseDescription(podcast.description) }}></p> */}
               {getPodcastDescription(podcast)}
-              {podcast.link && <h6><a href={podcast.link}>Podcast website</a></h6>}
+              {podcast.link && <h6><a href={podcast.link} target="_blank" rel="nofollow">Podcast website</a></h6>}
             </div>
           </div>
         </div>
@@ -234,7 +249,7 @@ function Description(props) {
     <div id="podcast">
       {}
       <Helmet>
-        <title>{podcastTitle} - BroJogan Podcasts</title>
+        <title>{podcast ? podcast.title : ""} - BroJogan Podcasts</title>
       </Helmet>
 
       {getPodcastHTML(podcast)}

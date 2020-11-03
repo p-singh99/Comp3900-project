@@ -4,6 +4,7 @@ import { Accordion } from 'react-bootstrap';
 import Card from 'react-bootstrap/Card';
 import { API_URL } from '../constants';
 import { getPodcastFromXML } from './../rss';
+import { fetchAPI } from './../auth-functions';
 
 function SubCard({ details: podcast }) {
   const [podcastObj, setPodcastObj] = useState();
@@ -13,46 +14,39 @@ function SubCard({ details: podcast }) {
   // so you have to add a useEffect trigger on the props and setState to null while it's loading
   useEffect(() => {
     setPodcastObj(null);
-    let xhr = new XMLHttpRequest();
-    xhr.open("GET", `${API_URL}/podcasts/${podcast.pid}`);
-    xhr.responseType = 'json';
-    xhr.send();
-    xhr.onload = () => {
-      console.log(xhr);
-      if (xhr.status === 200) {
-        const pod = getPodcastFromXML(xhr.response.xml);
+
+    const controller = new AbortController();
+    const setCard = async () => {
+      try {
+        // need to make this a cancellable promise so when page changes to podB while podA is still fetching, 
+        // podcastObj doesn't get to set to null and then set to podA when the response returns
+        const data = await fetchAPI(`/podcasts/${podcast.pid}`, 'get', null, controller.signal);
+        const pod = getPodcastFromXML(data.xml);
+        setPodcastObj({podcast: pod, subscription: data.subscription});
         console.log(`Episodes for ${podcast.pid}`);
-        console.log(pod);
-        setPodcastObj(pod);
-      } else if (xhr.status === 404) {
-        displayError("Podcast does not exist");
-      } else {
-        displayError("Error in retrieving podcast");
+      } catch (error) {
+        console.log(`Error is ${error}`);
+        displayError(error);
       }
-    }
-    xhr.onerror = () => {
-      console.log("xhr error");
-      console.log(xhr);
-      displayError("Network or other error");
-    }
+    };
+    setCard();
 
     return function cleanup() {
-      xhr.abort();
+      controller.abort();
       console.log("cleanup card");
     }
 
-    // could still use fetch for aborting 
+    // fetch for aborting 
     // https://medium.com/javascript-in-plain-english/an-absolute-guide-to-javascript-http-requests-44c685edfa51
   }, [podcast]);
 
-  
 
   function displayError(msg) {
     console.log('Error loading episodes');
   }
 
   function getEpisodeNumber(index) {
-    return podcastObj.episodes.length - index;
+    return podcastObj.podcast.episodes.length - index;
   }
 
   return (
@@ -60,7 +54,7 @@ function SubCard({ details: podcast }) {
       <Card.Header className="card-header">
         <Accordion.Toggle className={'accordion-toggle'} as={Card.Header} variant="link" eventKey={podcast.pid}>
           <div className='card-header-div'>
-            <img src={podcastObj ? podcastObj.image : 'https://i.pinimg.com/originals/92/63/04/926304843ea8e8b9bc22c52c755ec34f.gif'} style={{ width: '50px', height: '50px' }} />
+            <img src={podcastObj ? podcastObj.podcast.image : 'https://i.pinimg.com/originals/92/63/04/926304843ea8e8b9bc22c52c755ec34f.gif'} style={{ width: '50px', height: '50px' }} />
             {/* Random loading gif from google, totally dodge */}
             {/* change to use image returned with search results */}
             {/* <a className={'search-page-link'} href={"/podcast/" + podcast.pid}>
@@ -80,7 +74,7 @@ function SubCard({ details: podcast }) {
           <div>
             {/* It's extremely laggy showing all the episodes for massive (1000+ episode) podcasts*/}
             {podcastObj
-              ? podcastObj.episodes.slice(0, 50).map((episode, index) =>
+              ? podcastObj.podcast.episodes.slice(0, 50).map((episode, index) =>
                 <div>
                   <p id="episode-list-card">
                     {/* <a id="episode-list-link" className={'search-page-link'} href={`/podcast/${podcast.pid}?episode=${episodes.length-index}`}> */}
@@ -160,26 +154,48 @@ export default SubCard;
   // }
 
 
+  // const setCard = () => {
+  //   try {
+  //     // need to make this a cancellable promise so when page changes to podB while podA is still fetching, 
+  //     // podcastObj doesn't get to set to null and then set to podA when the response returns
+  //     const xml = await getRSS(podcast.pid);
+  //     // console.log('Received RSS :' + Date.now());
+  //     const pod = getPodcastFromXML(xml);
+  //     // episodeListTemp = pod.episodes;
+  //     // setEpisodes(pod.episodes);
+  //     setPodcastObj(pod);
+  //     // setImage(pod.image);
+  //     // console.log('parsed XML: ' + Date.now());
+  //     // console.log(`Episodes for ${podcast.pid}: ${pod.episodes}`);
+  //     console.log(`Episodes for ${podcast.pid}`);
+  //     // console.log(`Episodes 1 for ${podcast.pid}: ${JSON.stringify(pod.episodes[0])}`);
+  //     // console.log(podcast.image);
+  //   } catch (error) {
+  //     console.log(`Error is ${error}`);
+  //     displayError(error);
+  //   }
+  // };
+  // setCard();
 
-    // const setCard = () => {
-    // try {
-    //   // need to make this a cancellable promise so when page changes to podB while podA is still fetching, 
-    //   // podcastObj doesn't get to set to null and then set to podA when the response returns
-    //   const xml = await getRSS(podcast.pid);
-    //   // console.log('Received RSS :' + Date.now());
-    //   const pod = getPodcastFromXML(xml);
-    //   // episodeListTemp = pod.episodes;
-    //   // setEpisodes(pod.episodes);
-    //   setPodcastObj(pod);
-    //   // setImage(pod.image);
-    //   // console.log('parsed XML: ' + Date.now());
-    //   // console.log(`Episodes for ${podcast.pid}: ${pod.episodes}`);
-    //   console.log(`Episodes for ${podcast.pid}`);
-    //   // console.log(`Episodes 1 for ${podcast.pid}: ${JSON.stringify(pod.episodes[0])}`);
-    //   // console.log(podcast.image);
-    // } catch (error) {
-    //   console.log(`Error is ${error}`);
-    //   displayError(error);
+    // let xhr = new XMLHttpRequest();
+    // xhr.open("GET", `${API_URL}/podcasts/${podcast.pid}`);
+    // xhr.responseType = 'json';
+    // xhr.send();
+    // xhr.onload = () => {
+    //   console.log(xhr);
+    //   if (xhr.status === 200) {
+    //     const pod = getPodcastFromXML(xhr.response.xml);
+    //     console.log(`Episodes for ${podcast.pid}`);
+    //     console.log(pod);
+    //     setPodcastObj({ podcast: pod, subscription: xhr.response.subscription });
+    //   } else if (xhr.status === 404) {
+    //     displayError("Podcast does not exist");
+    //   } else {
+    //     displayError("Error in retrieving podcast");
+    //   }
     // }
-    // };
-    // setCard();
+    // xhr.onerror = () => {
+    //   console.log("xhr error");
+    //   console.log(xhr);
+    //   displayError("Network or other error");
+    // }

@@ -98,3 +98,7 @@ h1.podcast-heading{
 /* #podcast #episodes .pagination {
   justify-content: center;
 } */
+
+#podcast a {
+  color: dodgerblue;
+}
