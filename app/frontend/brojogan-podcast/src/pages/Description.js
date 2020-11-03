@@ -51,11 +51,6 @@ function Description(props) {
     const fetchPodcast = async (prefetchedPodcast) => {
       try {
         console.log("prefetched:", prefetchedPodcast);
-        // const xml = await getRSS(id);
-        // console.log('Received RSS :' + Date.now());
-        // const podcast = getPodcastFromXML(xml);
-        // console.log('parsed XML: ' + Date.now());
-        // setPodcastStuff(podcast, episodeNum);
 
         // TODO: need to figure out how to check for 401s etc, here.
         let promises = [];
@@ -78,6 +73,7 @@ function Description(props) {
         Promise.all(promises).then(([first, second]) => {
           // this [xml, times] thing won't work now that both are optional
           // will fail if times is used but xml isn't, because times will get assigned as xml
+          // hence the below bad code
           let times, xml;
           if (prefetchedPodcast) {
             xml = null;
@@ -133,18 +129,7 @@ function Description(props) {
     }
     fetchPodcast(podcastObj);
 
-    // if (podcastObj) {
-    //   setPodcastStuff(podcastObj, episodeNum);
-    // } else {
-    //   fetchPodcast();
-    // }
   }, [id]);
-
-  // function setPodcastStuff(podcast, episodeNum) {
-  //   setPodcastInfo(podcast);
-  //   setPodcastTitle(podcast.title);
-  //   setEpisodes({ episodes: podcast.episodes, showEpisode: episodeNum });
-  // }
 
   function displayError(msg) {
     setPodcast(<h1>{msg.toString()}</h1>);
@@ -163,14 +148,6 @@ function Description(props) {
     } catch {
       podcastDescription = <p id="podcast-description">{unTagDescription(podcast.description)}</p>;
     }
-    // setPodcast(
-    //   <div>
-    //     <div id="podcast-info">
-    //       {podcast.image && <img id="podcast-img" src={podcast.image} alt="Podcast icon" style={{ height: '300px', width: '300px', minWidth: '300px' }}></img>}
-    //       <div id="podcast-name-author">
-    //         <h1 id="podcast-name" className="podcast-heading">{podcast.title}</h1>
-    //         <h5 id="podcast-author">{podcast.author}</h5>
-    //         {podcastDescription}
     return podcastDescription;
   }
 
@@ -189,6 +166,7 @@ function Description(props) {
               <h3 id="podcast-author">{podcast.author}</h3>
               {/* <p id="podcast-description" dangerouslySetInnerHTML={{ __html: sanitiseDescription(podcast.description) }}></p> */}
               {getPodcastDescription(podcast)}
+              {podcast.link && <h6><a href={podcast.link}>Podcast website</a></h6>}
             </div>
           </div>
         </div>
