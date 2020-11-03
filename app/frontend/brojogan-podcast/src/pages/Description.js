@@ -6,142 +6,59 @@ import { API_URL } from '../constants';
 import Pages from './../components/Pages';
 import './../css/Description.css';
 import { isLoggedIn, fetchAPI } from '../auth-functions';
+// import GetAppIcon from '@material-ui/icons/GetApp';
+// import {Icon} from '@material-ui/icons';
 
 // !! what happens if the description is invalid html, will it break the whole page?
 // eg the a tag doesn't close
 
-// subscription button
-function SubscribeHandler(event) {
-  console.log("entered into subhandler");
-  var podcastID = window.location.pathname.substring(9);
-  console.log(podcastID);
-  let body = {};
-  body.podcastid = podcastID;
-  fetchAPI(`/podcasts/${podcastID}`, 'post', body)
-    .then(data => {
-    })
-}
-
-// unsubscription button
-function unSubscribeHandler(event) {
-  console.log("entered into Unsubhandler");
-  var podcastID = window.location.pathname.substring(9);
-  console.log(podcastID);
-  let body = {};
-  body.podcastid = podcastID;
-  fetchAPI(`/podcasts/${podcastID}`, 'delete', body)
-    .then(data => {
-    })
-}
-
 // CORS bypass
 async function getRSS(id) {
   return fetchAPI(`/podcasts/${id}`,'get',null);
-  //return fetch(`${API_URL}/podcasts/${id}`).then(resp => resp.json());
-  /*
-  let resp, data;
-  try {
-    resp = 
-  } catch {
-    throw Error("Network error");
-  }
-  if (resp.status === 200) {
-    // console.log(data.xml);
-    return data.xml;
-  } else if (resp.status === 404) {
-    throw Error("Podcast does not exist");
-  } else {
-    throw Error("Error in retrieving podcast");
-  }*/
 }
-
-// function Description({ setPlaying }) {
-// function Description() {
-//   // const [episodes, setEpisodes] = useState(); // []
-//   // const [podcast, setPodcast] = useState(<h1>Loading...</h1>);
-// function onTag(tag, html, options) {
-//   if (tag === 'p') {
-//     return '<br>'; // p tags screw up the div onClick, this is easier
-//   }
-//   // no return, it does default
-// }
-
-// // this will make sure that all rels are nofollow, but it won't add nofollow to links
-// function onIgnoreTagAttr(tag, name, value, isWhiteAttr) {
-//   if (tag === 'a' && name === 'rel') {
-//     return 'rel=nofollow'; // why does this work? Shouldn't I just return nofollow?
-//   } else if (tag === 'a' && name === 'target') {
-//     return 'target=_blank;'
-//   }
-//   // no return, it does default ie remove attibute
-// }
-
-// // maybe use DOMPurify instead, and should try to add rel="nofollow" to links
-// // also should set target = _blank on all links
-// // could also do that in js - get all links and loop through setting the attributes
-// // or could set base target = _blank, and then change it on the ones we control
-// // this doesn't really feel secure, this third party script could get bugs or be altered
-// // should put the script in local folder
-// function sanitiseDescription(description) {
-//   // https://www.npmjs.com/package/xss
-//   // https://jsxss.com/en/options.
-//   let options = {
-//     whiteList: {
-//       a: ['href'], // title
-//       // p: [],
-//       // strong: []
-//     },
-//     stripIgnoreTag: true,
-//     onTag: onTag,
-//     onIgnoreTagAttr: onIgnoreTagAttr
-//   };
-//   description = window.filterXSS(description, options);
-//   return description;
-// }
-
-// // https://stackoverflow.com/questions/1912501/unescape-html-entities-in-javascript
-// function htmlDecode(text) {
-//   let doc = new DOMParser().parseFromString(text, "text/html");
-//   return doc.documentElement.textContent;
-// }
-
-// // this function is for removing tags so they don't show up in text
-// // it is not for security sanitisting for innerHTML
-// function unTagDescription(description) {
-//   description = description.replace(/<[^>]+>/g, ''); // remove HTML tags - could be flawed
-//   description = htmlDecode(description);
-//   return description;
-// }
-
-// // function shortenDescription(description) {
-// //   description = unTagDescription();
-// //   if (description.length > 200) {
-// //     return description.substr(0, 197) + '...';
-// //   } else {
-// //     return description;
-// //   }
-// // }
-
-// function getDate(timestamp) {
-//   let date = new Date(timestamp);
-//   // return date.toDateString(); // change to custom format
-//   return date.toLocaleDateString(undefined, {year: 'numeric', month: 'short', day: 'numeric' }).replace(/,/g,'')/*.toUpperCase()*/;
-// }
-
-// function downloadEpisode(event) {
-//   alert(event.target.getAttribute('eid'));
-// }
-
-// function toggleDescription(event) {
-//   event.target.classList.toggle("collapsed");
-//   event.target.classList.toggle("expanded");
-//   // maybe want to do this fancier using js not css
-// }
 
 function Description({ setPlaying }) {
   const [episodes, setEpisodes] = useState([]);
   const [podcast, setPodcast] = useState(null);
-  const [podcastTitle, setPodcastTitle] = useState(""); // overlaps with above
+  const [podcastTitle, setPodcastTitle] = useState("");
+  const [subscribeBtn, setSubscribeBtn] = useState("Subscribe"); // overlaps with above
+
+  function subscribeHandler() {
+    console.log("entered into subhandler");
+    var podcastID = window.location.pathname.substring(9);
+    console.log(podcastID);
+    let body = {};
+    body.podcastid = podcastID;
+    fetchAPI(`/podcasts/${podcastID}`, 'post', body)
+      .then(data => {
+        
+      })
+  }
+  
+  // unsubscription button
+  function unSubscribeHandler() {
+    console.log("entered into Unsubhandler");
+    var podcastID = window.location.pathname.substring(9);
+    console.log(podcastID);
+    let body = {};
+    body.podcastid = podcastID;
+    fetchAPI(`/podcasts/${podcastID}`, 'delete', body)
+      .then(data => {
+        setSubscribeBtn("Subscribe");
+      })
+  }
+  
+  const handleClickRequest = (event) => {
+    if (subscribeBtn == 'Unsubscribe') {
+      /** User clicked to unsubscribe */
+      unSubscribeHandler();
+      setSubscribeBtn("Subscribe");
+    } else {
+      /** User clicked to Subscribe */
+      subscribeHandler();
+      setSubscribeBtn("Unsubscribe");
+    }
+  }
 
   // on page load:
   // send some props from search page like title, thumbnail etc., so that stuff appears faster
@@ -151,8 +68,11 @@ function Description({ setPlaying }) {
     const fetchPodcast = async () => {
       try {
         // TODO: need to figure out how to check for 401s etc, here.
-        const xmlPromise = getRSS(id);
+        const xmlPromise = getRSS(id)//.then(data => {console.log(`Subs: ${data.subscription}`)});
         let promises = [xmlPromise];
+        let bool;
+        xmlPromise.then(data => {bool = data.subscription});
+        
 
         // if we're logged in we'll get the listened data for this podcast
         if (isLoggedIn()) {
@@ -166,7 +86,10 @@ function Description({ setPlaying }) {
           console.log(xml);
           const podcast = getPodcastFromXML(xml.xml);
           console.log('parsed XML: ' + Date.now());
-          
+          console.log(`Subscribed: ${xml.subscription}`);
+          if (xml.subscription) {
+            setSubscribeBtn('Unsubscribe');
+          }
           console.log("in start of use effect podcast is:");
           console.log(podcast);
 
@@ -212,14 +135,6 @@ function Description({ setPlaying }) {
     } catch {
       podcastDescription = <p id="podcast-description">{unTagDescription(podcast.description)}</p>;
     }
-    // setPodcast(
-    //   <div>
-    //     <div id="podcast-info">
-    //       {podcast.image && <img id="podcast-img" src={podcast.image} alt="Podcast icon" style={{ height: '300px', width: '300px', minWidth: '300px' }}></img>}
-    //       <div id="podcast-name-author">
-    //         <h1 id="podcast-name" className="podcast-heading">{podcast.title}</h1>
-    //         <h5 id="podcast-author">{podcast.author}</h5>
-    //         {podcastDescription}
     return podcastDescription;
   }
 
@@ -236,9 +151,9 @@ function Description({ setPlaying }) {
             <div id="podcast-name-author">
               <h1 id="podcast-name">{podcast.title}</h1>
               <h3 id="podcast-author">{podcast.author}</h3>
-              <form id="subscribe-form" onClick={SubscribeHandler}>
+              <form id="subscribe-form" onClick={() => handleClickRequest()}>
                 <div id="subscribe-btns">
-                  <button id="subscribe-btn" type="button">Subscribe</button>
+                  <button id="subscribe-btn" type="button">{subscribeBtn}</button>
                 </div>
               </form>
               {/* <p id="podcast-description" dangerouslySetInnerHTML={{ __html: sanitiseDescription(podcast.description) }}></p> */}
@@ -311,7 +226,7 @@ function EpisodeDescription({ details: episode, context: { podcast, setPlaying }
         <span className="title">{episode.title}</span>
         <span className="date">{getDate(episode.timestamp)}</span>
       </div>
-      <div className="play">
+      <div className="play-div">
         <span className="duration">{episode.duration}</span>
         {/* <button className="play" eid={episode.guid} onClick={(event) => playEpisode(event, setPlaying, episodes)}>Play</button> */}
         <button className="play" eid={episode.guid} onClick={(event) => {
