@@ -18,8 +18,12 @@ CORS(app)
 
 #CHANGE SECRET KEY
 app.config['SECRET_KEY'] = 'secret_key'
+# remote
+#conn_pool = SemaThreadPool(1, 50,\
+#	 dbname="ultracast", user="brojogan", password="GbB8j6Op", host="polybius.bowdens.me", port=5432)
+# local
 conn_pool = SemaThreadPool(1, 50,\
-	 dbname="ultracast", user="brojogan", password="GbB8j6Op", host="polybius.bowdens.me", port=5432)
+	 dbname="ultracast")
 
 def get_conn():
 	conn = conn_pool.getconn()
@@ -259,8 +263,7 @@ class Podcast(Resource):
 			subscribers = res[0]
 
 		close_conn(conn,cur)
-		else:
-			return {"xml": res[0], "id": res[1], "subscription": flag, "subscribers": subscribers}, 200
+		return {"xml": xml, "id": id, "subscription": flag, "subscribers": subscribers}, 200
 
 
 	@token_required
@@ -400,7 +403,7 @@ class ManyListens(Resource):
 			"episodeGuid": x[0],
 			"listenDate": str(x[1]),
 			"timestamp": x[2]
-		    } for x in res]
+		} for x in res]
 		print("got res")
 		print(jsonready)
 		return jsonready, 200
