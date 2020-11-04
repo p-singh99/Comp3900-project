@@ -260,7 +260,7 @@ class Podcast(Resource):
 
 		close_conn(conn,cur)
 		else:
-		    return {"xml": res[0], "id": res[1], "subscription": flag}, 200
+			return {"xml": res[0], "id": res[1], "subscription": flag, "subscribers": subscribers}, 200
 
 
 	@token_required
