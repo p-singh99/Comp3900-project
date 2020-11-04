@@ -94,7 +94,7 @@ function Description(props) {
     console.log("episodeNum:", episodeNum);
 
     function updatePodcastDetails(podcast, subscription) {
-      setPodcastInfo(podcast);
+      setPodcast(podcast);
       console.log(`Subscribed: ${subscription}`);
       if (subscription) {
         setSubscribeBtn('Unsubscribe');
@@ -146,8 +146,12 @@ function Description(props) {
             const xml = first;
             // console.log('Received RSS :' + Date.now());
             console.log(xml);
-            podcast = getPodcastFromXML(xml.xml);
-            console.log(podcast);
+            if (xml.xml) {
+              podcast = getPodcastFromXML(xml.xml);
+              console.log(podcast);
+            } else {
+              podcast = {};
+            }
             // console.log('parsed XML: ' + Date.now());
             // if (xml.subscription) {
             //   setSubscribeBtn('Unsubscribe');
@@ -177,7 +181,7 @@ function Description(props) {
           }
 
           console.log("podcast:", podcast);
-          setEpisodes({ episodes: podcast.episodes, showEpisode: episodeNum });
+          setEpisodes({ episodes: (podcast ? podcast.episodes : null), showEpisode: episodeNum });
           console.log(episodes);
         });
       } catch (error) {
@@ -200,9 +204,16 @@ function Description(props) {
     setPodcast(<h1>{msg.toString()}</h1>);
   }
 
-  function setPodcastInfo(podcast) {
-    // css grid for this? need to add rating and subscribe button
-    setPodcast(podcast)
+  // function setPodcastInfo(podcast) {
+  //   // css grid for this? need to add rating and subscribe button
+  //   setPodcast(podcast)
+  // }
+
+  function isEmptyObj(obj) {
+    for (const i in obj) {
+      return false;
+    }
+    return true;
   }
 
   function getPodcastDescription(podcast) {
@@ -219,6 +230,10 @@ function Description(props) {
     if (podcast === null) {
       return (
         <h1>Loading...</h1>
+      )
+    } else if (isEmptyObj(podcast)) {
+      return (
+        <h1>Error loading podcast</h1>
       )
     } else {
       return (
@@ -249,14 +264,14 @@ function Description(props) {
     <div id="podcast">
       {}
       <Helmet>
-        <title>{podcast ? podcast.title : ""} - BroJogan Podcasts</title>
+        <title>{podcast && podcast.title ? podcast.title : ""} - BroJogan Podcasts</title>
       </Helmet>
 
       {getPodcastHTML(podcast)}
 
       <div id="episodes">
         <ul>
-          {episodes && episodes.episodes.length > 0
+          {episodes && episodes.episodes && episodes.episodes.length > 0
             ? <Pages itemDetails={episodes.episodes} context={{ podcast: podcast, setPlaying: setPlaying }} podcastId={window.location.pathname.split("/").pop()} itemsPerPage={10} Item={EpisodeDescription} showItemIndex={episodes.showEpisode} />
             : null}
         </ul>

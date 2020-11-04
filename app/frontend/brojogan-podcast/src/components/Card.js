@@ -14,42 +14,42 @@ function SubCard({ details: podcast, context }) {
 
   // should like track if a subscribe/unscubscribe request is already in the air before sending another
   // copied from description.js, extract to another file
-function subscribeHandler(podcastID) {
-  console.log("entered into subhandler");
-  console.log(podcastID);
-  let body = {};
-  body.podcastid = podcastID;
-  setSubscribeBtn("...");
-  fetchAPI(`/podcasts/${podcastID}`, 'post', body)
-    .then(data => {
-      setSubscribeBtn("Unsubscribe");
-    })
-}
-
-// unsubscription button
-function unSubscribeHandler(podcastID) {
-  console.log("entered into Unsubhandler");
-  console.log(podcastID);
-  let body = {};
-  body.podcastid = podcastID;
-  setSubscribeBtn("...");
-  fetchAPI(`/podcasts/${podcastID}`, 'delete', body)
-    .then(data => {
-      setSubscribeBtn("Subscribe");
-    })
-}
-
-const handleClickRequest = (event, podcastID) => {
-  // event.preventDefault();
-  event.stopPropagation();
-  if (subscribeBtn == 'Unsubscribe') {
-    /** User clicked to unsubscribe */
-    unSubscribeHandler(podcastID);
-  } else {
-    /** User clicked to Subscribe */
-    subscribeHandler(podcastID);
+  function subscribeHandler(podcastID) {
+    console.log("entered into subhandler");
+    console.log(podcastID);
+    let body = {};
+    body.podcastid = podcastID;
+    setSubscribeBtn("...");
+    fetchAPI(`/podcasts/${podcastID}`, 'post', body)
+      .then(data => {
+        setSubscribeBtn("Unsubscribe");
+      })
   }
-}
+
+  // unsubscription button
+  function unSubscribeHandler(podcastID) {
+    console.log("entered into Unsubhandler");
+    console.log(podcastID);
+    let body = {};
+    body.podcastid = podcastID;
+    setSubscribeBtn("...");
+    fetchAPI(`/podcasts/${podcastID}`, 'delete', body)
+      .then(data => {
+        setSubscribeBtn("Subscribe");
+      })
+  }
+
+  const handleClickRequest = (event, podcastID) => {
+    // event.preventDefault();
+    event.stopPropagation();
+    if (subscribeBtn == 'Unsubscribe') {
+      /** User clicked to unsubscribe */
+      unSubscribeHandler(podcastID);
+    } else {
+      /** User clicked to Subscribe */
+      subscribeHandler(podcastID);
+    }
+  }
 
   // note to self: when you do something like <Item props={state} />, when the state changes,
   // it doesn't make a new Item, it just changes the props
@@ -60,20 +60,24 @@ const handleClickRequest = (event, podcastID) => {
     const controller = new AbortController();
     const setCard = async () => {
       try {
-        console.log(context.subscribeButton);
+        console.log(context && context.subscribeButton);
         // need to make this a cancellable promise so when page changes to podB while podA is still fetching, 
         // podcastObj doesn't get to set to null and then set to podA when the response returns
         const data = await fetchAPI(`/podcasts/${podcast.pid}`, 'get', null, controller.signal);
         console.log(data);
-        const pod = getPodcastFromXML(data.xml);
-        setPodcastObj({podcast: pod, subscription: data.subscription});
-        console.log(`Episodes for ${podcast.pid}`);
+        if (!data.xml) {
+          setPodcastObj({ podcast: null, subscription: data.subscription });
+        } else {
+          const pod = getPodcastFromXML(data.xml);
+          setPodcastObj({ podcast: pod, subscription: data.subscription });
+          console.log(`Episodes for ${podcast.pid}`);
+        }
       } catch (error) {
         console.log(`Error is ${error}`);
         displayError(error);
       }
     };
-    if (podcast.episodes.length == 0) {
+    if (!podcast.episodes || podcast.episodes.length == 0) {
       setCard();
     }
 
@@ -99,7 +103,7 @@ const handleClickRequest = (event, podcastID) => {
       <Card.Header className="card-header">
         <Accordion.Toggle className={'accordion-toggle'} as={Card.Header} variant="link" eventKey={podcast.pid}>
           <div className='card-header-div'>
-            <img src={podcastObj ? podcastObj.podcast.image : 'https://i.pinimg.com/originals/92/63/04/926304843ea8e8b9bc22c52c755ec34f.gif'} />
+            <img src={(podcastObj && podcastObj.podcast) ? podcastObj.podcast.image : 'https://i.pinimg.com/originals/92/63/04/926304843ea8e8b9bc22c52c755ec34f.gif'} />
             {/* Random loading gif from google, totally dodge */}
             {/* change to use image returned with search results */}
             {/* <a className={'search-page-link'} href={"/podcast/" + podcast.pid}>
@@ -119,22 +123,29 @@ const handleClickRequest = (event, podcastID) => {
         <Card.Body className={'card-body'} eventKey={podcast.pid}>
           <div>
             {/* It's extremely laggy showing all the episodes for massive (1000+ episode) podcasts*/}
-            {podcastObj
-              ? podcastObj.podcast.episodes.slice(0, 50).map((episode, index) =>
-                <div>
-                  <p id="episode-list-card">
-                    {/* <a id="episode-list-link" className={'search-page-link'} href={`/podcast/${podcast.pid}?episode=${episodes.length-index}`}> */}
-                    {/* {episode.title} */}
-                    {/* </a> */}
-                    <Link to={{ pathname: `/podcast/${podcast.pid}?episode=${getEpisodeNumber(index)}`, state: { podcastObj: podcastObj } }} id="episode-list-link" className={'search-page-link'}>
-                      <b>{getEpisodeNumber(index) + '. '}</b>
-                      {episode.title}
-                    </Link>
-                  </p>
-                </div>
-              )
-              : <p>Loading episodes...</p>
-            }
+            {(() => {
+              if (podcastObj && podcastObj.podcast) {
+                return (
+                  podcastObj.podcast.episodes.slice(0, 50).map((episode, index) =>
+                    <div>
+                      <p id="episode-list-card">
+                        {/* <a id="episode-list-link" className={'search-page-link'} href={`/podcast/${podcast.pid}?episode=${episodes.length-index}`}> */}
+                        {/* {episode.title} */}
+                        {/* </a> */}
+                        <Link to={{ pathname: `/podcast/${podcast.pid}?episode=${getEpisodeNumber(index)}`, state: { podcastObj: podcastObj } }} id="episode-list-link" className={'search-page-link'}>
+                          <b>{getEpisodeNumber(index) + '. '}</b>
+                          {episode.title}
+                        </Link>
+                      </p>
+                    </div>
+                  )
+                )
+              } else if (podcastObj) {
+                return <p>Error retrieving podcast details</p>
+              } else {
+                return <p>Loading episodes...</p>
+              }
+            })()}
           </div>
         </Card.Body>
       </Accordion.Collapse>
