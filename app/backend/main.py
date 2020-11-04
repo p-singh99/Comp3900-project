@@ -431,18 +431,22 @@ class Recommendations(Resource):
 			for i in cur.fetchall():
 				recs.add((i[0],2))
 						
-		cur.execute("select p.xml, count(p.title) from podcasts p, podcastcategories pc, categories c \
+		cur.execute("select p.xml, count(p.xml) from podcasts p, podcastcategories pc, categories c \
 			where p.id=pc.podcastid and pc.categoryid=c.id and c.id in (select distinct c.id from categories c, subscriptions s, podcastcategories pc \
 				where s.userId=%s and s.podcastid = pc.podcastid and pc.categoryid = c.id) and \
 					p.title not in (select p.title from podcasts p, subscriptions s where p.id = s.podcastid and \
-						s.userid=%s) group by p.xml order by count(p.title) DESC;" % (user_id, user_id))
+						s.userid=%s) group by p.xml order by count(p.xml) DESC;" % (user_id, user_id))
 		for i in cur.fetchall():
 			recs.add((i[0],3))
 		# recs = recs[:10]
 		recsl = list(recs)
+		print(len(recsl))
 		sorted(recsl,key=lambda x: x[1])
+		xml_list = [x[0] for x in recsl]
+		xml_list = xml_list[:10]
+		print(xml_list)
 		close_conn(conn, cur)
-		return {"recommendations" : recsl}
+		return {"recommendations" : xml_list}
 			
 
 
