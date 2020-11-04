@@ -42,7 +42,7 @@ def get_user_id(cur):
 	return None
 
 def create_token(username):
-	token = jwt.encode({'user' : username, 'exp' : datetime.datetime.utcnow() + datetime.timedelta(minutes=20)}, app.config['SECRET_KEY'])
+	token = jwt.encode({'user' : username, 'exp' : datetime.datetime.utcnow() + datetime.timedelta(minutes=60)}, app.config['SECRET_KEY'])
 	return token.decode('UTF-8')
 
 def token_required(f):
