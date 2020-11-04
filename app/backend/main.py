@@ -16,10 +16,14 @@ app = Flask(__name__)
 api = Api(app)
 CORS(app)
 
-#CHANGE SECRET KEY 
+#CHANGE SECRET KEY
 app.config['SECRET_KEY'] = 'secret_key'
+# remote
+#conn_pool = SemaThreadPool(1, 50,\
+#	 dbname="ultracast", user="brojogan", password="GbB8j6Op", host="polybius.bowdens.me", port=5432)
+# local
 conn_pool = SemaThreadPool(1, 50,\
-	 dbname="ultracast", user="brojogan", password="GbB8j6Op", host="polybius.bowdens.me", port=5432)
+	 dbname="ultracast")
 
 def get_conn():
 	conn = conn_pool.getconn()
@@ -246,20 +250,22 @@ class Podcast(Resource):
 		flag = False
 		if cur.rowcount != 0:
 			flag = True
-		cur.execute("SELECT rssFeed FROM Podcasts WHERE id=(%s)", (id,))
+		cur.execute("SELECT xml, id FROM Podcasts WHERE id=(%s)", (id,))
 		res = cur.fetchone()
-		close_conn(conn,cur)
-		if res:
-			url = res[0]
-			resp = requests.get(url, headers={'User-Agent': 'Mozilla/5.0 (X11; CrOS x86_64 8172.45.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.64 Safari/537.36'})
-			if resp.status_code == 200 and flag:
-				return {"xml": resp.text, "subscription": True}, 200
-			elif resp.status_code == 200 and not flag:
-				return {"xml": resp.text, "subscription": False}, 200
-			else:
-				return {}, 502
-		else:
+		if res is None:
 			return {}, 404
+		xml = res[0]
+		id  = res[1]
+
+		cur.execute("SELECT count(*) from subscriptions where podcastid=(%s)", (id,))
+		res = cur.fetchone()
+		subscribers = 0
+		if res is not None:
+			subscribers = res[0]
+
+		close_conn(conn,cur)
+		return {"xml": xml, "id": id, "subscription": flag, "subscribers": subscribers}, 200
+
 
 	@token_required
 	def post(self, id):
@@ -398,11 +404,11 @@ class ManyListens(Resource):
 			"episodeGuid": x[0],
 			"listenDate": str(x[1]),
 			"timestamp": x[2]
-		    } for x in res]
+		} for x in res]
 		print("got res")
 		print(jsonready)
 		return jsonready, 200
-		
+
 class Recommendations(Resource):
 	@token_required
 	def get(self):
@@ -431,7 +437,7 @@ class Recommendations(Resource):
 
 			for i in cur.fetchall():
 				recs.add((i[0],2))
-						
+
 		cur.execute("select p.xml, count(p.xml) from podcasts p, podcastcategories pc, categories c \
 			where p.id=pc.podcastid and pc.categoryid=c.id and c.id in (select distinct c.id from categories c, subscriptions s, podcastcategories pc \
 				where s.userId=%s and s.podcastid = pc.podcastid and pc.categoryid = c.id) and \
@@ -448,7 +454,7 @@ class Recommendations(Resource):
 		print(xml_list)
 		close_conn(conn, cur)
 		return {"recommendations" : xml_list}
-			
+
 
 
 api.add_resource(Unprotected, "/unprotected")

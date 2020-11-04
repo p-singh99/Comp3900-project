@@ -10,7 +10,7 @@ function isDigits(str) {
 // to be able to scroll to the item, the Item component will need to accept an id prop
 // and set this id as the id of the element. The only id used will be 'scroll-item'.
 // maybe should use #id thing?
-function Pages({ itemDetails, context, itemsPerPage, Item, showItemIndex }) {
+function Pages({ itemDetails, context, itemsPerPage, Item, showItemIndex, podcastId }) {
   const [pageState, setPageState] = useState();
   const [pageJSX, setPageJSX] = useState();
   // const scrollItemRef = useRef(null);
@@ -122,9 +122,9 @@ function Pages({ itemDetails, context, itemsPerPage, Item, showItemIndex }) {
           // this onLoad scrolling doesn't work
           if (scrollIndex === index) {
             console.log("scrollIndex matches:", scrollIndex, index);
-            return <Item details={item} context={context} id="scroll-item" />
+            return <Item details={item} context={context} id="scroll-item" podcastId={podcastId} />
           } else {
-            return <Item details={item} context={context}/>
+            return <Item details={item} context={context} podcastId={podcastId}/>
           }
         })}
         {/* https://github.com/react-bootstrap/react-bootstrap/issues/3281 */}
