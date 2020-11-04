@@ -1,5 +1,5 @@
 # Database Details
-**Local**
+**Local**  
 To set up a local database you will need to have postgres installed. I used postgres12 for this but any recent version should be fine.
 
 1. Switch to postgres user  
