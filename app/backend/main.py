@@ -247,11 +247,20 @@ class Podcast(Resource):
 			flag = True
 		cur.execute("SELECT xml, id FROM Podcasts WHERE id=(%s)", (id,))
 		res = cur.fetchone()
-		close_conn(conn,cur)
 		if res is None:
-		    return {}, 404
+			return {}, 404
+		xml = res[0]
+		id  = res[1]
+
+		cur.execute("SELECT count(*) from subscriptions where podcastid=(%s)", (id,))
+		res = cur.fetchone()
+		subscribers = 0
+		if res is not None:
+			subscribers = res[0]
+
+		close_conn(conn,cur)
 		else:
-                    return {"xml": res[0], "id": res[1], "subscription": flag}, 200
+		    return {"xml": res[0], "id": res[1], "subscription": flag}, 200
 
 
 	@token_required
