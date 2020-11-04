@@ -29,7 +29,9 @@ function SubCard({ details: podcast }) {
         displayError(error);
       }
     };
-    setCard();
+    if (podcast.episodes.length == 0) {
+      setCard();
+    }
 
     return function cleanup() {
       controller.abort();
@@ -39,7 +41,6 @@ function SubCard({ details: podcast }) {
     // fetch for aborting 
     // https://medium.com/javascript-in-plain-english/an-absolute-guide-to-javascript-http-requests-44c685edfa51
   }, [podcast]);
-
 
   function displayError(msg) {
     console.log('Error loading episodes');

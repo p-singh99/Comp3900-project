@@ -259,10 +259,8 @@ class Podcast(Resource):
 			subscribers = res[0]
 
 		close_conn(conn,cur)
-		else:
-			return {"xml": res[0], "id": res[1], "subscription": flag, "subscribers": subscribers}, 200
-
-
+		return {"xml": xml, "id": id, "subscription": flag, "subscribers": subscribers}, 200
+    
 	@token_required
 	def post(self, id):
 		conn, cur = get_conn()
@@ -447,7 +445,7 @@ class Recommendations(Resource):
 		sorted(recsl,key=lambda x: x[1])
 		xml_list = [x[0] for x in recsl]
 		xml_list = xml_list[:10]
-		print(xml_list)
+		# print(xml_list)
 		close_conn(conn, cur)
 		return {"recommendations" : xml_list}
 

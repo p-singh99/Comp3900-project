@@ -1,19 +1,54 @@
-import React from 'react';
+import React, {useState, useEffect} from 'react';
+import ReactDOM from 'react-dom';
 import { Helmet } from 'react-helmet';
 import { isLoggedIn, fetchAPI } from '../auth-functions';
+import PodcastCards from '../components/PodcastCards';
+import {getPodcastFromXML} from '../rss';
 
 function Recommended() {
-  console.log("opened");
-  let result = fetchAPI('/self/recommendations', 'get');
-  result.then(data => console.log(`Result is: ${JSON.stringify(data)}`))
+  let [body, setBody] = useState(<h2>Loading...</h2>);
+  let Podcasts = [];
+
+  const setupPodcasts = () => {
+    let result = fetchAPI('/self/recommendations', 'get');
+      result.then(podcasts => {
+        console.log(`Result is: ${JSON.stringify(result)}`);
+        const pod = podcasts.recommendations;
+        for (let p of pod) {
+          const parsedObject = getPodcastFromXML(p);
+          console.log(`Podcast is: ${JSON.stringify(parsedObject.title)}`);
+          Podcasts.push({
+            'title': parsedObject.title , 
+            'description': parsedObject.description,
+            'pid': parsedObject.id,
+            'episodes': parsedObject.episodes
+          });
+          setBody(<PodcastCards 
+            heading={'Recommendations'}
+            podcasts={Podcasts}
+          />);
+        }
+      })     
+  }
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      setupPodcasts();
+    } else {
+      setBody("Log In to see Recommendations");
+    }
+    
+  }, [])
 
   return (
-    <div>
+    <React.Fragment>
       <Helmet>
         <title>Brojogan Podcasts - Recommended</title>
       </Helmet>
-      <h1>Recommended page</h1>
-    </div>
+      <div id='recommended-div'>
+        {body}
+      </div>
+    </React.Fragment>
   )
 }
 

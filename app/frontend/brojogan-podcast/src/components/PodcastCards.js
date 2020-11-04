@@ -6,6 +6,8 @@ import Pages from './Pages';
 
 function PodcastCards(props) {
 
+  console.log(`Props: ${props.podcasts.pid}`);
+
   return (
     <React.Fragment>
       <h3>
@@ -19,7 +21,7 @@ function PodcastCards(props) {
           pid={String(podcast.pid)} 
           title={podcast.title} 
           subscribers={podcast.subscribers}
-          episodes={[]}
+          episodes={podcast.episodes}
         />
       ))} */}
         </Accordion>
