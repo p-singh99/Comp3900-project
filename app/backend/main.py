@@ -245,14 +245,14 @@ class Podcast(Resource):
 		flag = False
 		if cur.rowcount != 0:
 			flag = True
-		cur.execute("SELECT xml FROM Podcasts WHERE id=(%s)", (id,))
+		cur.execute("SELECT xml, id FROM Podcasts WHERE id=(%s)", (id,))
 		res = cur.fetchone()
+		close_conn(conn,cur)
 		if res is None:
 		    return {}, 404
 		else:
-		    return {"xml": res[0], "subscription": flag}, 200
+                    return {"xml": res[0], "id": res[1], "subscription": flag}, 200
 
-		close_conn(conn,cur)
 
 	@token_required
 	def post(self, id):
