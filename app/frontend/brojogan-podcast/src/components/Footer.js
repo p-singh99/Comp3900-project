@@ -8,10 +8,6 @@ import { fetchAPI, isLoggedIn } from './../auth-functions';
 //   // get playtime, save in localstorage so can resume if refresh
 // }
 
-function sendTime() {
-  // get playtime, send to server
-}
-
 function Footer({ state, setState }) {
   function pingServer(progress) {
     if (isLoggedIn()) {

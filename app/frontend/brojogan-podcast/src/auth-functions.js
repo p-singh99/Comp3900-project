@@ -41,12 +41,16 @@ export const getToken = () => {
 // returns resp.json() or an error
 // give endpoint as eg /podcasts/4
 // sends json. provide body as js object
-export async function fetchAPI(endpoint, method, body=null) {
+// signal: const controller = new AbortController(); fetchAPI(..., controller.signal); controller.abort()
+export async function fetchAPI(endpoint, method, body=null, signal=null) {
   let resp, data;
   let args = {method: method, headers: {'token': getToken()}};
   if (body) {
     args.body = JSON.stringify(body);
     args.headers["Content-Type"] = "application/json";
+  }
+  if (signal) {
+    args.signal = signal;
   }
   console.log(args);
   try {
@@ -62,6 +66,8 @@ export async function fetchAPI(endpoint, method, body=null) {
       authFailed(); // doesn't return
     }
     throw Error(data.error || "Authentication failed");
+  } else if (resp.status === 404) {
+    throw Error("404 Not Found"); // stupid
   } else {
     throw Error(data.error);
   }

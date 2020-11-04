@@ -1,8 +1,11 @@
 #podcast {
     font-family: sans-serif;
     /* padding-left: 20px; */
+    /* padding-bottom: 150px; */ /* to not clash with footer */
+    /* padding-right: 150px; */ /* stuff getting cut off on right */
     /* padding-bottom: 200px; */
 }
+
 h1.podcast-heading{
   margin-bottom: 0px;
   padding-bottom: 0px;
@@ -87,6 +90,15 @@ h1.podcast-heading{
   margin-top: 20px;
 }
 
-#podcast #episodes .pagination {
-    justify-content: center;
+#podcast li.episode {
+  scroll-margin-top: 50px;
+  /* Because the topbar confuses Pages' scrollTo function I think */
+}
+
+/* #podcast #episodes .pagination {
+  justify-content: center;
+} */
+
+#podcast a {
+  color: dodgerblue;
 }

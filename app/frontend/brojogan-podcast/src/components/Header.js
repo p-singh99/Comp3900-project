@@ -4,7 +4,7 @@ import './../css/Header.css';
 import logo from './../images/logo.png';
 import DropDownMenu from './../components/DropDownMenu';
 //import Search from './../components/Search.js';
-import Search from './../components/SearchPage.js';
+// import Search from './../components/SearchPage.js';
 import notifications from './../images/notifications.png';
 import settings from './../images/settings.png';
 import {logoutHandler, authFailed, isLoggedIn, getUsername} from './../auth-functions';
@@ -127,21 +127,26 @@ function Header() {
       console.log(searched_text);
       console.log(searched_text.value);
 
-      fetch(`${API_URL}/podcasts?search_query=`+searched_text.value+'&offset=0&limit=50', {method: 'get'})
-        .then(resp => {
-          resp.json().then(podcasts => {
-            if (resp.status === 200) {
-              history.push("/search" + "?" + searched_text.value);
+      history.push("/search" + "?" + searched_text.value);
+      // window.location.href = "/search" + "?" + searched_text.value;
 
-            } else {
-              // should never enter this
-              console.log('response status is not 200 after search');
-            }
-          })
-        })
-        .catch(error => { // will this catch error from resp.json()?
-        displayError(error);
-      });
+      // being fetched both here and on the actual search page?
+      // fetch(`${API_URL}/podcasts?search_query=`+searched_text.value+'&offset=0&limit=50', {method: 'get'})
+      //   .then(resp => {
+      //     resp.json().then(podcasts => {
+      //       if (resp.status === 200) {
+      //         // console.log(podcasts[0].title);
+      //         // history.push("/search" + "?" + searched_text.value);
+      //         // history.push("/search" + "?" + searched_text.value, {podcasts: podcasts});
+      //       } else {
+      //         // should never enter this
+      //         console.log('response status is not 200 after search');
+      //       }
+      //     })
+      //   })
+      //   .catch(error => { // will this catch error from resp.json()?
+      //   displayError(error);
+      // });
     }
   }
 

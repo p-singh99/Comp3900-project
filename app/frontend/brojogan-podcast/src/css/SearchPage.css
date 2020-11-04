@@ -8,6 +8,8 @@
   margin-bottom: 200px;
 }
 
+/* this seems to apply on all pages, not just search page */
+/* imported css applies across the whole app or smth */
 .card-header {
   background-color:  #2E2B3F;
   cursor: pointer;
@@ -15,7 +17,8 @@
   height: 50px;
 }
 
-#card {
+/* #card { */
+#podcast-card-accordion .card {
   border: 1px dotted #66D0EC;
   border-radius: 10px;
   margin-bottom: 10px;

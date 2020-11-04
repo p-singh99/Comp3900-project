@@ -42,15 +42,17 @@ function App() {
         <Header />
         <div id='middle'>
           <NavBar />
+          {/* Routes for all users */}
           <Route path="/" component={Home} exact />
-          <Route path="/history" component={History} exact />
           <Route path="/podcast/:id" exact render={(props) => (<Description {...props} setPlaying={changePlaying} />)}/>
           <Route path="/recommended" component={Recommended} exact />
-          <Route path="/subscriptions" component={Subscriptions} exact />
           <Route path="/about" component={About} exact />
           <Route path="/search" component={Search} />
+
+          {/* Routes for logged in users only */}
+          <Route path="/history" exact>{isLoggedIn() ? <History /> : <Redirect to="/" />}</Route>
+          <Route path="/subscriptions" exact >{isLoggedIn() ? <Subscriptions /> : <Redirect to="/" />}</Route>
           <Route path="/settings" exact>{isLoggedIn() ? <Settings /> : <Redirect to="/" />}</Route>
-          {/* <Route path="/description" component={() => <Description />} exact /> */}
         </div>
       </div>
       <footer>
