@@ -5,9 +5,51 @@ import Card from 'react-bootstrap/Card';
 import { API_URL } from '../constants';
 import { getPodcastFromXML } from './../rss';
 import { fetchAPI } from './../auth-functions';
+import './../css/Card.css';
 
-function SubCard({ details: podcast }) {
+
+function SubCard({ details: podcast, context }) {
   const [podcastObj, setPodcastObj] = useState();
+  const [subscribeBtn, setSubscribeBtn] = useState("Unsubscribe");
+
+  // should like track if a subscribe/unscubscribe request is already in the air before sending another
+  // copied from description.js, extract to another file
+function subscribeHandler(podcastID) {
+  console.log("entered into subhandler");
+  console.log(podcastID);
+  let body = {};
+  body.podcastid = podcastID;
+  setSubscribeBtn("...");
+  fetchAPI(`/podcasts/${podcastID}`, 'post', body)
+    .then(data => {
+      setSubscribeBtn("Unsubscribe");
+    })
+}
+
+// unsubscription button
+function unSubscribeHandler(podcastID) {
+  console.log("entered into Unsubhandler");
+  console.log(podcastID);
+  let body = {};
+  body.podcastid = podcastID;
+  setSubscribeBtn("...");
+  fetchAPI(`/podcasts/${podcastID}`, 'delete', body)
+    .then(data => {
+      setSubscribeBtn("Subscribe");
+    })
+}
+
+const handleClickRequest = (event, podcastID) => {
+  // event.preventDefault();
+  event.stopPropagation();
+  if (subscribeBtn == 'Unsubscribe') {
+    /** User clicked to unsubscribe */
+    unSubscribeHandler(podcastID);
+  } else {
+    /** User clicked to Subscribe */
+    subscribeHandler(podcastID);
+  }
+}
 
   // note to self: when you do something like <Item props={state} />, when the state changes,
   // it doesn't make a new Item, it just changes the props
@@ -18,9 +60,11 @@ function SubCard({ details: podcast }) {
     const controller = new AbortController();
     const setCard = async () => {
       try {
+        console.log(context.subscribeButton);
         // need to make this a cancellable promise so when page changes to podB while podA is still fetching, 
         // podcastObj doesn't get to set to null and then set to podA when the response returns
         const data = await fetchAPI(`/podcasts/${podcast.pid}`, 'get', null, controller.signal);
+        console.log(data);
         const pod = getPodcastFromXML(data.xml);
         setPodcastObj({podcast: pod, subscription: data.subscription});
         console.log(`Episodes for ${podcast.pid}`);
@@ -54,7 +98,7 @@ function SubCard({ details: podcast }) {
       <Card.Header className="card-header">
         <Accordion.Toggle className={'accordion-toggle'} as={Card.Header} variant="link" eventKey={podcast.pid}>
           <div className='card-header-div'>
-            <img src={podcastObj ? podcastObj.podcast.image : 'https://i.pinimg.com/originals/92/63/04/926304843ea8e8b9bc22c52c755ec34f.gif'} style={{ width: '50px', height: '50px' }} />
+            <img src={podcastObj ? podcastObj.podcast.image : 'https://i.pinimg.com/originals/92/63/04/926304843ea8e8b9bc22c52c755ec34f.gif'} />
             {/* Random loading gif from google, totally dodge */}
             {/* change to use image returned with search results */}
             {/* <a className={'search-page-link'} href={"/podcast/" + podcast.pid}>
@@ -66,6 +110,7 @@ function SubCard({ details: podcast }) {
             <p className='subs-count'>
               Subscribers:- {podcast.subscribers}
             </p>
+            {context && context.subscribeButton && <button className="subscribe-btn" onClick={(event) => handleClickRequest(event, podcast.pid)}>{subscribeBtn}</button>}
           </div>
         </Accordion.Toggle>
       </Card.Header>

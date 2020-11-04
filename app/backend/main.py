@@ -31,7 +31,8 @@ def close_conn(conn, cur):
 	conn_pool.putconn(conn)
 
 def create_token(username):
-	token = jwt.encode({'user' : username, 'exp' : datetime.datetime.utcnow() + datetime.timedelta(minutes=20)}, app.config['SECRET_KEY'])
+	# implement some kind of token refreshing scheme
+	token = jwt.encode({'user' : username, 'exp' : datetime.datetime.utcnow() + datetime.timedelta(minutes=60)}, app.config['SECRET_KEY'])
 	return token.decode('UTF-8')
 
 def token_required(f):

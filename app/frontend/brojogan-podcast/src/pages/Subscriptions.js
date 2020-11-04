@@ -30,6 +30,7 @@ function Subscriptions() {
             <PodcastCards
               heading={`Subscriptions`}
               podcasts={podcasts}
+              options={{subscribeButton: true}}
             />)
         } else if (podcasts) {
           return "You aren't subscribed to any podcasts.";

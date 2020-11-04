@@ -1,0 +1,40 @@
+.card button {
+    /* display: inline-block; */
+    /* border: 1px solid #535353;
+    height: 40px;
+    padding: 0 20px;
+    border-radius: 10px;
+    font-size: 0.95rem;
+    */
+    cursor: pointer;
+    text-align: center;
+    transition: background 250ms ease-in-out, transform 150ms ease;
+
+    margin: 5px 0 5px 10px;
+    width: 90px;
+    height: 30px;
+    background-color: #6E59D6; 
+    border-radius: 50px;
+    border: 1px solid #6E59D6;
+    font-weight: bold;
+    font-style: italic;
+    font-size: 13px;
+    color: white;
+}
+
+.card button:hover, .card button:focus {
+    outline: none;
+    background: #8f82d3;
+    border-color: #8f82d3;
+  }
+
+  .card button:focus:not(:hover) {
+    background-color: #6E59D6; 
+    border: 1px solid #6E59D6;
+  }
+
+.card img {
+    /* height: 100%; */
+    width: 50px;
+    /* padding: 5px 0; */
+}

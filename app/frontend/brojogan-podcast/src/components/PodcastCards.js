@@ -13,7 +13,7 @@ function PodcastCards(props) {
       </h3>
       <div /*id="podcast-card-accordion"*/>
         <Accordion id="podcast-card-accordion" defaultActiveKey={null}>
-        <Pages Item={SubCard} itemDetails={props.podcasts} itemsPerPage={10} />
+        <Pages Item={SubCard} itemDetails={props.podcasts} itemsPerPage={10} context={props.options} />
         {/* {props.podcasts.map((podcast) => (
         <SubCard 
           pid={String(podcast.pid)} 
