@@ -333,7 +333,7 @@ class Listens(Resource):
 		episodeGuid = request.json.get("episodeGuid")
 		if episodeGuid is None:
 			cur.close()
-			pool.putconn()
+			conn_pool.putconn()
 			return {"data": "episodeGuid not included"}, 400
 
 		cur.execute("""
@@ -417,7 +417,7 @@ class Recommendations(Resource):
 		cur.execute("select query from searchqueries where userid=%s order by searchdate DESC limit 10" % user_id)
 		queries = cur.fetchall()
 		for query in queries:
-			cur.execute("select p.title, count(p.xml) from podcasts p, podcastcategories pc, categories c where p.title in (SELECT v.title\
+			cur.execute("select p.xml, count(p.xml) from podcasts p, podcastcategories pc, categories c where p.title in (SELECT v.title\
 				FROM   searchvector v\
 				FULL OUTER JOIN Subscriptions s ON s.podcastId = v.id\
 				WHERE  v.vector @@ plainto_tsquery(%s)\
@@ -426,23 +426,27 @@ class Recommendations(Resource):
 				p.id = pc.podcastid and pc.categoryid=c.id and c.id in (select distinct c.id from categories c, subscriptions s, podcastcategories pc \
 					where s.userId=%s and s.podcastid = pc.podcastid and pc.categoryid = c.id) and \
 						p.title not in (select p.title from podcasts p, subscriptions s where p.id = s.podcastid and \
-							s.userid=%s) group by p.title order by count(p.xml) DESC", (query[0],query[0], user_id, user_id))
+							s.userid=%s) group by p.xml order by count(p.xml) DESC", (query[0],query[0], user_id, user_id))
 
 			for i in cur.fetchall():
 				recs.add((i[0],2))
 						
-		cur.execute("select p.title, count(p.title) from podcasts p, podcastcategories pc, categories c \
+		cur.execute("select p.xml, count(p.xml) from podcasts p, podcastcategories pc, categories c \
 			where p.id=pc.podcastid and pc.categoryid=c.id and c.id in (select distinct c.id from categories c, subscriptions s, podcastcategories pc \
 				where s.userId=%s and s.podcastid = pc.podcastid and pc.categoryid = c.id) and \
 					p.title not in (select p.title from podcasts p, subscriptions s where p.id = s.podcastid and \
-						s.userid=%s) group by p.title order by count(p.title) DESC;" % (user_id, user_id))
+						s.userid=%s) group by p.xml order by count(p.xml) DESC;" % (user_id, user_id))
 		for i in cur.fetchall():
 			recs.add((i[0],3))
 		# recs = recs[:10]
 		recsl = list(recs)
+		print(len(recsl))
 		sorted(recsl,key=lambda x: x[1])
+		xml_list = [x[0] for x in recsl]
+		xml_list = xml_list[:10]
+		print(xml_list)
 		close_conn(conn, cur)
-		return {"recommendations" : recsl}
+		return {"recommendations" : xml_list}
 			
 
 
@@ -456,7 +460,6 @@ api.add_resource(Podcast, "/podcasts/<int:id>")
 api.add_resource(Recommendations, "/self/recommendations")
 api.add_resource(Subscriptions, "/subscriptions")
 api.add_resource(History, "/self/history/<int:id>")
-
 api.add_resource(Listens, "/users/self/podcasts/<int:podcastId>/episodes/time")
 api.add_resource(ManyListens, "/users/self/podcasts/<int:podcastId>/time")
 
