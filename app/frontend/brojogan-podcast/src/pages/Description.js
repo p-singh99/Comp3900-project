@@ -257,7 +257,7 @@ function Description(props) {
       <div id="episodes">
         <ul>
           {episodes && episodes.episodes.length > 0
-            ? <Pages itemDetails={episodes.episodes} context={{ podcast: podcast, setPlaying: setPlaying }} itemsPerPage={10} Item={EpisodeDescription} showItemIndex={episodes.showEpisode} />
+            ? <Pages itemDetails={episodes.episodes} context={{ podcast: podcast, setPlaying: setPlaying }} podcastId={window.location.pathname.split("/").pop()} itemsPerPage={10} Item={EpisodeDescription} showItemIndex={episodes.showEpisode} />
             : null}
         </ul>
       </div>
@@ -287,7 +287,7 @@ function downloadEpisode(event) {
   alert(event.target.getAttribute('eid'));
 }
 
-function EpisodeDescription({ details: episode, context: { podcast, setPlaying }, id }) {
+function EpisodeDescription({ details: episode, context: { podcast, setPlaying }, id, podcastId }) {
   let description;
   // in case the sanitiser fails, don't use innerHTML
   try {
@@ -320,7 +320,7 @@ function EpisodeDescription({ details: episode, context: { podcast, setPlaying }
             src: episode.url,
             thumb: episode.image ? episode.image : podcast.image,
             guid: episode.guid,
-            podcastID: id,
+            podcastID: podcastId,
             listenDate: episode.listenDate ? episode.listenDate : undefined,
             progress: episode.progress ? episode.progress : 0.0
           });

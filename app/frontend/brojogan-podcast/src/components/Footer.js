@@ -15,6 +15,8 @@ function Footer({ state, setState }) {
       let uri = '/users/self/podcasts/'+state.podcastID+'/episodes/time';
       console.log("sending to " + uri);
       fetchAPI(uri, 'put', {'time': progress, 'episodeGuid': state.guid}).then(() => console.log("updated"))
+    } else {
+      console.log("not logged in");
     }
   }
   let setPlayed=false;
