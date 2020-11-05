@@ -79,6 +79,9 @@ function SubCard({ details: podcast, context }) {
     };
     if (!podcast.episodes || podcast.episodes.length == 0) {
       setCard();
+    } else {
+      console.log(podcast);
+      setPodcastObj({ podcast: podcast })
     }
 
     return function cleanup() {
@@ -133,7 +136,7 @@ function SubCard({ details: podcast, context }) {
                         {/* {episode.title} */}
                         {/* </a> */}
                         <Link to={{ pathname: `/podcast/${podcast.pid}?episode=${getEpisodeNumber(index)}`, state: { podcastObj: podcastObj } }} id="episode-list-link" className={'search-page-link'}>
-                          <b>{getEpisodeNumber(index) + '. '}</b>
+                          {/* <b>{getEpisodeNumber(index) + '. '}</b> */}
                           {episode.title}
                         </Link>
                       </p>

@@ -14,25 +14,28 @@ function Recommended() {
       result.then(podcasts => {
         console.log(`Result is: ${JSON.stringify(result)}`);
         const pod = podcasts.recommendations;
+        console.log("Recommended.js podcasts.recommendations");
         for (let p of pod) {
           const parsedObject = getPodcastFromXML(p);
-          console.log(`Podcast is: ${JSON.stringify(parsedObject.title)}`);
-          Podcasts.push({
-            'title': parsedObject.title , 
-            'description': parsedObject.description,
-            'pid': parsedObject.id,
-            'episodes': parsedObject.episodes
-          });
-          setBody(<PodcastCards 
-            heading={'Recommendations'}
-            podcasts={Podcasts}
-          />);
+          console.log(`Recommended Podcast is: ${JSON.stringify(parsedObject.title)}`);
+          // Podcasts.push({
+          //   'title': parsedObject.title , 
+          //   'description': parsedObject.description,
+          //   'pid': parsedObject.id,
+          //   'episodes': parsedObject.episodes
+          // });
+          Podcasts.push(parsedObject);
         }
+        console.log("Recommended end of for loop podcasts:", Podcasts)
+        setBody(<PodcastCards 
+          heading={'Recommendations'}
+          podcasts={Podcasts}
+        />);
       })     
   }
 
   useEffect(() => {
-    if (isLoggedIn) {
+    if (isLoggedIn()) {
       setupPodcasts();
     } else {
       setBody("Log In to see Recommendations");

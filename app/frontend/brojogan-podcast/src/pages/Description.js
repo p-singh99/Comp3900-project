@@ -108,7 +108,7 @@ function Description(props) {
         // TODO: need to figure out how to check for 401s etc, here.
         let promises = [];
         if (prefetchedPodcast) {
-          updatePodcastDetails(prefetchedPodcast.podcast, prefetchedPodcast.subscription);
+          updatePodcastDetails((prefetchedPodcast.podcast ? prefetchedPodcast.podcast : {}), prefetchedPodcast.subscription);
           // setPodcastInfo(prefetchedPodcast.podcast);
           // if (prefetchedPodcast.subscription) {
           //   setSubscribeBtn('Unsubscribe');
@@ -272,7 +272,7 @@ function Description(props) {
       <div id="episodes">
         <ul>
           {episodes && episodes.episodes && episodes.episodes.length > 0
-            ? <Pages itemDetails={episodes.episodes} context={{ podcast: podcast, setPlaying: setPlaying }} podcastId={window.location.pathname.split("/").pop()} itemsPerPage={10} Item={EpisodeDescription} showItemIndex={episodes.showEpisode} />
+            ? <Pages itemDetails={episodes.episodes} context={{ podcast: podcast, setPlaying: setPlaying, podcastId: window.location.pathname.split("/").pop() }} itemsPerPage={10} Item={EpisodeDescription} showItemIndex={episodes.showEpisode} />
             : null}
         </ul>
       </div>
@@ -302,7 +302,7 @@ function downloadEpisode(event) {
   alert(event.target.getAttribute('eid'));
 }
 
-function EpisodeDescription({ details: episode, context: { podcast, setPlaying }, id, podcastId }) {
+function EpisodeDescription({ details: episode, context: { podcast, setPlaying, podcastId }, id }) {
   let description;
   // in case the sanitiser fails, don't use innerHTML
   try {

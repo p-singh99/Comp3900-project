@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import './../css/Footer.css';
 import AudioPlayer from 'react-h5-audio-player';
 import 'react-h5-audio-player/lib/styles.css';
@@ -26,7 +27,7 @@ function Footer({ state, setState }) {
         <table className="player-table">
           <tr>
             <td className="image-col" rowSpan="2">
-              <img src={state.thumb} className="thumbnail"></img>
+              <Link to={`/podcast/${state.podcastID}`}><img src={state.thumb} className="thumbnail"></img></Link>
             </td>
             <td>{state.title}</td>
           </tr>
