@@ -19,11 +19,11 @@ CORS(app)
 #CHANGE SECRET KEY
 app.config['SECRET_KEY'] = 'secret_key'
 # remote
-conn_pool = SemaThreadPool(1, 50,\
-	 dbname="ultracast", user="brojogan", password="GbB8j6Op", host="polybius.bowdens.me", port=5432)
-# local
 #conn_pool = SemaThreadPool(1, 50,\
-#	 dbname="ultracast")
+#	 dbname="ultracast", user="brojogan", password="GbB8j6Op", host="polybius.bowdens.me", port=5432)
+# local
+conn_pool = SemaThreadPool(1, 50,\
+	 dbname="ultracast", password="newPassword", user="postgres", port=5433)
 
 def get_conn():
 	conn = conn_pool.getconn()
@@ -422,7 +422,7 @@ class Recommendations(Resource):
 				order by l.listendate DESC Limit 10;" % (user_id, user_id))
 		results = cur.fetchall()
 		for i in results:
-			cur.execute("select count(p.id) from podcasts p, subscriptions s where p.id=s.podcastid")
+			cur.execute("select count(p.id) from podcasts p, subscriptions s where s.podcastid=%s", i[1])
 			recs.append({"xml": i[0], "id": i[1], "subs": cur.fetchone()[0]})
 			
 		cur.execute("select query from searchqueries where userid=%s order by searchdate DESC limit 10" % user_id)
