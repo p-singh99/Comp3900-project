@@ -437,7 +437,7 @@ class Recommendations(Resource):
 				p.id = pc.podcastid and pc.categoryid=c.id and c.id in (select distinct c.id from categories c, subscriptions s, podcastcategories pc \
 					where s.userId=%s and s.podcastid = pc.podcastid and pc.categoryid = c.id) and \
 						p.title not in (select p.title from podcasts p, subscriptions s where p.id = s.podcastid and \
-							s.userid=%s) group by p.title order by count(p.xml) DESC", (query[0],query[0], user_id, user_id))
+							s.userid=%s) group by p.xml, p.id order by count(p.xml) DESC", (query[0],query[0], user_id, user_id))
 
 			results = cur.fetchall()
 			for i in results:
@@ -448,14 +448,14 @@ class Recommendations(Resource):
 			where p.id=pc.podcastid and pc.categoryid=c.id and c.id in (select distinct c.id from categories c, subscriptions s, podcastcategories pc \
 				where s.userId=%s and s.podcastid = pc.podcastid and pc.categoryid = c.id) and \
 					p.title not in (select p.title from podcasts p, subscriptions s where p.id = s.podcastid and \
-						s.userid=%s) group by p.title order by count(p.xml) DESC;" % (user_id, user_id))
+						s.userid=%s) group by p.xml, p.id order by count(p.xml) DESC;" % (user_id, user_id))
 
 		results = cur.fetchall()
 		for i in results:
 			cur.select("select count(p.id) from podcasts p, subscriptions s where s.podcastid=%s" % i[1])
 			recs.append({"xml": i[0] , "id": i[1], "subs": cur.fetchone()[0]})
 
-		# recs = recs[:10]
+		recs = recs[:10]
 		#recsl = list(recs)
 		#sorted(recsl,key=lambda x: x[1])
 		#xml_list = [x[4] for x in recsl]
