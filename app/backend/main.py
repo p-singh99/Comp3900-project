@@ -19,11 +19,11 @@ CORS(app)
 #CHANGE SECRET KEY
 app.config['SECRET_KEY'] = 'secret_key'
 # remote
-#conn_pool = SemaThreadPool(1, 50,\
-#	 dbname="ultracast", user="brojogan", password="GbB8j6Op", host="polybius.bowdens.me", port=5432)
-# local
 conn_pool = SemaThreadPool(1, 50,\
-	 dbname="ultracast")
+	 dbname="ultracast", user="brojogan", password="GbB8j6Op", host="polybius.bowdens.me", port=5432)
+# local
+#conn_pool = SemaThreadPool(1, 50,\
+#	 dbname="ultracast")
 
 def get_conn():
 	conn = conn_pool.getconn()
@@ -423,12 +423,12 @@ class Recommendations(Resource):
 		results = cur.fetchall()
 		for i in results:
 			cur.execute("select count(p.id) from podcasts p, subscriptions s where p.id=s.podcastid")
-			recs.append({"xml": i[0] , "id": i[1], "subs": cur.fetchone()[0]})
+			recs.append({"xml": i[0], "id": i[1], "subs": cur.fetchone()[0]})
 			
 		cur.execute("select query from searchqueries where userid=%s order by searchdate DESC limit 10" % user_id)
 		queries = cur.fetchall()
 		for query in queries:
-			cur.execute("select p.xml, p.id, count(p.title) from podcasts p, podcastcategories pc, categories c where p.title in (SELECT v.title\
+			cur.execute("select p.xml, p.id, count(p.id) from podcasts p, podcastcategories pc, categories c where p.title in (SELECT v.title\
 				FROM   searchvector v\
 				FULL OUTER JOIN Subscriptions s ON s.podcastId = v.id\
 				WHERE  v.vector @@ plainto_tsquery(%s)\
@@ -441,10 +441,10 @@ class Recommendations(Resource):
 
 			results = cur.fetchall()
 			for i in results:
-				cur.select("select count(p.id) from podcasts p, subscriptions s where s.podcastid=%s" % i[1])
-				recs.append({"xml": i[0] , "id": i[1], "subs": cur.fetchone()[0]})
+				cur.execute("select count(p.id) from podcasts p, subscriptions s where s.podcastid=%s" % i[1])
+				recs.append({"xml": i[0], "id": i[1], "subs": cur.fetchone()[0]})
 
-		cur.execute("select p.xml, p.id, count(p.title) from podcasts p, podcastcategories pc, categories c \
+		cur.execute("select p.xml, p.id, count(p.id) from podcasts p, podcastcategories pc, categories c \
 			where p.id=pc.podcastid and pc.categoryid=c.id and c.id in (select distinct c.id from categories c, subscriptions s, podcastcategories pc \
 				where s.userId=%s and s.podcastid = pc.podcastid and pc.categoryid = c.id) and \
 					p.title not in (select p.title from podcasts p, subscriptions s where p.id = s.podcastid and \
@@ -452,8 +452,8 @@ class Recommendations(Resource):
 
 		results = cur.fetchall()
 		for i in results:
-			cur.select("select count(p.id) from podcasts p, subscriptions s where s.podcastid=%s" % i[1])
-			recs.append({"xml": i[0] , "id": i[1], "subs": cur.fetchone()[0]})
+			cur.execute("select count(p.id) from podcasts p, subscriptions s where s.podcastid=%s" % i[1])
+			recs.append({"xml": i[0], "id": i[1], "subs": cur.fetchone()[0]})
 
 		recs = recs[:10]
 		#recsl = list(recs)
