@@ -215,11 +215,11 @@ class Settings(Resource):
 		conn, cur = get_conn()
 		user_id = get_user_id(cur)
 		parser = reqparse.RequestParser(bundle_errors=True)
-		parser.add_argument('oldpassword', type=str, required=True, help="Need old password", location="json")
+		parser.add_argument('password', type=str, required=True, help="Need old password", location="json")
 		args = parser.parse_args()
 		cur.execute("SELECT hashedpassword FROM users WHERE id='%s'" % user_id)
 		old_pw = cur.fetchone()[0].strip()
-		if bcrypt.checkpw(args["oldpassword"].encode('UTF-8'), old_pw.encode('utf-8')):
+		if bcrypt.checkpw(args["password"].encode('UTF-8'), old_pw.encode('utf-8')):
 			# delete from users
 			cur.execute("DELETE FROM users WHERE id=%s" % user_id)
 			# delete all subscriptions
@@ -422,7 +422,7 @@ class Recommendations(Resource):
 				order by l.listendate DESC Limit 10;" % (user_id, user_id))
 		results = cur.fetchall()
 		for i in results:
-			cur.execute("select count(p.id) from podcasts p, subscriptions s where s.podcastid=%s", i[1])
+			cur.execute("select count(p.id) from podcasts p, subscriptions s where s.podcastid=%s and p.id=s.podcastid" % i[1])
 			recs.append({"xml": i[0], "id": i[1], "subs": cur.fetchone()[0]})
 			
 		cur.execute("select query from searchqueries where userid=%s order by searchdate DESC limit 10" % user_id)
@@ -441,7 +441,7 @@ class Recommendations(Resource):
 
 			results = cur.fetchall()
 			for i in results:
-				cur.execute("select count(p.id) from podcasts p, subscriptions s where s.podcastid=%s" % i[1])
+				cur.execute("select count(p.id) from podcasts p, subscriptions s where s.podcastid=%s and p.id=s.podcastid" % i[1])
 				recs.append({"xml": i[0], "id": i[1], "subs": cur.fetchone()[0]})
 
 		cur.execute("select p.xml, p.id, count(p.id) from podcasts p, podcastcategories pc, categories c \
@@ -452,7 +452,7 @@ class Recommendations(Resource):
 
 		results = cur.fetchall()
 		for i in results:
-			cur.execute("select count(p.id) from podcasts p, subscriptions s where s.podcastid=%s" % i[1])
+			cur.execute("select count(p.id) from podcasts p, subscriptions s where s.podcastid=%s and p.id=s.podcastid" % i[1])
 			recs.append({"xml": i[0], "id": i[1], "subs": cur.fetchone()[0]})
 
 		recs = recs[:10]
