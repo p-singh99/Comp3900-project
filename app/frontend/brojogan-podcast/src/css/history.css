@@ -1,0 +1,21 @@
+.history-cards {
+    display: flex;
+    width: 1000px; /* maybe not hardcode */
+    flex-flow: row wrap;
+}
+
+.history-card {
+    background: #aaaaaa;
+    margin: 15px;
+    width: 250px;
+}
+
+.history-card img {
+    width: 100px;
+}
+
+.history-cards .pagination {
+    justify-content: center;
+    /* align-items: center; */
+    flex-basis: 100%; /* to put on new row */
+}

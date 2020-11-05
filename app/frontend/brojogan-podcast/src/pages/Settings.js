@@ -19,7 +19,7 @@ function handleDelete(event) {
   }
 
   let body = { "password": password };
-  fetchAPI('/users/self/settings', 'delete', body, false)
+  fetchAPI('/users/self/settings', 'delete', body)
     .then(() => {
       alert("Success. Account deleted.");
       logoutHandler();
