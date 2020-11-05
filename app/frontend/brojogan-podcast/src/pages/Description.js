@@ -306,9 +306,9 @@ function EpisodeDescription({ details: episode, context: { podcast, setPlaying, 
   let description;
   // in case the sanitiser fails, don't use innerHTML
   try {
-    description = <p className="description collapsed" dangerouslySetInnerHTML={{ __html: sanitiseDescription(episode.description) }}></p>;
+    description = <div className="description collapsed"> <p dangerouslySetInnerHTML={{ __html: sanitiseDescription(episode.description) }}></p><p><a href={episode.link} rel="nofollow" target="_blank">Episode website</a></p></div>;
   } catch {
-    description = <p className="description collapsed">{unTagDescription(episode.description)}</p>;
+    description = <div className="description collapsed"><p>{unTagDescription(episode.description)}</p><p><a href={episode.link} rel="nofollow" target="_blank">Episode website</a></p></div>;
   }
 
   // weird react bug that descriptions stay expanded after changing the page,
