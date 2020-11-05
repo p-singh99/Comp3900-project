@@ -412,19 +412,23 @@ class ManyListens(Resource):
 class Recommendations(Resource):
 	@token_required
 	def get(self):
-		recs = set()
+		#recs = set()
+		recs = []
 		conn, cur = get_conn()
 		user_id = get_user_id(cur)
 		# Finds the most recently listened to podcasts that are not subscribed to
-		cur.execute("select p.xml, %s from podcasts p, listens l where p.id = l.podcastid and l.userid=%s and \
+		cur.execute("select p.xml, p.id from podcasts p, listens l where p.id = l.podcastid and l.userid=%s and \
 			p.id not in (select p.id from podcasts p, subscriptions s where s.userid=%s and s.podcastid=p.id) \
-				order by l.listendate DESC Limit 10;" % (1, user_id, user_id))
-		for i in cur.fetchall():
-			recs.add((i[0], 1))
+				order by l.listendate DESC Limit 10;" % (user_id, user_id))
+		results = cur.fetchall()
+		for i in results:
+			cur.select("select count(p.id) from podcasts p, subscribers s where p.id=s.podcastid")
+			recs.append({"xml": i[0] , "id": i[1], "subs": cur.fetchone()[0]})
+			
 		cur.execute("select query from searchqueries where userid=%s order by searchdate DESC limit 10" % user_id)
 		queries = cur.fetchall()
 		for query in queries:
-			cur.execute("select p.xml, count(p.xml) from podcasts p, podcastcategories pc, categories c where p.title in (SELECT v.title\
+			cur.execute("select p.xml, p.id, count(p.title) from podcasts p, podcastcategories pc, categories c where p.title in (SELECT v.title\
 				FROM   searchvector v\
 				FULL OUTER JOIN Subscriptions s ON s.podcastId = v.id\
 				WHERE  v.vector @@ plainto_tsquery(%s)\
@@ -433,27 +437,32 @@ class Recommendations(Resource):
 				p.id = pc.podcastid and pc.categoryid=c.id and c.id in (select distinct c.id from categories c, subscriptions s, podcastcategories pc \
 					where s.userId=%s and s.podcastid = pc.podcastid and pc.categoryid = c.id) and \
 						p.title not in (select p.title from podcasts p, subscriptions s where p.id = s.podcastid and \
-							s.userid=%s) group by p.xml order by count(p.xml) DESC", (query[0],query[0], user_id, user_id))
+							s.userid=%s) group by p.title order by count(p.xml) DESC", (query[0],query[0], user_id, user_id))
 
-			for i in cur.fetchall():
-				recs.add((i[0],2))
+			results = cur.fetchall()
+			for i in results:
+				cur.select("select count(p.id) from podcasts p, subscribers s where s.podcastid=%s" % i[1])
+				recs.append({"xml": i[0] , "id": i[1], "subs": cur.fetchone()[0]})
 
-		cur.execute("select p.xml, count(p.xml) from podcasts p, podcastcategories pc, categories c \
+		cur.execute("select p.xml, p.id, count(p.title) from podcasts p, podcastcategories pc, categories c \
 			where p.id=pc.podcastid and pc.categoryid=c.id and c.id in (select distinct c.id from categories c, subscriptions s, podcastcategories pc \
 				where s.userId=%s and s.podcastid = pc.podcastid and pc.categoryid = c.id) and \
 					p.title not in (select p.title from podcasts p, subscriptions s where p.id = s.podcastid and \
-						s.userid=%s) group by p.xml order by count(p.xml) DESC;" % (user_id, user_id))
-		for i in cur.fetchall():
-			recs.add((i[0],3))
+						s.userid=%s) group by p.title order by count(p.xml) DESC;" % (user_id, user_id))
+
+		results = cur.fetchall()
+		for i in results:
+			cur.select("select count(p.id) from podcasts p, subscribers s where s.podcastid=%s" % i[1])
+			recs.append({"xml": i[0] , "id": i[1], "subs": cur.fetchone()[0]})
+
 		# recs = recs[:10]
-		recsl = list(recs)
-		print(len(recsl))
-		sorted(recsl,key=lambda x: x[1])
-		xml_list = [x[0] for x in recsl]
-		xml_list = xml_list[:10]
+		#recsl = list(recs)
+		#sorted(recsl,key=lambda x: x[1])
+		#xml_list = [x[4] for x in recsl]
+		#xml_list = xml_list[:10]
 		# print(xml_list)
 		close_conn(conn, cur)
-		return {"recommendations" : xml_list}
+		return {"recommendations" : recs}
 
 
 

@@ -2,7 +2,7 @@
   /* top: 30px; */
   display: flex;
   flex-direction: column;
-  margin-top: 93px;
+  margin-top: 92px;
   position: fixed;
   min-width: 210px; /* changed to min-width because it was getting shrunk on descriptions page. this might break something idk */
   height: 100%;
