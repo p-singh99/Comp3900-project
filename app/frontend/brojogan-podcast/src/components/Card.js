@@ -132,7 +132,6 @@ function SubCard({ details: podcast, context }) {
                 return (
                   podcastObj.podcast.episodes.slice(0, 50).map((episode, index) =>
                     <div>
-                      <p>Hello</p>
                       <p id="episode-list-card">
                         {/* <a id="episode-list-link" className={'search-page-link'} href={`/podcast/${podcast.pid}?episode=${episodes.length-index}`}> */}
                         {/* {episode.title} */}
