@@ -79,9 +79,9 @@ function SubCard({ details: podcast, context }) {
     };
     if (!podcast.episodes || podcast.episodes.length == 0) {
       setCard();
-    } else {
-      console.log(podcast);
-      setPodcastObj({ podcast: podcast })
+    } else { // the xml has already been parsed and episodes are available
+      console.log("podcast:", podcast);
+      setPodcastObj({ podcast: podcast });
     }
 
     return function cleanup() {
@@ -128,9 +128,11 @@ function SubCard({ details: podcast, context }) {
             {/* It's extremely laggy showing all the episodes for massive (1000+ episode) podcasts*/}
             {(() => {
               if (podcastObj && podcastObj.podcast) {
+                console.log("recommended JSX:", podcastObj.podcast.episodes.slice(0,50));
                 return (
                   podcastObj.podcast.episodes.slice(0, 50).map((episode, index) =>
                     <div>
+                      <p>Hello</p>
                       <p id="episode-list-card">
                         {/* <a id="episode-list-link" className={'search-page-link'} href={`/podcast/${podcast.pid}?episode=${episodes.length-index}`}> */}
                         {/* {episode.title} */}

@@ -422,7 +422,7 @@ class Recommendations(Resource):
 				order by l.listendate DESC Limit 10;" % (user_id, user_id))
 		results = cur.fetchall()
 		for i in results:
-			cur.select("select count(p.id) from podcasts p, subscribers s where p.id=s.podcastid")
+			cur.execute("select count(p.id) from podcasts p, subscriptions s where p.id=s.podcastid")
 			recs.append({"xml": i[0] , "id": i[1], "subs": cur.fetchone()[0]})
 			
 		cur.execute("select query from searchqueries where userid=%s order by searchdate DESC limit 10" % user_id)
@@ -441,7 +441,7 @@ class Recommendations(Resource):
 
 			results = cur.fetchall()
 			for i in results:
-				cur.select("select count(p.id) from podcasts p, subscribers s where s.podcastid=%s" % i[1])
+				cur.select("select count(p.id) from podcasts p, subscriptions s where s.podcastid=%s" % i[1])
 				recs.append({"xml": i[0] , "id": i[1], "subs": cur.fetchone()[0]})
 
 		cur.execute("select p.xml, p.id, count(p.title) from podcasts p, podcastcategories pc, categories c \
@@ -452,7 +452,7 @@ class Recommendations(Resource):
 
 		results = cur.fetchall()
 		for i in results:
-			cur.select("select count(p.id) from podcasts p, subscribers s where s.podcastid=%s" % i[1])
+			cur.select("select count(p.id) from podcasts p, subscriptions s where s.podcastid=%s" % i[1])
 			recs.append({"xml": i[0] , "id": i[1], "subs": cur.fetchone()[0]})
 
 		# recs = recs[:10]

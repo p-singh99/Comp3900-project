@@ -14,9 +14,9 @@ function Recommended() {
       result.then(podcasts => {
         console.log(`Result is: ${JSON.stringify(result)}`);
         const pod = podcasts.recommendations;
-        console.log("Recommended.js podcasts.recommendations");
+        console.log("Recommended.js podcasts.recommendations:", podcasts.recommendations);
         for (let p of pod) {
-          const parsedObject = getPodcastFromXML(p);
+          const parsedObject = getPodcastFromXML(p.xml);
           console.log(`Recommended Podcast is: ${JSON.stringify(parsedObject.title)}`);
           // Podcasts.push({
           //   'title': parsedObject.title , 
@@ -24,7 +24,7 @@ function Recommended() {
           //   'pid': parsedObject.id,
           //   'episodes': parsedObject.episodes
           // });
-          Podcasts.push(parsedObject);
+          Podcasts.push({...parsedObject, pid: p.id, subscribers: p.subs});
         }
         console.log("Recommended end of for loop podcasts:", Podcasts)
         setBody(<PodcastCards 
