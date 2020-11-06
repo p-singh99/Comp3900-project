@@ -23,7 +23,8 @@ app.config['SECRET_KEY'] = 'secret_key'
 #	 dbname="ultracast", user="brojogan", password="GbB8j6Op", host="polybius.bowdens.me", port=5432)
 # local
 conn_pool = SemaThreadPool(1, 50,\
-	 dbname="ultracast", password="newPassword", user="postgres", port=5433)
+	 dbname="ultracast")
+	#  dbname="ultracast", password="newPassword", user="postgres", port=5433)
 
 def get_conn():
 	conn = conn_pool.getconn()
@@ -317,20 +318,23 @@ class Subscriptions(Resource):
 		close_conn(conn, cur)
 		return results, 200
 
+# allow passing the page size or doing offset limit thing?
 class History(Resource):
 	@token_required
 	def get(self, id):
-		if id < 0:
+		pageNum = id
+		if pageNum <= 0:
 			return {"error": "bad request"}, 400
-		range = 50
-		offset = (id - 1) * range
+		range = 12
+		offset = (pageNum - 1) * range
 		conn, cur = get_conn()
 		user_id = get_user_id(cur)
-		cur.execute("SELECT p.xml, l.episodeguid FROM listens l, podcasts p where l.userid=%s and \
-			p.id = l.podcastid ORDER BY l.listenDate LIMIT %s OFFSET %s" % (user_id, range, offset))
+		cur.execute("SELECT p.id, p.xml, l.episodeguid, l.listenDate, l.timestamp FROM listens l, podcasts p where l.userid=%s and \
+			p.id = l.podcastid ORDER BY l.listenDate DESC LIMIT %s OFFSET %s" % (user_id, range, offset))
 		eps = cur.fetchall()
+		jsoneps = [{"pid" : ep[0], "xml": ep[1], "episodeguid": ep[2], "listenDate": ep[3].timestamp(), "timestamp": ep[4]} for ep in eps]
 		close_conn(conn, cur)
-		return {"history" : eps}, 200
+		return {"history" : jsoneps}, 200
 
 class Listens(Resource):
 	@token_required
@@ -424,7 +428,7 @@ class Recommendations(Resource):
 		for i in results:
 			cur.execute("select count(p.id) from podcasts p, subscriptions s where s.podcastid=%s and p.id=s.podcastid" % i[1])
 			recs.append({"xml": i[0], "id": i[1], "subs": cur.fetchone()[0]})
-			
+		
 		cur.execute("select query from searchqueries where userid=%s order by searchdate DESC limit 10" % user_id)
 		queries = cur.fetchall()
 		for query in queries:

@@ -10,26 +10,60 @@ function isDigits(str) {
 // to be able to scroll to the item, the Item component will need to accept an id prop
 // and set this id as the id of the element. The only id used will be 'scroll-item'.
 // maybe should use #id thing?
-function PagesFetch({ Item, fetchItems, numPages }) {
+function PagesFetch({ Item, fetchItems, numPages, context }) {
   const [pageState, setPageState] = useState();
   // const [pageJSX, setPageJSX] = useState();
   // const scrollItemRef = useRef(null);
   const startRef = useRef(null);
+  let controller = new AbortController(); // not sure if okay to initialise here
 
   async function getPage(pgNum) {
-    const page = await fetchItems(pgNum);
-    setPageState({ page: page, lastPage: numPages, pageNum: 0 });
+    console.log("getPage pageState:", pageState);
+    console.log("pages[pgNum]:", pageState.pages[pgNum]);
+    if (pageState.pages[pgNum]) {
+      setPageState({ ...pageState, pageNum: pgNum });
+    } else {
+      try {
+        const { items: page } = await fetchItems(pgNum, controller.signal);
+        console.log(page);
+        let pages = [...pageState.pages];
+        pages[pgNum] = page;
+        setPageState({ ...pageState, pages: pages, pageNum: pgNum });
+      } catch (err) {
+        throw err;
+      }
+    }
+  }
+
+  async function getPage0() {
+    // get page 0, whose response includes the number of pages
+    try {
+      // const { items: page, numPages } = await fetchItems(1);
+      const { items: page } = await fetchItems(1);
+      console.log(page);
+      numPages = 2;
+      let pages = [];
+      for (let i = 0; i < numPages; i++) {
+        pages.push(null);
+      }
+      pages[1] = page;
+      console.log(pages, numPages, 1);
+      setPageState({ pages: pages, lastPage: numPages, pageNum: 1 });
+    } catch (err) {
+      throw err;
+    }
   }
 
   // run once on page load.
   useEffect(() => {
-    getPage(0);
+    // getPage(0);
+    getPage0();
   }, []);
 
   function pageChanged(event) {
     console.log(event.target);
-    // React-Bootstrap Pagination is actually pretty bad and makes it awkward to respond to Previous or Next button clicks
-    // Maybe should use a different library
+    controller.abort(); // abort in-air requests from previous page
+    controller = new AbortController();
     // checking parent as well because if you click directly on the arrow, the event comes on a span, child of the <a>
     let pageNum = undefined;
     if (event.target.id === "prev" || event.target.parentElement.id === "prev") {
@@ -40,7 +74,6 @@ function PagesFetch({ Item, fetchItems, numPages }) {
       pageNum = parseInt(event.target.text, 10);
     }
     if (pageNum) {
-      console.log({ ...pageState, pageNum: pageNum });
       getPage(pageNum);
       startRef.current.scrollIntoView({ behavior: 'smooth' });
       // this only works sometimes in Firefox...
@@ -50,7 +83,8 @@ function PagesFetch({ Item, fetchItems, numPages }) {
   function pagination(pageNum, lastPage, onPageChange) {
     let paginationMiddleItems;
     if (lastPage <= 7) {
-      paginationMiddleItems = <>{[2, 3, 4, 5, 6].map(num => <Pagination.Item active={pageNum === num}>{num}</Pagination.Item>)}</>;
+      let pages = [2, 3, 4, 5, 6].filter(x => x < lastPage);
+      paginationMiddleItems = <>{pages.map(num => <Pagination.Item active={pageNum === num}>{num}</Pagination.Item>)}</>;
     } else {
       let items;
       switch (pageNum) {
@@ -110,13 +144,20 @@ function PagesFetch({ Item, fetchItems, numPages }) {
   // }, [pageState]);
 
   return (
-    <div ref={startRef} className="pages">
-      {pageState.page.map(item => {
-        <Item details={item} />
-      })}
-      {pagination(pageState.pageNum, pageState.lastPage, pageChanged)}
-    </div>
+    <React.Fragment>
+      <div ref={startRef} className="pages">
+      </div>
+      {pageState
+        ? pageState.pages[pageState.pageNum].map(item => {
+          return <Item details={item} context={context} />
+        })
+        : <h1>Loading...</h1>}
+
+      {pageState
+        ? pagination(pageState.pageNum, pageState.lastPage, pageChanged)
+        : null}
+    </React.Fragment>
   )
 }
 
-export default Pages;
+export default PagesFetch;
