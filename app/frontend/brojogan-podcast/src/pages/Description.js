@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet';
-import { useParams } from 'react-router-dom';
+// import { useParams } from 'react-router-dom';
 import { getPodcastFromXML } from '../rss';
 import { API_URL } from '../constants';
 import Pages from './../components/Pages';
@@ -14,14 +14,36 @@ import { isLoggedIn, fetchAPI } from '../auth-functions';
 
 // CORS bypass
 async function getRSS(id) {
+  // return fetch(`${API_URL}/podcasts/${id}`).then(resp => resp.json());
   return fetchAPI(`/podcasts/${id}`,'get',null);
+
+  /*
+  let resp, data;
+  try {
+    resp = 
+  } catch {
+    throw Error("Network error");
+  }
+  if (resp.status === 200) {
+    // console.log(data.xml);
+    return data.xml;
+  } else if (resp.status === 404) {
+    throw Error("Podcast does not exist");
+  } else {
+    throw Error("Error in retrieving podcast");
+  }*/
 }
 
-function Description({ setPlaying }) {
-  const [episodes, setEpisodes] = useState([]);
+// function Description({ setPlaying }) {
+function Description(props) {
+  const [episodes, setEpisodes] = useState(); // []
   const [podcast, setPodcast] = useState(null);
-  const [podcastTitle, setPodcastTitle] = useState("");
-  const [subscribeBtn, setSubscribeBtn] = useState("Subscribe"); // overlaps with above
+  // const [podcastTitle, setPodcastTitle] = useState(""); // overlaps with above
+  const [subscribeBtn, setSubscribeBtn] = useState("Subscribe");
+  // const [episodes, setEpisodes] = useState([]);
+  // const [showEpisodeNum, setShowEpisodeNum] = useState();
+
+  const setPlaying = props.setPlaying;
 
   function subscribeHandler() {
     console.log("entered into subhandler");
@@ -31,10 +53,10 @@ function Description({ setPlaying }) {
     body.podcastid = podcastID;
     fetchAPI(`/podcasts/${podcastID}`, 'post', body)
       .then(data => {
-        
+
       })
   }
-  
+
   // unsubscription button
   function unSubscribeHandler() {
     console.log("entered into Unsubhandler");
@@ -47,7 +69,7 @@ function Description({ setPlaying }) {
         setSubscribeBtn("Subscribe");
       })
   }
-  
+
   const handleClickRequest = (event) => {
     if (subscribeBtn == 'Unsubscribe') {
       /** User clicked to unsubscribe */
@@ -61,44 +83,94 @@ function Description({ setPlaying }) {
   }
 
   // on page load:
-  // send some props from search page like title, thumbnail etc., so that stuff appears faster
-  const { id } = useParams();
+  // const { id } = useParams(); 
+  // useParams is insane and depending on whether the page is accessed by typing in the link, or by clicking on a link from somewhere else in the app,
+  // it sometimes does and sometimes doesn't include query parameters in the result
   useEffect(() => {
+    const id = window.location.pathname.split("/").pop();
     console.log('Start useeffect: ' + Date.now());
-    const fetchPodcast = async () => {
+    const queryParams = new URLSearchParams(window.location.search);
+    const episodeNum = queryParams.get("episode");
+    console.log("episodeNum:", episodeNum);
+
+    function updatePodcastDetails(podcast, subscription) {
+      setPodcast(podcast);
+      console.log(`Subscribed: ${subscription}`);
+      if (subscription) {
+        setSubscribeBtn('Unsubscribe');
+      }
+    }
+
+    const fetchPodcast = async (prefetchedPodcast) => {
       try {
+        console.log("prefetched:", prefetchedPodcast);
+
         // TODO: need to figure out how to check for 401s etc, here.
-        const xmlPromise = getRSS(id)//.then(data => {console.log(`Subs: ${data.subscription}`)});
-        let promises = [xmlPromise];
-        let bool;
-        xmlPromise.then(data => {bool = data.subscription});
-        
+        let promises = [];
+        if (prefetchedPodcast) {
+          updatePodcastDetails((prefetchedPodcast.podcast ? prefetchedPodcast.podcast : {}), prefetchedPodcast.subscription);
+          // setPodcastInfo(prefetchedPodcast.podcast);
+          // if (prefetchedPodcast.subscription) {
+          //   setSubscribeBtn('Unsubscribe');
+          // }
+        } else {
+          const xmlPromise = getRSS(id);
+          // const xmlPromise = getRSS(id)//.then(data => {console.log(`Subs: ${data.subscription}`)});
+
+          // bool isn't used, I don't know what it's for so I might have merged it to the wrong place
+          // let bool;
+          // xmlPromise.then(data => { bool = data.subscription });
+
+          promises.push(xmlPromise);
+        }
 
         // if we're logged in we'll get the listened data for this podcast
         if (isLoggedIn()) {
-          let timesPromise = fetchAPI('/users/self/podcasts/'+id+'/time', 'get', null);
+          let timesPromise = fetchAPI('/users/self/podcasts/' + id + '/time', 'get');
           promises.push(timesPromise);
         }
 
+        console.log(promises);
         // have both promises running until we can resolve both
-        Promise.all(promises).then(([xml, times]) => {
-          console.log('Received RSS :' + Date.now());
-          console.log(xml);
-          const podcast = getPodcastFromXML(xml.xml);
-          console.log('parsed XML: ' + Date.now());
-          console.log(`Subscribed: ${xml.subscription}`);
-          if (xml.subscription) {
-            setSubscribeBtn('Unsubscribe');
+        Promise.all(promises).then(([first, second]) => {
+          // this [xml, times] thing won't work now that both are optional
+          // will fail if times is used but xml isn't, because times will get assigned as xml
+          // hence the below bad code
+          console.log("Promises all");
+          let times;
+          let podcast;
+          if (prefetchedPodcast) {
+            podcast = prefetchedPodcast.podcast;
+            times = first;
+          } else {
+            const xml = first;
+            // console.log('Received RSS :' + Date.now());
+            console.log(xml);
+            if (xml.xml) {
+              podcast = getPodcastFromXML(xml.xml);
+              console.log(podcast);
+            } else {
+              podcast = {};
+            }
+            // console.log('parsed XML: ' + Date.now());
+            // if (xml.subscription) {
+            //   setSubscribeBtn('Unsubscribe');
+            // }
+            updatePodcastDetails(podcast, xml.subscription);
+
+            // console.log("in start of use effect podcast is:");
+            // console.log(podcast);
+
+            // setPodcastInfo(podcast);
+            times = second;
           }
-          console.log("in start of use effect podcast is:");
-          console.log(podcast);
 
           // we might not have times since its only if we're logged in
           if (times) {
             console.log("times are: ");
             console.log(times);
             for (let time of times) {
-              let episode = podcast.episodes.find(e => e.guid===time.episodeGuid);
+              let episode = podcast.episodes.find(e => e.guid === time.episodeGuid);
               if (episode !== undefined) {
                 episode.progress = time.timestamp;
                 episode.listenDate = time.listenDate;
@@ -107,25 +179,41 @@ function Description({ setPlaying }) {
               }
             }
           }
-          setPodcastInfo(podcast);
-          setPodcastTitle(podcast.title);
-          setEpisodes(podcast.episodes);
+
+          console.log("podcast:", podcast);
+          setEpisodes({ episodes: (podcast ? podcast.episodes : null), showEpisode: episodeNum });
+          console.log(episodes);
         });
       } catch (error) {
         displayError(error);
       }
     }
-    fetchPodcast();
-  }, [id]);
+
+    console.log(props);
+    let podcastObj;
+    try {
+      podcastObj = props.location.state.podcastObj;
+    } catch {
+      podcastObj = null;
+    }
+    fetchPodcast(podcastObj);
+
+  }, [window.location]);
 
   function displayError(msg) {
     setPodcast(<h1>{msg.toString()}</h1>);
   }
 
-  function setPodcastInfo(podcast) {
-    // css grid for this? need to add rating and subscribe button
-    
-    setPodcast(podcast)
+  // function setPodcastInfo(podcast) {
+  //   // css grid for this? need to add rating and subscribe button
+  //   setPodcast(podcast)
+  // }
+
+  function isEmptyObj(obj) {
+    for (const i in obj) {
+      return false;
+    }
+    return true;
   }
 
   function getPodcastDescription(podcast) {
@@ -143,6 +231,10 @@ function Description({ setPlaying }) {
       return (
         <h1>Loading...</h1>
       )
+    } else if (isEmptyObj(podcast)) {
+      return (
+        <h1>Error loading podcast</h1>
+      )
     } else {
       return (
         <div>
@@ -151,13 +243,17 @@ function Description({ setPlaying }) {
             <div id="podcast-name-author">
               <h1 id="podcast-name">{podcast.title}</h1>
               <h3 id="podcast-author">{podcast.author}</h3>
-              <form id="subscribe-form" onClick={() => handleClickRequest()}>
-                <div id="subscribe-btns">
-                  <button id="subscribe-btn" type="button">{subscribeBtn}</button>
-                </div>
-              </form>
+              {isLoggedIn()
+                ?
+                <form id="subscribe-form" onClick={() => handleClickRequest()}>
+                  <div id="subscribe-btns">
+                    <button id="subscribe-btn" type="button">{subscribeBtn}</button>
+                  </div>
+                </form>
+                : null}
               {/* <p id="podcast-description" dangerouslySetInnerHTML={{ __html: sanitiseDescription(podcast.description) }}></p> */}
               {getPodcastDescription(podcast)}
+              {podcast.link && <h6><a href={podcast.link} target="_blank" rel="nofollow">Podcast website</a></h6>}
             </div>
           </div>
         </div>
@@ -168,16 +264,15 @@ function Description({ setPlaying }) {
     <div id="podcast">
       {}
       <Helmet>
-        <title>{podcastTitle} - BroJogan Podcasts</title>
+        <title>{podcast && podcast.title ? podcast.title : ""} - BroJogan Podcasts</title>
       </Helmet>
 
-      {getPodcastHTML(podcast)}      
-      
-      
+      {getPodcastHTML(podcast)}
+
       <div id="episodes">
         <ul>
-          {episodes.length > 0
-            ? <Pages itemDetails={episodes} context={{ podcast: podcast, setPlaying: setPlaying }} itemsPerPage={10} Item={EpisodeDescription} />
+          {episodes && episodes.episodes && episodes.episodes.length > 0
+            ? <Pages itemDetails={episodes.episodes} context={{ podcast: podcast, setPlaying: setPlaying, podcastId: window.location.pathname.split("/").pop() }} itemsPerPage={10} Item={EpisodeDescription} showItemIndex={episodes.showEpisode} />
             : null}
         </ul>
       </div>
@@ -207,7 +302,7 @@ function downloadEpisode(event) {
   alert(event.target.getAttribute('eid'));
 }
 
-function EpisodeDescription({ details: episode, context: { podcast, setPlaying }, id }) {
+function EpisodeDescription({ details: episode, context: { podcast, setPlaying, podcastId }, id }) {
   let description;
   // in case the sanitiser fails, don't use innerHTML
   try {
@@ -230,21 +325,21 @@ function EpisodeDescription({ details: episode, context: { podcast, setPlaying }
         <span className="duration">{episode.duration}</span>
         {/* <button className="play" eid={episode.guid} onClick={(event) => playEpisode(event, setPlaying, episodes)}>Play</button> */}
         <button className="play" eid={episode.guid} onClick={(event) => {
-                    console.log("podcast is");
-                    console.log(podcast);
-                    console.log("episode is");
-                    console.log(episode);
-                    setPlaying({
-                      title: episode.title,
-                      podcastTitle: podcast.title,
-                      src: episode.url,
-                      thumb: episode.image ? episode.image : podcast.image,
-                      guid: episode.guid,
-                      podcastID: id,
-                      listenDate: episode.listenDate ? episode.listenDate : undefined,
-                      progress: episode.progress ? episode.progress : 0.0
-                    });
-                  }}>Play</button>
+          console.log("podcast is");
+          console.log(podcast);
+          console.log("episode is");
+          console.log(episode);
+          setPlaying({
+            title: episode.title,
+            podcastTitle: podcast.title,
+            src: episode.url,
+            thumb: episode.image ? episode.image : podcast.image,
+            guid: episode.guid,
+            podcastID: podcastId,
+            listenDate: episode.listenDate ? episode.listenDate : undefined,
+            progress: episode.progress ? episode.progress : 0.0
+          });
+        }}>Play</button>
         <button className="download" eid={episode.guid} onClick={downloadEpisode}>Download</button>
       </div>
       {/* guid won't always work because some of them will contain invalid characters I think ? */}

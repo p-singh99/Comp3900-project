@@ -24,6 +24,7 @@ export function getPodcastFromXML(xmlText) {
   const xml = parser.parseFromString(xmlText, "text/xml");
   let podcast = {};
   let channel = xml.getElementsByTagName("channel")[0];
+  console.log(channel);
   podcast = getDetailsFromChannel(channel);
   podcast["episodes"] = getEpisodesFromChannel(channel);
   if (!verifyPodcast(podcast)) {
@@ -74,6 +75,7 @@ function getDetailsFromChannel(channel) {
                   podcast["description"] = node.textContent;
               }
               break;
+          case "link": podcast["link"] = node.textContent; break;
           default: break;
           // others: generator, atom:link, itunes:new-feed-url (for when feeds are changed - do later), itunes:type, itunes:episode, itunes: season, itunes:episodeType, ...
       }

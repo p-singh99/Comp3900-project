@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import './../css/Footer.css';
 import AudioPlayer from 'react-h5-audio-player';
 import 'react-h5-audio-player/lib/styles.css';
@@ -8,10 +9,6 @@ import { fetchAPI, isLoggedIn } from './../auth-functions';
 //   // get playtime, save in localstorage so can resume if refresh
 // }
 
-function sendTime() {
-  // get playtime, send to server
-}
-
 function Footer({ state, setState }) {
   function pingServer(progress) {
     if (isLoggedIn()) {
@@ -19,6 +16,8 @@ function Footer({ state, setState }) {
       let uri = '/users/self/podcasts/'+state.podcastID+'/episodes/time';
       console.log("sending to " + uri);
       fetchAPI(uri, 'put', {'time': progress, 'episodeGuid': state.guid}).then(() => console.log("updated"))
+    } else {
+      console.log("not logged in");
     }
   }
   let setPlayed=false;
@@ -28,7 +27,7 @@ function Footer({ state, setState }) {
         <table className="player-table">
           <tr>
             <td className="image-col" rowSpan="2">
-              <img src={state.thumb} className="thumbnail"></img>
+              <Link to={`/podcast/${state.podcastID}`}><img src={state.thumb} className="thumbnail"></img></Link>
             </td>
             <td>{state.title}</td>
           </tr>

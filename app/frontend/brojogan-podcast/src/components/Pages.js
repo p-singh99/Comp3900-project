@@ -20,6 +20,16 @@ function Pages({ itemDetails, context, itemsPerPage, Item, showItemIndex }) {
   useEffect(() => {
     console.log(itemDetails);
     console.log(itemsPerPage);
+    console.log("showItemIndex:", showItemIndex);
+
+    if (itemDetails.length === 0) {
+      return;
+    }
+
+    showItemIndex = parseInt(showItemIndex, 10);
+    if (showItemIndex) {
+      showItemIndex = itemDetails.length - showItemIndex; // it's reversed to the indexes of the array so that eg episode=1 takes you to the first episodes instead of the most recent
+    }
 
     let pages = [];
     const numPages = Math.ceil(itemDetails.length / itemsPerPage);
@@ -30,7 +40,7 @@ function Pages({ itemDetails, context, itemsPerPage, Item, showItemIndex }) {
     let startingPageNum = 1, startingScroll = undefined;
     for (let i = 0; i < itemDetails.length; i++, pgIndex++) {
       pages[pgNum][pgIndex] = itemDetails[i];
-      if (showItemIndex && i === showItemIndex) {
+      if (i === showItemIndex) { // showItemIndex &&
         startingPageNum = pgNum;
         startingScroll = pgIndex;
       }
@@ -38,10 +48,11 @@ function Pages({ itemDetails, context, itemsPerPage, Item, showItemIndex }) {
         pgNum++;
         pgIndex = -1;
       }
-      console.assert(numPages === (pgIndex === 0 ? pgNum - 1 : pgNum));
     }
+    console.assert(numPages === (pgIndex === 0 ? pgNum - 1 : pgNum));
     setPageState({ pages: pages, lastPage: numPages, pageNum: startingPageNum, scrollIndex: startingScroll });
   }, []);
+  // itemDetails, itemsPerPage, context, Item, showItemIndex 
 
   function pageChanged(event) {
     console.log(event.target);
@@ -50,29 +61,17 @@ function Pages({ itemDetails, context, itemsPerPage, Item, showItemIndex }) {
     // checking parent as well because if you click directly on the arrow, the event comes on a span, child of the <a>
     let pageNum = undefined;
     if (event.target.id === "prev" || event.target.parentElement.id === "prev") {
-      pageNum = pageState.pageNum-1;
+      pageNum = pageState.pageNum - 1;
     } else if (event.target.id === "next" || event.target.parentElement.id === "next") {
-      pageNum = pageState.pageNum+1;
+      pageNum = pageState.pageNum + 1;
     } else if (event.target.text && isDigits(event.target.text)) {
       pageNum = parseInt(event.target.text, 10);
     }
     if (pageNum) {
       console.log({ ...pageState, pageNum: pageNum, scrollIndex: null });
       setPageState({ ...pageState, pageNum: pageNum, scrollIndex: null });
-      startRef.current.scrollIntoView({behavior: 'smooth'});
+      startRef.current.scrollIntoView({ behavior: 'smooth' });
       // this only works sometimes in Firefox...
-      // I want it to scroll a bit above the start but I can't get it to work
-      // the scrollbar is not on the window so window.scrollTo() doesn't work, what is it on?
-
-      // const rect = startRef.current.getBoundingClientRect();
-      // console.log(rect);
-      // const scroll = window.scrollY+rect.top-20;
-      // console.log(scroll);
-      // console.log('scroll:', window.scrollY, window.scrollX);
-      // window.scrollTo({top: scroll, behavior: 'smooth'});
-      // window.scrollTo({top: 50, behavior: 'smooth'});
-      // window.scrollTo(0, 0);
-      // document.querySelector("body").scrollTo(0,0);
     }
   }
 
@@ -91,7 +90,8 @@ function Pages({ itemDetails, context, itemsPerPage, Item, showItemIndex }) {
     // there needs to be a way to make big jumps to the middle when there are a lot of pages
     let paginationMiddleItems;
     if (lastPage <= 7) {
-      paginationMiddleItems = <>{[2, 3, 4, 5, 6].map(num => <Pagination.Item active={pageNum === num}>{num}</Pagination.Item>)}</>;
+      let pages = [2, 3, 4, 5, 6].filter(x => x < lastPage);
+      paginationMiddleItems = <>{pages.map(num => <Pagination.Item active={pageNum === num}>{num}</Pagination.Item>)}</>;
     } else {
       let items;
       switch (pageNum) {
@@ -116,17 +116,19 @@ function Pages({ itemDetails, context, itemsPerPage, Item, showItemIndex }) {
     }
 
     setPageJSX(
-      <div ref={startRef} className="pages">
+      <React.Fragment>
+        <div ref={startRef} className="pages"></div> { /* empty div to scroll to top without affecting child selectors */}
         {pages[pageNum].map((item, index) => {
           // this onLoad scrolling doesn't work
           if (scrollIndex === index) {
             console.log("scrollIndex matches:", scrollIndex, index);
             return <Item details={item} context={context} id="scroll-item" />
           } else {
-            return <Item details={item} context={context}/>
+            return <Item details={item} context={context} />
           }
         })}
         {/* https://github.com/react-bootstrap/react-bootstrap/issues/3281 */}
+        {/* Maybe want to allow passing of some 'end' JSX to put before the pagination? */}
         <Pagination onClick={pageChanged}>
           <Pagination.Prev id="prev" disabled={pageNum === 1} />
           <Pagination.Item active={pageNum === 1}>{1}</Pagination.Item>
@@ -134,37 +136,26 @@ function Pages({ itemDetails, context, itemsPerPage, Item, showItemIndex }) {
           {lastPage !== 1 ? <Pagination.Item active={pageNum === lastPage}>{lastPage}</Pagination.Item> : null}
           <Pagination.Next id="next" disabled={pageNum === lastPage} />
         </Pagination>
-      </div>
+      </React.Fragment>
     );
-    // if (pageState.scrollIndex) {
-    //   // scroll somehow
-    // }
-    // if (scrollIndex && scrollItemRef.current) {
-      // scrollItemRef.current is null - hasn't rendered yet
-    //   scrollItemRef.current.scrollIntoView({behavior: 'smooth'});
-    // }
   }, [pageState]);
-
-  // useEffect(() => {
-  //   console.log('scrollItemRef:', scrollItemRef.current);
-  //   element still hasn't rendered, this doesn't work
-  //   if (scrollItemRef.current) {
-  //     scrollItemRef.current.scrollIntoView({behavior: 'smooth'});
-  //   }
-  // })
 
   useEffect(() => {
     const scrollElem = document.getElementById("scroll-item");
     console.log(scrollElem);
     if (scrollElem) {
-      scrollElem.scrollIntoView({behavior: 'smooth'});
+      scrollElem.scrollIntoView({ behavior: 'smooth' });
+      scrollElem.id = null;
+      // don't want to scroll again on every re-render, it's either this or keep more state like firstRender bool
     }
   })
 
   return (
-    <div>
+    // some effects, like Accordian, rely on > css combinators
+    // so I can't have any divs or other elements between between the outer content and the pages
+    <React.Fragment>
       {pageJSX}
-    </div>
+    </React.Fragment>
   )
 }
 

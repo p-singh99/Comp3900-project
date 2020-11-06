@@ -1,16 +1,47 @@
 # Database Details
+**Local**  
+To set up a local database you will need to have postgres installed. I used postgres12 for this but any recent version should be fine.
 
-Hostname: ```polybius.bowdens.me```
-Port: ```5432```
-Database: ```ultracast```
-Username: ```brojogan```
-Password: ```GbB8j6Op```
+1. Switch to postgres user  
+```$ sudo su postgres```
+
+2. Create the brojogan user  
+```$ createuser brojogan```
+
+3. Create the user for your own account. this should be the same name as when you're logged in and type ```whoami```  
+```$ createuser [insert your account name]```
+
+4. Set your account with the role of brojogan
+```
+$ psql
+=> grant brojogan to [your account name];
+=> \q
+```
+
+5. Create the database using createdb and set the owner to brojogan:  
+```$ createdb ultracast -O brojogan```
+
+Then get the database backup file from google drive [here](https://drive.google.com/drive/folders/1xeYmOVXuIgHIw4TC7uIIG3T4KBqSYRng?usp=sharing)
+
+Finally create the database using the sql file:  
+```psql ultracast < db.sql```
+
+**Polybius (remote db, shared by team)**  
+Hostname: ```polybius.bowdens.me```  
+Port: ```5432```  
+Database: ```ultracast```  
+Username: ```brojogan```  
+Password: ```GbB8j6Op```  
 
 
-## Connecting with psql
+## Connecting to polybius with psql
+**Polybius**  
 ```psql --host=polybius.bowdens.me --port=5432 --username=brojogan ultracast```
 
 Then enter password as above
+
+**Local**  
+```psql ultracast```
 
 ## psycopg2
 
@@ -19,6 +50,7 @@ Then enter password as above
 
 ### Connecting with psycopg2
 
+**Polybius**  
 ```python3
 import psycopg2
 
@@ -32,6 +64,15 @@ print(cur.fetchall())
 
 cur.close()
 conn.close()
+```
+
+**Local**
+```python3
+import psycopg2
+
+conn = psycopg2.connect(dbname="ultracast")
+
+cur = conn.cursor()
 ```
 
 ## Database Schema

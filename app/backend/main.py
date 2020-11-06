@@ -16,10 +16,14 @@ app = Flask(__name__)
 api = Api(app)
 CORS(app)
 
-#CHANGE SECRET KEY 
+#CHANGE SECRET KEY
 app.config['SECRET_KEY'] = 'secret_key'
+# remote
+#conn_pool = SemaThreadPool(1, 50,\
+#	 dbname="ultracast", user="brojogan", password="GbB8j6Op", host="polybius.bowdens.me", port=5432)
+# local
 conn_pool = SemaThreadPool(1, 50,\
-	 dbname="ultracast", user="brojogan", password="GbB8j6Op", host="polybius.bowdens.me", port=5432)
+	 dbname="ultracast", password="newPassword", user="postgres", port=5433)
 
 def get_conn():
 	conn = conn_pool.getconn()
@@ -211,11 +215,11 @@ class Settings(Resource):
 		conn, cur = get_conn()
 		user_id = get_user_id(cur)
 		parser = reqparse.RequestParser(bundle_errors=True)
-		parser.add_argument('oldpassword', type=str, required=True, help="Need old password", location="json")
+		parser.add_argument('password', type=str, required=True, help="Need old password", location="json")
 		args = parser.parse_args()
 		cur.execute("SELECT hashedpassword FROM users WHERE id='%s'" % user_id)
 		old_pw = cur.fetchone()[0].strip()
-		if bcrypt.checkpw(args["oldpassword"].encode('UTF-8'), old_pw.encode('utf-8')):
+		if bcrypt.checkpw(args["password"].encode('UTF-8'), old_pw.encode('utf-8')):
 			# delete from users
 			cur.execute("DELETE FROM users WHERE id=%s" % user_id)
 			# delete all subscriptions
@@ -246,20 +250,22 @@ class Podcast(Resource):
 		flag = False
 		if cur.rowcount != 0:
 			flag = True
-		cur.execute("SELECT rssFeed FROM Podcasts WHERE id=(%s)", (id,))
+		cur.execute("SELECT xml, id FROM Podcasts WHERE id=(%s)", (id,))
 		res = cur.fetchone()
-		close_conn(conn,cur)
-		if res:
-			url = res[0]
-			resp = requests.get(url, headers={'User-Agent': 'Mozilla/5.0 (X11; CrOS x86_64 8172.45.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.64 Safari/537.36'})
-			if resp.status_code == 200 and flag:
-				return {"xml": resp.text, "subscription": True}, 200
-			elif resp.status_code == 200 and not flag:
-				return {"xml": resp.text, "subscription": False}, 200
-			else:
-				return {}, 502
-		else:
+		if res is None:
 			return {}, 404
+		xml = res[0]
+		id  = res[1]
+
+		cur.execute("SELECT count(*) from subscriptions where podcastid=(%s)", (id,))
+		res = cur.fetchone()
+		subscribers = 0
+		if res is not None:
+			subscribers = res[0]
+
+		close_conn(conn,cur)
+		return {"xml": xml, "id": id, "subscription": flag, "subscribers": subscribers}, 200
+
 
 	@token_required
 	def post(self, id):
@@ -398,28 +404,31 @@ class ManyListens(Resource):
 			"episodeGuid": x[0],
 			"listenDate": str(x[1]),
 			"timestamp": x[2]
-		    } for x in res]
+		} for x in res]
 		print("got res")
 		print(jsonready)
 		return jsonready, 200
-		
+
 class Recommendations(Resource):
 	@token_required
 	def get(self):
-		recs = set()
+		#recs = set()
+		recs = []
 		conn, cur = get_conn()
 		user_id = get_user_id(cur)
 		# Finds the most recently listened to podcasts that are not subscribed to
-		cur.execute("select p.xml, %s from podcasts p, listens l where p.id = l.podcastid and l.userid=%s and \
+		cur.execute("select p.xml, p.id from podcasts p, listens l where p.id = l.podcastid and l.userid=%s and \
 			p.id not in (select p.id from podcasts p, subscriptions s where s.userid=%s and s.podcastid=p.id) \
-				and p.id not in (select podcastid from rejectedrecommendations) \
-					order by l.listendate DESC Limit 10;" % (1, user_id, user_id))
-		for i in cur.fetchall():
-			recs.add((i[0], 1))
+				order by l.listendate DESC Limit 10;" % (user_id, user_id))
+		results = cur.fetchall()
+		for i in results:
+			cur.execute("select count(p.id) from podcasts p, subscriptions s where s.podcastid=%s and p.id=s.podcastid" % i[1])
+			recs.append({"xml": i[0], "id": i[1], "subs": cur.fetchone()[0]})
+			
 		cur.execute("select query from searchqueries where userid=%s order by searchdate DESC limit 10" % user_id)
 		queries = cur.fetchall()
 		for query in queries:
-			cur.execute("select p.title, count(p.xml) from podcasts p, podcastcategories pc, categories c where p.title in (SELECT v.title\
+			cur.execute("select p.xml, p.id, count(p.id) from podcasts p, podcastcategories pc, categories c where p.title in (SELECT v.title\
 				FROM   searchvector v\
 				FULL OUTER JOIN Subscriptions s ON s.podcastId = v.id\
 				WHERE  v.vector @@ plainto_tsquery(%s)\
@@ -428,24 +437,26 @@ class Recommendations(Resource):
 				p.id = pc.podcastid and pc.categoryid=c.id and c.id in (select distinct c.id from categories c, subscriptions s, podcastcategories pc \
 					where s.userId=%s and s.podcastid = pc.podcastid and pc.categoryid = c.id) and \
 						p.title not in (select p.title from podcasts p, subscriptions s where p.id = s.podcastid and \
-							s.userid=%s) and p.id not in (select podcastid from rejectedrecommendations) group by p.title order by count(p.xml) DESC", (query[0],query[0], user_id, user_id))
+							s.userid=%s) group by p.xml, p.id order by count(p.xml) DESC", (query[0],query[0], user_id, user_id))
 
-			for i in cur.fetchall():
-				recs.add((i[0],2))
-						
-		cur.execute("select p.title, count(p.title) from podcasts p, podcastcategories pc, categories c \
+			results = cur.fetchall()
+			for i in results:
+				cur.execute("select count(p.id) from podcasts p, subscriptions s where s.podcastid=%s and p.id=s.podcastid" % i[1])
+				recs.append({"xml": i[0], "id": i[1], "subs": cur.fetchone()[0]})
+
+		cur.execute("select p.xml, p.id, count(p.id) from podcasts p, podcastcategories pc, categories c \
 			where p.id=pc.podcastid and pc.categoryid=c.id and c.id in (select distinct c.id from categories c, subscriptions s, podcastcategories pc \
 				where s.userId=%s and s.podcastid = pc.podcastid and pc.categoryid = c.id) and \
 					p.title not in (select p.title from podcasts p, subscriptions s where p.id = s.podcastid and \
 						s.userid=%s) and p.id not in (select podcastid from rejectedrecommendations)\
-							group by p.title order by count(p.title) DESC;" % (user_id, user_id))
+							group by p.xml, p.id order by count(p.id) DESC;" % (user_id, user_id))
 		for i in cur.fetchall():
-			recs.add((i[0],3))
+			recs.append((i[0],3))
 		# recs = recs[:10]
-		recsl = list(recs)
-		sorted(recsl,key=lambda x: x[1])
+		#recsl = list(recs)
+		#sorted(recsl,key=lambda x: x[1])
 		close_conn(conn, cur)
-		return {"recommendations" : recsl}
+		return {"recommendations" : recs}
 
 class RejectRecommendations(Resource):
 	@token_required
