@@ -25,3 +25,7 @@ Worked on API side user settings.
 Week 7
 
 Worked on the recommendation system. Fixed several bugs and updated functions to support database connectivity.
+
+Week 8
+
+The recommendation system was finished and the frontend is implemented. Created the backend for the rating system and have started fixing the api table to show proper ressponses to requests to endpoints. 
