@@ -42,7 +42,7 @@ export const getToken = () => {
 // give endpoint as eg /podcasts/4
 // sends json. provide body as js object
 // signal: const controller = new AbortController(); fetchAPI(..., controller.signal); controller.abort()
-export async function fetchAPI(endpoint, method, body=null, signal=null) {
+export async function fetchAPI(endpoint, method='get', body=null, signal=null) {
   let resp, data;
   let args = {method: method, headers: {'token': getToken()}};
   if (body) {

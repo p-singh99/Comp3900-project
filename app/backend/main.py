@@ -340,7 +340,7 @@ class History(Resource):
 		eps = cur.fetchall()
 		jsoneps = [{"pid" : ep[0], "xml": ep[1], "episodeguid": ep[2], "listenDate": ep[3].timestamp(), "timestamp": ep[4]} for ep in eps]
 		close_conn(conn, cur)
-		return {"history" : jsoneps, "pages": total_pages}, 200
+		return {"history" : jsoneps, "numPages": total_pages}, 200
 
 class Listens(Resource):
 	@token_required
