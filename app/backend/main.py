@@ -330,7 +330,8 @@ class History(Resource):
 		offset = (pageNum - 1) * range
 		conn, cur = get_conn()
 		user_id = get_user_id(cur)
-		if id == 0:
+		total_pages = 0
+		if id:
 			cur.execute("SELECT count(*) FROM listens l where l.userid=%s" % (user_id))
 			res = cur.fetchone()[0]
 			total_pages = math.ceil(res / range )
