@@ -11,6 +11,7 @@ import requests
 import feedparser
 import urllib.parse
 from SemaThreadPool import SemaThreadPool
+import math
 
 app = Flask(__name__)
 api = Api(app)
@@ -19,8 +20,8 @@ CORS(app)
 #CHANGE SECRET KEY
 app.config['SECRET_KEY'] = 'secret_key'
 # remote
-#conn_pool = SemaThreadPool(1, 50,\
-#	 dbname="ultracast", user="brojogan", password="GbB8j6Op", host="polybius.bowdens.me", port=5432)
+conn_pool = SemaThreadPool(1, 50,\
+	 dbname="ultracast", user="brojogan", password="GbB8j6Op", host="polybius.bowdens.me", port=5432)
 # local
 conn_pool = SemaThreadPool(1, 50,\
 	 dbname="ultracast")
@@ -329,12 +330,16 @@ class History(Resource):
 		offset = (pageNum - 1) * range
 		conn, cur = get_conn()
 		user_id = get_user_id(cur)
+		if id == 0:
+			cur.execute("SELECT count(*) FROM listens l where l.userid=%s" % (user_id))
+			res = cur.fetchone()[0]
+			total_pages = math.ceil(res / range )
 		cur.execute("SELECT p.id, p.xml, l.episodeguid, l.listenDate, l.timestamp FROM listens l, podcasts p where l.userid=%s and \
 			p.id = l.podcastid ORDER BY l.listenDate DESC LIMIT %s OFFSET %s" % (user_id, range, offset))
 		eps = cur.fetchall()
 		jsoneps = [{"pid" : ep[0], "xml": ep[1], "episodeguid": ep[2], "listenDate": ep[3].timestamp(), "timestamp": ep[4]} for ep in eps]
 		close_conn(conn, cur)
-		return {"history" : jsoneps}, 200
+		return {"history" : jsoneps, "pages": total_pages}, 200
 
 class Listens(Resource):
 	@token_required
@@ -468,6 +473,44 @@ class Recommendations(Resource):
 		close_conn(conn, cur)
 		return {"recommendations" : recs}
 
+class RejectRecommendations(Resource):
+	@token_required
+	def put(self, id):
+		conn, cur = get_conn()
+		user_id = get_user_id(cur)
+		cur.execute("INSERT INTO rejectedrecommendations (userid, podcastid) VALUES (%s, %s)" % (user_id, id))
+		conn.commit()
+		close_conn(conn,cur)
+		
+class Notifications(Resource):
+	def get(self):
+		conn, cur = get_conn()
+		user_id = get_user_id(cur)
+		cur.execute("select * from notifications where user='%s'" % user_id)
+		close_conn(conn, cur)
+		return {"notifications": cur.fetchall()}
+
+class Ratings(Resource):
+	def get(self, id):
+		conn, cur = get_conn()
+		cur.execute("SELECT AVG(rating) FROM podcastratings WHERE podcastid=%s" % (id))
+		rating = cur.fetchone()[0]
+		close_conn(conn,cur)
+		return {"rating": str(round(rating,1))}
+
+	def put(self,id):
+		conn, cur = get_conn()
+		user_id = get_user_id(cur)
+		parser = reqparse.RequestParser()
+		parser.add_argument('rating', type=int, required=True, choices=(1,2,3,4,5), help="Rating not valid", location="json")
+		args = parser.parse_args()
+		#check if already rated
+		cur.execute("SELECT * FROM podcastratings where id=%s" % user_id)
+		if cur.fetchone():
+			cur.execute("DELETE FROM podcastratings WHERE id=%s" % user_id)
+		cur.execute("INSERT INTO podcastratings (userid, podcastid, rating) VALUES (%s, %s, %s)" % (user_id, id, args["rating"]))
+		conn.commit()
+		return {"success": "added"}
 
 
 api.add_resource(Unprotected, "/unprotected")
@@ -482,6 +525,7 @@ api.add_resource(Subscriptions, "/subscriptions")
 api.add_resource(History, "/self/history/<int:id>")
 api.add_resource(Listens, "/users/self/podcasts/<int:podcastId>/episodes/time")
 api.add_resource(ManyListens, "/users/self/podcasts/<int:podcastId>/time")
+api.add_resource(Ratings, "/podcasts/<int:id>/rating")
 
 if __name__ == '__main__':
 	app.run(debug=True)
