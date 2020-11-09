@@ -6,7 +6,10 @@ on subscriptions.podcastId = podcasts.id
 group by podcasts.id
 order by subscribers desc;
 
-
+create or replace view podcastSubscribers as
+select podcasts.xml, podcasts.id, count(subscriptions.podcastid)
+from podcasts join subscriptions on id=podcastid
+group by podcasts.xml, podcasts.id, subscriptions.podcastid;
 
 -- HELPER FUNCTIONS --
 
