@@ -20,8 +20,8 @@ CORS(app)
 #CHANGE SECRET KEY
 app.config['SECRET_KEY'] = 'secret_key'
 # remote
-conn_pool = SemaThreadPool(1, 50,\
-	 dbname="ultracast", user="brojogan", password="GbB8j6Op", host="polybius.bowdens.me", port=5432)
+#conn_pool = SemaThreadPool(1, 50,\
+	 #dbname="ultracast", user="brojogan", password="GbB8j6Op", host="polybius.bowdens.me", port=5432)
 # local
 conn_pool = SemaThreadPool(1, 50,\
 	 dbname="ultracast")
