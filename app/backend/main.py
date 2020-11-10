@@ -76,29 +76,29 @@ class Protected(Resource):
 		return {'message': 'not anyone'}, 200
 
 class SubscriptionPanel(Resource):
-        def get(self):
-                conn,cur = get_conn()
-                uid = uid = get_user_id(cur)
-                cur.execute("""SELECT p.title, p.xml, p.id
-                               FROM   podcasts p
-                               FULL OUTER JOIN   subscriptions s
-                                      on s.podcastId = p.id
-                               WHERE  s.userID = %s;
-                            """, (uid,))
-                podcasts = cur.fetchall()
-                results = []
-                for p in podcasts:
-                        search = re.search('<guid.*>(.*)</guid>', p[1])
-                        guid = search(group(1))
-                        cur.execute("SELECT * FROM Listens where episodeGuid = '%s' AND userId = %s;", (guid, uid))
+	def get(self):
+		conn,cur = get_conn()
+		uid = uid = get_user_id(cur)
+		cur.execute("""SELECT p.title, p.xml, p.id
+		               FROM   podcasts p
+		               FULL OUTER JOIN   subscriptions s
+		               on s.podcastId = p.id
+		               WHERE  s.userID = %s;
+		            """, (uid,))
+		podcasts = cur.fetchall()
+		results = []
+		for p in podcasts:
+			search = re.search('<guid.*>(.*)</guid>', p[1])
+			guid = search(group(1))
+			cur.execute("SELECT * FROM Listens where episodeGuid = '%s' AND userId = %s;", (guid, uid))
 			if cur.rowcount != 0:
 				continue
-                        title = p[0]
-                        xml = p[1]
-                        pid = p[2]
-                        results.append({"title":title, "xml":xml, "pid":pid, "guid":guid})
-                close_conn(conn, cur)
-                return results, 200
+			title = p[0]
+			xml = p[1]
+			pid = p[2]
+			results.append({"title":title, "xml":xml, "pid":pid, "guid":guid})
+		close_conn(conn, cur)
+		return results, 200
 
 class Login(Resource):
 	def post(self):
