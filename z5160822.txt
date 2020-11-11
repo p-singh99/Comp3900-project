@@ -20,3 +20,7 @@ I did the frontend for the user settings page.
 Next week, I'm going to try editing the podcast description page to use infinite scroll rather than loading all episodes at once.
 
 **Week 7**
+I made a generalised Pages component, instead of infinite scroll, to display items as pages for the Details, Search, Recommendations and History pages. I made a version which takes all the items at the start, and another which is given a function to fetch one page at a time.
+
+**Week 8**
+I made some performance optimizations to the search frontend. I added the unsubscribe button to the subscriptions page. I made the history page and some edits to the Details page.

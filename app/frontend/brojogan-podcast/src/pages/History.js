@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet';
 import { Link } from 'react-router-dom';
+import ProgressBar from 'react-bootstrap/ProgressBar';
+
 import { fetchAPI } from './../auth-functions';
 import PagesFetch from './../components/PagesFetch';
 import { getPodcastFromXML } from './../rss';
 import { API_URL } from './../constants';
-import './../css/history.css';
+import './../css/History.css';
 
 // this is used in multiple pages, should extract to other file
 async function getRSS(id, signal) {
@@ -28,17 +30,18 @@ async function getRSS(id, signal) {
 
 function History() {
   async function fetchItems(pgNum, signal) {
-    try {
-      const data = await fetchAPI(`/self/history/${pgNum}`, 'get', null, signal);
-      console.log("History data:", data);
-      if (pgNum === 1) {
-        return { items: data.history, numPages: data.numPages };
-      } else {
-        return { items: data.history };
-      }
-    } catch (err) {
-      throw err;
+    const data = await fetchAPI(`/self/history/${pgNum}`, 'get', null, signal);
+    console.log("History data:", data);
+    if (pgNum === 1) {
+      return { items: data.history, numPages: data.numPages };
+    } else {
+      return { items: data.history };
     }
+    // try {
+
+    // } catch (err) {
+    //   throw err;
+    // }
   }
 
   return (
@@ -57,7 +60,7 @@ function History() {
 
 // copied from description.js, move to other file
 function getDate(timestamp) {
-  console.log(timestamp, typeof(timestamp));
+  console.log(timestamp, typeof (timestamp));
   let date = new Date(timestamp);
   // return date.toDateString(); // change to custom format
   return date.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }).replace(/,/g, '')/*.toUpperCase()*/;
@@ -82,29 +85,51 @@ function HistoryCard({ details }) {
         const episode = podcast.episodes.find(episode => episode.guid === details.episodeguid);
         setState({ podcast, episode });
       } catch (err) {
-        throw err;
+        setState({ error: "Error in retrieving details" });
       }
     }
     setCard();
   }, [details]);
 
+
   return (
-    <div className="history-card">
+    <React.Fragment>
+      <div className="history-card">
+        {state
+          ?
+          (state.error
+            ? <p>{state.error}</p>
+            :
+            <React.Fragment>
+              <Link to={`/podcast/${details.pid}`}><p>{state.podcast.title}</p></Link>
+              <Link to={`/podcast/${details.pid}`}><img src={state.episode.image ? state.episode.image : state.podcast.image} /></Link>
+              <p>{state.episode.title}</p>
+              <p>Listen Date: {getDate(details.listenDate * 1000)}</p>
+              <p>Progress: {details.timestamp} (for testing)</p>
+              <p>Episode duration: {state.episode.duration}</p>
+              {/* Some kind of progress bar based on state.timestamp.
+            Though it seems like the durations in the rss feeds are sometimes wrong */}
+              <ProgressBar max={state.episode.durationSeconds} now={details.timestamp /*|| 0*/} />
+            </React.Fragment>
+          )
+          :
+          null}
+      </div>
+
       {state
         ?
-        <React.Fragment>
-          <Link to={`/podcast/${details.pid}`}><p>{state.podcast.title}</p></Link>
-          <Link to={`/podcast/${details.pid}`}><img src={state.episode.image ? state.episode.image : state.podcast.image} /></Link>
-          <p>{state.episode.title}</p>
-          <p>Listen Date: {getDate(details.listenDate*1000)}</p>
-          <p>Progress: {details.timestamp}</p>
-          <p>Episode duration: {state.episode.duration}</p>
-          {/* Some kind of progress bar based on state.timestamp.
-          Though it seems like the durations in the rss feeds are sometimes wrong */}
-        </React.Fragment>
-        :
-        null}
-    </div>
+        <div className="history-card2" style={{
+          backgroundImage: `linear-gradient(#111111, transparent 30px), url(${state.podcast.image})`,
+          backgroundSize: 'contain',
+          backgroundRepeat: 'no-repeat',
+          // color: 'dodgerblue',
+          height: '300px',
+          width: '150px'
+        }}>
+          {state.podcast.title}
+        </div>
+        : null}
+    </React.Fragment>
   );
 }
 

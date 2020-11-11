@@ -39,9 +39,8 @@ function PagesFetch({ Item, fetchItems, numPages, context }) {
     // get page 0, whose response includes the number of pages
     try {
       // const { items: page, numPages } = await fetchItems(1);
-      const { items: page } = await fetchItems(1);
-      console.log(page);
-      numPages = 2;
+      const { items: page, numPages } = await fetchItems(1);
+      console.log(page, numPages);
       let pages = [];
       for (let i = 0; i < numPages; i++) {
         pages.push(null);

@@ -125,6 +125,7 @@ for (let item of episodeNodes) {
                     // the provided duration seconds seem to frequently be wrong though
                     // console.log(episode.title);
                     // console.log(node.textContent);
+                    episode["durationSeconds"] = parseInt(node.textContent, 10);
                     let hhmmss = new Date(node.textContent*1000).toISOString().substr(11,8);
                     // console.log(hhmmss);
                     if (hhmmss.startsWith("00:")) {
@@ -134,7 +135,17 @@ for (let item of episodeNodes) {
                     }
                     episode["duration"] = hhmmss;
                   } else {
+                    // assuming that duration is in hh:mm:ss form
                     episode["duration"] = node.textContent;
+                    const smh = episode["duration"].split(":").map(x => parseInt(x, 10)).reverse();
+                    // console.log("SMH TRANSLATION:", smh);
+                    let seconds = 0;
+                    for (let i in smh) {
+                      seconds += smh[i]*(60**i);
+                    }
+                    // let seconds = hms[hms.length-1] + hms[hms.length-2]*60 + hms[hms.length-3]*60*60;
+                    // console.log("seconds:", seconds);
+                    episode["durationSeconds"] = seconds;
                   }
                   break;
               case "enclosure": 
