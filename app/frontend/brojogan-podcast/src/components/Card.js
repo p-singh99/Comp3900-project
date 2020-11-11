@@ -4,7 +4,7 @@ import { Accordion } from 'react-bootstrap';
 import Card from 'react-bootstrap/Card';
 import SubscribeBtn from './SubscribeBtn';
 import { getPodcastFromXML } from './../rss';
-import { fetchAPI } from './../auth-functions';
+import { fetchAPI } from './../authFunctions';
 import './../css/Card.css';
 
 

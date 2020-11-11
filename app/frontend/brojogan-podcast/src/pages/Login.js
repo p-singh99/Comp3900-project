@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import './../css/Login.css';
 import logo from './../images/logo.png';
 import { API_URL } from './../constants';
-import { saveToken } from './../auth-functions';
+import { saveToken } from './../authFunctions';
 import { useHistory } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
 
@@ -30,9 +30,7 @@ function Login() {
           resp.json().then(data => {
             if (resp.status === 200) {
               saveToken(data);
-              // window.location.replace("/home"); // use react redirect, should be faster?
-              // window.location.href = "/home"; // this allows the back button to be used
-              history.push("/"); // this is faster
+              history.push("/"); // this is faster than window.location.href/replace
             } else {
               displayLoginError("Login failed. Username or password incorrect.");
             }

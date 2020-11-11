@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet';
 import PodcastCards from './../components/PodcastCards';
-import { fetchAPI } from './../auth-functions';
+import { fetchAPI } from './../authFunctions';
 import './../css/SearchPage.css';
 
 export default function Search(ppodcasts) {

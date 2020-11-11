@@ -2,16 +2,12 @@ import React, {useEffect, useState} from 'react';
 import './../css/SignUp.css';
 import logo from './../images/logo.png';
 import { API_URL } from './../constants';
-import {saveToken} from './../auth-functions'
+import {saveToken} from './../authFunctions'
 import {useHistory} from 'react-router-dom';
 import { Helmet } from 'react-helmet';
-import { checkPassword, checkPasswordsMatch, checkField } from './../validation-functions';
+import { checkPassword, checkPasswordsMatch, checkField } from './../validationFunctions';
 
 
-// General error eg network error
-// function displayError(error) {
-//   alert(error);
-// }
 
 function displaySignupError(msg) {
   let errorElem = document.getElementById("signup-error");

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Helmet from 'react-helmet';
-import {fetchAPI} from '../auth-functions';
+import {fetchAPI} from '../authFunctions';
 import PodcastCards from '../components/PodcastCards';
 import './../css/SearchPage.css';
 

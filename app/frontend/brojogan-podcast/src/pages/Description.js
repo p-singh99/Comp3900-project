@@ -6,7 +6,7 @@ import ProgressBar from 'react-bootstrap/ProgressBar';
 import { getPodcastFromXML } from '../rss';
 import Pages from './../components/Pages';
 import './../css/Description.css';
-import { isLoggedIn, fetchAPI } from '../auth-functions';
+import { isLoggedIn, fetchAPI } from '../authFunctions';
 import SubscribeBtn from '../components/SubscribeBtn';
 // import GetAppIcon from '@material-ui/icons/GetApp';
 // import {Icon} from '@material-ui/icons';
@@ -16,7 +16,6 @@ import SubscribeBtn from '../components/SubscribeBtn';
 
 // CORS bypass
 async function getRSS(id) {
-  // return fetch(`${API_URL}/podcasts/${id}`).then(resp => resp.json());
   return fetchAPI(`/podcasts/${id}`, 'get', null);
 
   /*
@@ -36,13 +35,10 @@ async function getRSS(id) {
   }*/
 }
 
-// function Description({ setPlaying }) {
 function Description(props) {
   const [episodes, setEpisodes] = useState(); // []
   const [podcast, setPodcast] = useState(null);
-  // const [podcastTitle, setPodcastTitle] = useState(""); // overlaps with above
   const [subscribeBtn, setSubscribeBtn] = useState("Subscribe");
-  // const [showEpisodeNum, setShowEpisodeNum] = useState();
 
   const setPlaying = props.setPlaying;
 
@@ -72,18 +68,9 @@ function Description(props) {
         // TODO: need to figure out how to check for 401s etc, here.
         let promises = [];
         if (prefetchedPodcast) {
-          updatePodcastDetails((prefetchedPodcast.podcast ? prefetchedPodcast.podcast : {}), prefetchedPodcast.subscription);
-          // setPodcastInfo(prefetchedPodcast.podcast);
-          // if (prefetchedPodcast.subscription) {
-          //   setSubscribeBtn('Unsubscribe');
-          // }
+          updatePodcastDetails((prefetchedPodcast.podcast ? prefetchedPodcast.podcast : {error: "Error loading podcast"}), prefetchedPodcast.subscription);
         } else {
           const xmlPromise = getRSS(id);
-          // const xmlPromise = getRSS(id)//.then(data => {console.log(`Subs: ${data.subscription}`)});
-
-          // bool isn't used, I don't know what it's for so I might have merged it to the wrong place
-          // let bool;
-          // xmlPromise.then(data => { bool = data.subscription });
 
           promises.push(xmlPromise);
         }
@@ -96,57 +83,52 @@ function Description(props) {
 
         console.log(promises);
         // have both promises running until we can resolve both
-        Promise.all(promises).then(([first, second]) => {
-          // this [xml, times] thing won't work now that both are optional
-          // will fail if times is used but xml isn't, because times will get assigned as xml
-          // hence the below bad code
-          console.log("Promises all");
-          let times;
-          let podcast;
-          if (prefetchedPodcast) {
-            podcast = prefetchedPodcast.podcast;
-            times = first;
-          } else {
-            const xml = first;
-            // console.log('Received RSS :' + Date.now());
-            console.log(xml);
-            if (xml.xml) {
-              podcast = getPodcastFromXML(xml.xml);
-              console.log(podcast);
+        Promise.all(promises)
+          .then(([first, second]) => {
+            // this [xml, times] thing won't work now that both are optional
+            // will fail if times is used but xml isn't, because times will get assigned as xml
+            // hence the below bad code
+            console.log("Promises all");
+            let times;
+            let podcast;
+            if (prefetchedPodcast) {
+              podcast = prefetchedPodcast.podcast;
+              times = first;
             } else {
-              podcast = {};
-            }
-            // console.log('parsed XML: ' + Date.now());
-            // if (xml.subscription) {
-            //   setSubscribeBtn('Unsubscribe');
-            // }
-            updatePodcastDetails(podcast, xml.subscription);
-
-            // console.log("in start of use effect podcast is:");
-            // console.log(podcast);
-
-            // setPodcastInfo(podcast);
-            times = second;
-          }
-
-          // we might not have times since its only if we're logged in
-          if (times) {
-            console.log("times are: ");
-            console.log(times);
-            for (let time of times) {
-              let episode = podcast.episodes.find(e => e.guid === time.episodeGuid);
-              if (episode !== undefined) {
-                episode.progress = time.timestamp;
-                episode.listenDate = time.listenDate;
+              const xml = first;
+              console.log(xml);
+              if (xml.xml) {
+                podcast = getPodcastFromXML(xml.xml);
+                console.log("Parsed podcast:", podcast);
               } else {
-                console.error("episode with guid " + time.episodeGuid + " did not have a match in the fetched feed");
+                podcast = { error: "Error loading podcast" };
+              }
+              updatePodcastDetails(podcast, xml.subscription);
+
+              times = second;
+            }
+
+            // we might not have times since its only if we're logged in
+            if (times) {
+              console.log("times are: ");
+              console.log(times);
+              for (let time of times) {
+                let episode = podcast.episodes.find(e => e.guid === time.episodeGuid);
+                if (episode !== undefined) {
+                  episode.progress = time.timestamp;
+                  episode.listenDate = time.listenDate;
+                } else {
+                  console.error("episode with guid " + time.episodeGuid + " did not have a match in the fetched feed");
+                }
               }
             }
-          }
 
-          console.log("podcast:", podcast);
-          setEpisodes({ episodes: (podcast ? podcast.episodes : null), showEpisode: episodeNum });
-        });
+            console.log("podcast:", podcast);
+            setEpisodes({ episodes: (podcast ? podcast.episodes : null), showEpisode: episodeNum });
+          })
+          .catch(error => {
+            displayError(error);
+          });
       } catch (error) {
         displayError(error);
       }
@@ -164,20 +146,16 @@ function Description(props) {
   }, [window.location, props]);
 
   function displayError(msg) {
-    setPodcast(<h1>{msg.toString()}</h1>);
+    // setPodcast(<h1>{msg.toString()}</h1>);
+    setPodcast({ error: msg.toString() });
   }
 
-  // function setPodcastInfo(podcast) {
-  //   // css grid for this? need to add rating and subscribe button
-  //   setPodcast(podcast)
+  // function isEmptyObj(obj) {
+  //   for (const i in obj) {
+  //     return false;
+  //   }
+  //   return true;
   // }
-
-  function isEmptyObj(obj) {
-    for (const i in obj) {
-      return false;
-    }
-    return true;
-  }
 
   function getPodcastDescription(podcast) {
     let podcastDescription;
@@ -194,9 +172,9 @@ function Description(props) {
       return (
         <h1>Loading...</h1>
       )
-    } else if (isEmptyObj(podcast)) {
+    } else if (podcast.error) {
       return (
-        <h1>Error loading podcast</h1>
+        <h1>{podcast.error}</h1>
       )
     } else {
       return (
@@ -294,7 +272,7 @@ function EpisodeDescription({ details: episode, context: { podcast, setPlaying, 
     <li className={episode.progress >= episode.durationSeconds - 5 ? "episode finished" : "episode"} id={id} onClick={toggleDescription}>
       {/* <li className={episode.complete ? "episode finished" : "episode"} id={id} onClick={toggleDescription}> */}
       {/* make this flexbox or grid? */}
-      {episode.progress > 0 &&
+      {episode.durationSeconds && episode.progress > 0 &&
         <div className="progress-div">
           <p>Played: {episode.complete ? "Complete" : secondstoTime(episode.progress)}</p>
           <ProgressBar max={episode.durationSeconds} now={episode.progress /*|| 0*/} />
@@ -306,7 +284,6 @@ function EpisodeDescription({ details: episode, context: { podcast, setPlaying, 
       </div>
       <div className="play-div">
         <span className="duration">{episode.duration}</span>
-        {/* <button className="play" eid={episode.guid} onClick={(event) => playEpisode(event, setPlaying, episodes)}>Play</button> */}
         <button className="play" eid={episode.guid} onClick={(event) => {
           console.log("podcast is");
           console.log(podcast);
@@ -371,9 +348,11 @@ function sanitiseDescription(description) {
     // onIgnoreTagAttr: onIgnoreTagAttr
   };
   description = window.filterXSS(description, options);
+
   // use DOMParser on description, loop through nodes, if there are any that aren't <a> or <br>, throw error and don't use innerHTML
   // and add target and rel to each <a>
   // todo: and if there is an error in parsing, throw error and don't use innerHTML
+  // this is double parsing, should be able to the <a> attributes while sanitising with the right library
   const dom = (new DOMParser()).parseFromString(description, "text/html");
   for (const node of dom.querySelectorAll("body *")) {
     console.log(node);

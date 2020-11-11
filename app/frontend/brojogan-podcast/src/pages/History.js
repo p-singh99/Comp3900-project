@@ -3,7 +3,7 @@ import { Helmet } from 'react-helmet';
 import { Link } from 'react-router-dom';
 import ProgressBar from 'react-bootstrap/ProgressBar';
 
-import { fetchAPI } from './../auth-functions';
+import { fetchAPI } from './../authFunctions';
 import PagesFetch from './../components/PagesFetch';
 import { getPodcastFromXML } from './../rss';
 import './../css/History.css';
@@ -83,7 +83,6 @@ function HistoryCard({ details }) {
 
     const setCard = async () => {
       try {
-        // const xml = await getRSS(details.pid, controller.signal);
         const podcast = getPodcastFromXML(details.xml);
         const episode = podcast.episodes.find(episode => episode.guid === details.episodeguid);
         setState({ podcast, episode });

@@ -3,8 +3,8 @@ import Modal from 'react-bootstrap/Modal';
 import { Helmet } from 'react-helmet';
 import {FiUser} from 'react-icons/fi';
 
-import { checkPassword, checkPasswordsMatch, checkField } from './../validation-functions';
-import { fetchAPI, logoutHandler, getUsername } from './../auth-functions';
+import { checkPassword, checkPasswordsMatch, checkField } from './../validationFunctions';
+import { fetchAPI, logoutHandler, getUsername } from './../authFunctions';
 import './../css/Settings.css';
 import './../css/bootstrap-modal.css'; // get rid of this, bootstrap css is already imported
 
@@ -179,7 +179,6 @@ function Settings() {
         </Modal.Body>
         <Modal.Footer>
           <button className="settings-btn" onClick={hideModal}>Cancel</button>
-          {/* <button disabled={disabled} className="settings-btn delete-btn" id="delete-btn" onClick={handleDelete}>Delete my account</button> */}
           <input type="submit" form="delete-form" disabled={disabled} className="settings-btn delete-btn" id="delete-btn" value="Delete my account" />
         </Modal.Footer>
       </Modal>

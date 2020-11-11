@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import './../css/Footer.css';
 import AudioPlayer from 'react-h5-audio-player';
 import 'react-h5-audio-player/lib/styles.css';
-import { fetchAPI, isLoggedIn } from './../auth-functions';
+import { fetchAPI, isLoggedIn } from './../authFunctions';
 
 // function storeTime() {
 //   // get playtime, save in localstorage so can resume if refresh
