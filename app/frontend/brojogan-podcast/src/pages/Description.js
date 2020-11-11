@@ -308,7 +308,7 @@ function EpisodeDescription({ details: episode, context: { podcast, setPlaying, 
     <li className={episode.progress >= episode.durationSeconds - 5 ? "episode finished" : "episode"} id={id} onClick={toggleDescription}>
       {/* <li className={episode.complete ? "episode finished" : "episode"} id={id} onClick={toggleDescription}> */}
       {/* make this flexbox or grid? */}
-      {episode.progress > 0 &&
+      {episode.durationSeconds && episode.progress > 0 &&
         <div className="progress-div">
           <p>Played: {episode.complete ? "Complete" : secondstoTime(episode.progress)}</p>
           <ProgressBar max={episode.durationSeconds} now={episode.progress /*|| 0*/} />
