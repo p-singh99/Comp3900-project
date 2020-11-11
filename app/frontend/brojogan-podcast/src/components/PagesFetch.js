@@ -12,7 +12,7 @@ function isDigits(str) {
 // maybe should use #id thing?
 function PagesFetch({ Item, fetchItems, numPages, context }) {
   const [pageState, setPageState] = useState();
-  // const [pageJSX, setPageJSX] = useState();
+  const [error, setError] = useState();
   // const scrollItemRef = useRef(null);
   const startRef = useRef(null);
   let controller = new AbortController(); // not sure if okay to initialise here
@@ -29,16 +29,17 @@ function PagesFetch({ Item, fetchItems, numPages, context }) {
         let pages = [...pageState.pages];
         pages[pgNum] = page;
         setPageState({ ...pageState, pages: pages, pageNum: pgNum });
+        setError(null);
       } catch (err) {
-        throw err;
+        setError(err.toString());
+        // throw err; // todo
       }
     }
   }
 
-  async function getPage0() {
-    // get page 0, whose response includes the number of pages
+  async function getPage1() {
+    // get page 1, whose response includes the number of pages
     try {
-      // const { items: page, numPages } = await fetchItems(1);
       const { items: page, numPages } = await fetchItems(1);
       console.log(page, numPages);
       let pages = [];
@@ -48,15 +49,16 @@ function PagesFetch({ Item, fetchItems, numPages, context }) {
       pages[1] = page;
       console.log(pages, numPages, 1);
       setPageState({ pages: pages, lastPage: numPages, pageNum: 1 });
+      setError(null);
     } catch (err) {
-      throw err;
+      setError(err.toString());
+      // throw err; // todo
     }
   }
 
   // run once on page load.
   useEffect(() => {
-    // getPage(0);
-    getPage0();
+    getPage1();
   }, []);
 
   function pageChanged(event) {
@@ -119,33 +121,14 @@ function PagesFetch({ Item, fetchItems, numPages, context }) {
     )
   }
 
-  // runs on page change. update displayed pages and page numbers.
-  // useEffect(() => {
-  //   console.log('pageState useeffect');
-  //   console.log(pageState);
-  //   if (!pageState) {
-  //     return;
-  //   }
-
-  //   const { page, lastPage, pageNum } = pageState;
-  //   console.log(page);
-  //   console.log(pageNum);
-
-  //   // there needs to be a way to make big jumps to the middle when there are a lot of pages
-  //   setPageJSX(
-  //     <div ref={startRef} className="pages">
-  //       {page.map(item => {
-  //         <Item details={item} />
-  //       })}
-  //       {pagination(pageNum, lastPage, pageChanged)}
-  //     </div>
-  //   );
-  // }, [pageState]);
-
   return (
     <React.Fragment>
-      <div ref={startRef} className="pages">
-      </div>
+      <div ref={startRef} className="pages"></div>
+      {error
+        ? <h1>{error}</h1>
+        : null
+      }
+
       {pageState
         ? pageState.pages[pageState.pageNum].map(item => {
           return <Item details={item} context={context} />

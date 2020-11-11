@@ -4,7 +4,6 @@ import { Helmet } from 'react-helmet';
 import ProgressBar from 'react-bootstrap/ProgressBar';
 
 import { getPodcastFromXML } from '../rss';
-import { API_URL } from '../constants';
 import Pages from './../components/Pages';
 import './../css/Description.css';
 import { isLoggedIn, fetchAPI } from '../auth-functions';
@@ -16,7 +15,6 @@ import { isLoggedIn, fetchAPI } from '../auth-functions';
 
 // CORS bypass
 async function getRSS(id) {
-  // return fetch(`${API_URL}/podcasts/${id}`).then(resp => resp.json());
   return fetchAPI(`/podcasts/${id}`, 'get', null);
 
   /*
@@ -36,14 +34,10 @@ async function getRSS(id) {
   }*/
 }
 
-// function Description({ setPlaying }) {
 function Description(props) {
   const [episodes, setEpisodes] = useState(); // []
   const [podcast, setPodcast] = useState(null);
-  // const [podcastTitle, setPodcastTitle] = useState(""); // overlaps with above
   const [subscribeBtn, setSubscribeBtn] = useState("Subscribe");
-  // const [episodes, setEpisodes] = useState([]);
-  // const [showEpisodeNum, setShowEpisodeNum] = useState();
 
   const setPlaying = props.setPlaying;
 
@@ -110,18 +104,9 @@ function Description(props) {
         // TODO: need to figure out how to check for 401s etc, here.
         let promises = [];
         if (prefetchedPodcast) {
-          updatePodcastDetails((prefetchedPodcast.podcast ? prefetchedPodcast.podcast : {error: "Invalid podcast RSS"}), prefetchedPodcast.subscription);
-          // setPodcastInfo(prefetchedPodcast.podcast);
-          // if (prefetchedPodcast.subscription) {
-          //   setSubscribeBtn('Unsubscribe');
-          // }
+          updatePodcastDetails((prefetchedPodcast.podcast ? prefetchedPodcast.podcast : {error: "Error loading podcast"}), prefetchedPodcast.subscription);
         } else {
           const xmlPromise = getRSS(id);
-          // const xmlPromise = getRSS(id)//.then(data => {console.log(`Subs: ${data.subscription}`)});
-
-          // bool isn't used, I don't know what it's for so I might have merged it to the wrong place
-          // let bool;
-          // xmlPromise.then(data => { bool = data.subscription });
 
           promises.push(xmlPromise);
         }
@@ -147,7 +132,6 @@ function Description(props) {
               times = first;
             } else {
               const xml = first;
-              // console.log('Received RSS :' + Date.now());
               console.log(xml);
               if (xml.xml) {
                 podcast = getPodcastFromXML(xml.xml);
@@ -155,16 +139,8 @@ function Description(props) {
               } else {
                 podcast = { error: "Error loading podcast" };
               }
-              // console.log('parsed XML: ' + Date.now());
-              // if (xml.subscription) {
-              //   setSubscribeBtn('Unsubscribe');
-              // }
               updatePodcastDetails(podcast, xml.subscription);
 
-              // console.log("in start of use effect podcast is:");
-              // console.log(podcast);
-
-              // setPodcastInfo(podcast);
               times = second;
             }
 
@@ -210,11 +186,6 @@ function Description(props) {
     // setPodcast(<h1>{msg.toString()}</h1>);
     setPodcast({ error: msg.toString() });
   }
-
-  // function setPodcastInfo(podcast) {
-  //   // css grid for this? need to add rating and subscribe button
-  //   setPodcast(podcast)
-  // }
 
   // function isEmptyObj(obj) {
   //   for (const i in obj) {
@@ -349,7 +320,6 @@ function EpisodeDescription({ details: episode, context: { podcast, setPlaying, 
       </div>
       <div className="play-div">
         <span className="duration">{episode.duration}</span>
-        {/* <button className="play" eid={episode.guid} onClick={(event) => playEpisode(event, setPlaying, episodes)}>Play</button> */}
         <button className="play" eid={episode.guid} onClick={(event) => {
           console.log("podcast is");
           console.log(podcast);
@@ -411,9 +381,11 @@ function sanitiseDescription(description) {
     // onIgnoreTagAttr: onIgnoreTagAttr
   };
   description = window.filterXSS(description, options);
+
   // use DOMParser on description, loop through nodes, if there are any that aren't <a> or <br>, throw error and don't use innerHTML
   // and add target and rel to each <a>
   // todo: and if there is an error in parsing, throw error and don't use innerHTML
+  // this is double parsing, should be able to the <a> attributes while sanitising with the right library
   const dom = (new DOMParser()).parseFromString(description, "text/html");
   for (const node of dom.querySelectorAll("body *")) {
     console.log(node);

@@ -83,7 +83,6 @@ function HistoryCard({ details }) {
 
     const setCard = async () => {
       try {
-        // const xml = await getRSS(details.pid, controller.signal);
         const podcast = getPodcastFromXML(details.xml);
         const episode = podcast.episodes.find(episode => episode.guid === details.episodeguid);
         setState({ podcast, episode });
