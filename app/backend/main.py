@@ -349,7 +349,7 @@ class Subscriptions(Resource):
 # allow passing the page size or doing offset limit thing?
 class History(Resource):
 	@token_required
-	def get(self, id):
+	def get(self):
 		parser = reqparse.RequestParser()
 		parser.add_argument('offset', type=int, required=False, location="args")
 		parser.add_argument('limit', type=int, required=False, location="args")
@@ -361,7 +361,6 @@ class History(Resource):
 			return {"error": "bad request"}, 400
 		if (offset := args['offset']) is None:
 			offset = (pageNum - 1) * limit
-		print("offset = " + str(offset))
 		conn, cur = get_conn()
 		user_id = get_user_id(cur)
 		cur.execute("SELECT p.id, p.xml, l.episodeguid, l.listenDate, l.timestamp FROM listens l, podcasts p where l.userid=%s and \
@@ -369,7 +368,6 @@ class History(Resource):
 		eps = cur.fetchall()
 		res = cur.rowcount
 		total_pages = math.ceil(res / limit )
-		print("res = " + str(res))
 		jsoneps = [{"pid" : ep[0], "xml": ep[1], "episodeguid": ep[2], "listenDate": ep[3].timestamp(), "timestamp": ep[4]} for ep in eps]
 		close_conn(conn, cur)
 		return {"history" : jsoneps, "numPages": total_pages}, 200
@@ -456,17 +454,23 @@ class Recommendations(Resource):
 	def get(self):
 		#recs = set()
 		recs = []
+		limit = 10
 		conn, cur = get_conn()
 		user_id = get_user_id(cur)
 		# Finds the most recently listened to podcasts that are not subscribed to
 		cur.execute("select p.xml, p.id from podcasts p, listens l where p.id = l.podcastid and l.userid=%s and \
 			p.id not in (select p.id from podcasts p, subscriptions s where s.userid=%s and s.podcastid=p.id) \
-				order by l.listendate DESC Limit 10;" % (user_id, user_id))
+				order by l.listendate DESC Limit %s;" % (user_id, user_id, limit))
 		results = cur.fetchall()
+		print(cur.rowcount)
 		for i in results:
-			cur.execute("select count(p.id) from podcasts p, subscriptions s where s.podcastid=%s and p.id=s.podcastid" % i[1])
-			recs.append({"xml": i[0], "id": i[1], "subs": cur.fetchone()[0]})
-		
+			print("loop")
+			if limit == 0:
+				close_conn(conn, cur)
+				return {"recommendations" : recs}
+			#cur.execute("select count(p.id) from podcasts p, subscriptions s where s.podcastid=%s and p.id=s.podcastid" % i[1])
+			recs.append({"xml": i[0], "id": i[1], "subs": 1})
+			limit -= 1
 		cur.execute("select query from searchqueries where userid=%s order by searchdate DESC limit 10" % user_id)
 		queries = cur.fetchall()
 		for query in queries:
@@ -479,30 +483,27 @@ class Recommendations(Resource):
 				p.id = pc.podcastid and pc.categoryid=c.id and c.id in (select distinct c.id from categories c, subscriptions s, podcastcategories pc \
 					where s.userId=%s and s.podcastid = pc.podcastid and pc.categoryid = c.id) and \
 						p.title not in (select p.title from podcasts p, subscriptions s where p.id = s.podcastid and \
-							s.userid=%s) group by p.xml, p.id order by count(p.xml) DESC", (query[0],query[0], user_id, user_id))
-
+							s.userid=%s) group by p.xml, p.id order by count(p.xml) DESC LIMIT %s", (query[0],query[0], user_id, user_id, limit))
 			results = cur.fetchall()
 			for i in results:
-				cur.execute("select count(p.id) from podcasts p, subscriptions s where s.podcastid=%s and p.id=s.podcastid" % i[1])
-				recs.append({"xml": i[0], "id": i[1], "subs": cur.fetchone()[0]})
-
+				if limit == 0:
+					close_conn(conn, cur)
+					return {"recommendations" : recs}
+				#cur.execute("select count(p.id) from podcasts p, subscriptions s where s.podcastid=%s and p.id=s.podcastid" % i[1])
+				recs.append({"xml": i[0], "id": i[1], "subs": 1})
+				limit -= 1
 		cur.execute("select p.xml, p.id, count(p.id) from podcasts p, podcastcategories pc, categories c \
 			where p.id=pc.podcastid and pc.categoryid=c.id and c.id in (select distinct c.id from categories c, subscriptions s, podcastcategories pc \
 				where s.userId=%s and s.podcastid = pc.podcastid and pc.categoryid = c.id) and \
 					p.title not in (select p.title from podcasts p, subscriptions s where p.id = s.podcastid and \
-						s.userid=%s) group by p.xml, p.id order by count(p.xml) DESC;" % (user_id, user_id))
+						s.userid=%s) group by p.xml, p.id order by count(p.xml) DESC LIMIT %s;" % (user_id, user_id, limit))
 
 		results = cur.fetchall()
 		for i in results:
-			cur.execute("select count(p.id) from podcasts p, subscriptions s where s.podcastid=%s and p.id=s.podcastid" % i[1])
-			recs.append({"xml": i[0], "id": i[1], "subs": cur.fetchone()[0]})
+			#cur.execute("select count(p.id) from podcasts p, subscriptions s where s.podcastid=%s and p.id=s.podcastid" % i[1])
+			recs.append({"xml": i[0], "id": i[1], "subs": 1})
 
-		recs = recs[:10]
-		#recsl = list(recs)
-		#sorted(recsl,key=lambda x: x[1])
-		#xml_list = [x[4] for x in recsl]
-		#xml_list = xml_list[:10]
-		# print(xml_list)
+		#recs = recs[:10]
 		close_conn(conn, cur)
 		return {"recommendations" : recs}
 
@@ -560,7 +561,7 @@ api.add_resource(Podcasts, "/podcasts")
 api.add_resource(Podcast, "/podcasts/<int:id>")
 api.add_resource(Recommendations, "/self/recommendations")
 api.add_resource(Subscriptions, "/subscriptions")
-api.add_resource(History, "/self/history/<int:id>")
+api.add_resource(History, "/self/history")
 api.add_resource(Listens, "/users/self/podcasts/<int:podcastId>/episodes/time")
 api.add_resource(ManyListens, "/users/self/podcasts/<int:podcastId>/time")
 api.add_resource(Ratings, "/podcasts/<int:id>/rating")
