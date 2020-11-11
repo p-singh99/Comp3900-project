@@ -10,23 +10,23 @@ import { API_URL } from './../constants';
 import './../css/History.css';
 
 // this is used in multiple pages, should extract to other file
-async function getRSS(id, signal) {
-  let resp, data;
-  try {
-    resp = await fetch(`${API_URL}/podcasts/${id}`, { signal });
-    data = await resp.json();
-  } catch {
-    throw Error("Network error");
-  }
-  if (resp.status === 200) {
-    // console.log(data.xml);
-    return data.xml;
-  } else if (resp.status === 404) {
-    throw Error("Podcast does not exist");
-  } else {
-    throw Error("Error in retrieving podcast");
-  }
-}
+// async function getRSS(id, signal) {
+//   let resp, data;
+//   try {
+//     resp = await fetch(`${API_URL}/podcasts/${id}`, { signal });
+//     data = await resp.json();
+//   } catch {
+//     throw Error("Network error");
+//   }
+//   if (resp.status === 200) {
+//     // console.log(data.xml);
+//     return data.xml;
+//   } else if (resp.status === 404) {
+//     throw Error("Podcast does not exist");
+//   } else {
+//     throw Error("Error in retrieving podcast");
+//   }
+// }
 
 function History() {
   async function fetchItems(pgNum, signal) {
@@ -80,8 +80,8 @@ function HistoryCard({ details }) {
 
     const setCard = async () => {
       try {
-        const xml = await getRSS(details.pid, controller.signal);
-        const podcast = getPodcastFromXML(xml);
+        // const xml = await getRSS(details.pid, controller.signal);
+        const podcast = getPodcastFromXML(details.xml);
         const episode = podcast.episodes.find(episode => episode.guid === details.episodeguid);
         setState({ podcast, episode });
       } catch (err) {
