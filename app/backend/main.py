@@ -20,11 +20,11 @@ CORS(app)
 #CHANGE SECRET KEY
 app.config['SECRET_KEY'] = 'secret_key'
 # remote
-#conn_pool = SemaThreadPool(1, 50,\
-	 #dbname="ultracast", user="brojogan", password="GbB8j6Op", host="polybius.bowdens.me", port=5432)
-# local
 conn_pool = SemaThreadPool(1, 50,\
-	 dbname="ultracast")
+	 dbname="ultracast", user="brojogan", password="GbB8j6Op", host="polybius.bowdens.me", port=5432)
+# local
+#conn_pool = SemaThreadPool(1, 50,\
+#	 dbname="ultracast")
 	#  dbname="ultracast", password="newPassword", user="postgres", port=5433)
 
 def get_conn():
@@ -334,6 +334,7 @@ class History(Resource):
 		if id:
 			cur.execute("SELECT count(*) FROM listens l where l.userid=%s" % (user_id))
 			res = cur.fetchone()[0]
+			print(res)
 			total_pages = math.ceil(res / range )
 		cur.execute("SELECT p.id, p.xml, l.episodeguid, l.listenDate, l.timestamp FROM listens l, podcasts p where l.userid=%s and \
 			p.id = l.podcastid ORDER BY l.listenDate DESC LIMIT %s OFFSET %s" % (user_id, range, offset))
@@ -494,10 +495,14 @@ class Notifications(Resource):
 class Ratings(Resource):
 	def get(self, id):
 		conn, cur = get_conn()
-		cur.execute("SELECT AVG(rating) FROM podcastratings WHERE podcastid=%s" % (id))
-		rating = cur.fetchone()[0]
+		cur.execute("SELECT AVG(rating) FROM podcastratings WHERE podcastid=%s" % (str(id)))
+		rating = cur.fetchone()
+		if rating[0]:
+			rating = str(round(rating[0],1))
+		else:
+			rating = "NA"
 		close_conn(conn,cur)
-		return {"rating": str(round(rating,1))}
+		return {"rating": rating}
 
 	def put(self,id):
 		conn, cur = get_conn()
@@ -507,7 +512,7 @@ class Ratings(Resource):
 		args = parser.parse_args()
 		#check if already rated
 		cur.execute("SELECT * FROM podcastratings where id=%s" % user_id)
-		if cur.fetchone():
+		if cur.fetchone()[0]:
 			cur.execute("DELETE FROM podcastratings WHERE id=%s" % user_id)
 		cur.execute("INSERT INTO podcastratings (userid, podcastid, rating) VALUES (%s, %s, %s)" % (user_id, id, args["rating"]))
 		conn.commit()
