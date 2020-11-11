@@ -10,6 +10,7 @@ from functools import wraps
 import requests
 import feedparser
 import urllib.parse
+import re
 from SemaThreadPool import SemaThreadPool
 import math
 
@@ -73,6 +74,31 @@ class Protected(Resource):
 	@token_required
 	def get(self):
 		return {'message': 'not anyone'}, 200
+
+class SubscriptionPanel(Resource):
+	def get(self):
+		conn,cur = get_conn()
+		uid = uid = get_user_id(cur)
+		cur.execute("""SELECT p.title, p.xml, p.id
+		               FROM   podcasts p
+		               FULL OUTER JOIN   subscriptions s
+		               on s.podcastId = p.id
+		               WHERE  s.userID = %s;
+		            """, (uid,))
+		podcasts = cur.fetchall()
+		results = []
+		for p in podcasts:
+			search = re.search('<guid.*>(.*)</guid>', p[1])
+			guid = search(group(1))
+			cur.execute("SELECT * FROM Listens where episodeGuid = '%s' AND userId = %s;", (guid, uid))
+			if cur.rowcount != 0:
+				continue
+			title = p[0]
+			xml = p[1]
+			pid = p[2]
+			results.append({"title":title, "xml":xml, "pid":pid, "guid":guid})
+		close_conn(conn, cur)
+		return results, 200
 
 class Login(Resource):
 	def post(self):
@@ -341,7 +367,7 @@ class History(Resource):
 		eps = cur.fetchall()
 		jsoneps = [{"pid" : ep[0], "xml": ep[1], "episodeguid": ep[2], "listenDate": ep[3].timestamp(), "timestamp": ep[4]} for ep in eps]
 		close_conn(conn, cur)
-		return {"history" : jsoneps, "pages": total_pages}, 200
+		return {"history" : jsoneps, "numPages": total_pages}, 200
 
 class Listens(Resource):
 	@token_required
@@ -521,6 +547,7 @@ class Ratings(Resource):
 
 api.add_resource(Unprotected, "/unprotected")
 api.add_resource(Protected, "/protected")
+api.add_resource(SubscriptionPanel, "/home")
 api.add_resource(Login, "/login")
 api.add_resource(Users, "/users")
 api.add_resource(Settings, "/users/self/settings")
