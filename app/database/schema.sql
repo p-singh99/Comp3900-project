@@ -104,8 +104,9 @@ CREATE TABLE Notifications (
     epsiodeName         text not null,
     created             timestamp,
     opened              boolean,
+    id                  serial unique not null,
     FOREIGN KEY (userId) references Users (id),
     FOREIGN KEY (podcastId, episodeGuid) references Episodes (podcastId, guid),
     PRIMARY KEY (userId, podcastId, episodeGuid)
-)
+);
 

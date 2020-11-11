@@ -15,7 +15,7 @@ function Footer({ state, setState }) {
       console.log("pinging " + progress + " to server episodeguid = " + state.guid + ", podcastid = " + state.podcastID);
       let uri = '/users/self/podcasts/'+state.podcastID+'/episodes/time';
       console.log("sending to " + uri);
-      fetchAPI(uri, 'put', {'time': progress, 'episodeGuid': state.guid}).then(() => console.log("updated"))
+      fetchAPI(uri, 'put', {'time': progress, 'episodeGuid': state.guid, 'title': state.title}).then(() => console.log("updated"))
     } else {
       console.log("not logged in");
     }

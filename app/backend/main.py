@@ -363,6 +363,7 @@ class Listens(Resource):
 		user_id = get_user_id(cur)
 		timestamp = request.json.get("time")
 		episodeGuid = request.json.get("episodeGuid")
+		title = request.json.get("title")
 		if timestamp is None:
 			close_conn(conn,cur)
 			return {"data": "timestamp not included"}, 400
@@ -375,11 +376,11 @@ class Listens(Resource):
 
 		# we're touching episodes so insert new episode (if it doesn't already exist)
 		cur.execute("""
-			INSERT INTO episodes (podcastId, guid)
-			values (%s, %s)
+			INSERT INTO episodes (podcastId, guid, title, created)
+			values (%s, %s, %s, now())
 			ON CONFLICT DO NOTHING
 		""",
-		(podcastId, episodeGuid))
+		(podcastId, episodeGuid, title))
 
 		cur.execute("""
 			INSERT INTO listens (userId, podcastId, episodeGuid, listenDate, timestamp)
@@ -466,6 +467,79 @@ class Recommendations(Resource):
 		close_conn(conn, cur)
 		return {"recommendations" : recs}
 
+class Notifications(Resource):
+	@token_required
+	def get(self):
+		conn, cur = get_conn()
+		user_id=get_user_id(cur)
+		cur.execute("""
+		select (p.title, p.id, e.title, e.created, e.guid, u.status, n.id) from
+		notifications u
+		join podcasts p on n.podcastid=p.id
+		join episodes e on n.episodeguid=e.guid
+		where u.userid=%s
+		""", (user_id,))
+		results = cur.fetchall()
+		close_conn(conn,cur)
+		json = [{
+			"podcastTitle": x[0],
+			"podcastId":    x[1],
+			"episodeTitle": x[1],
+			"dateCreated":  x[3],
+			"episodeGuid":  x[4],
+			"status":       x[5],
+			"id": 		x[6]
+		} for x in results]
+		return json, 200
+
+
+class Notification(Resource):
+	@token_required
+	def delete(self, notificationId):
+		conn,cur = get_conn()
+		user_id=get_user_id(cur)
+		cur.execute("""
+		delete from notifications
+		where id=%s and userId=%s
+		returning id
+		""", (notificationId, userId))
+		results = cur.fetchall()
+		if len(results) > 1:
+			conn.rollback()
+			close_conn(conn,cur)
+			return {"data": "unexpectedly deleted more than 1 notification. rolling back"}, 500
+		close_conn(conn,cur)
+		if len(results) == 0:
+			return {"data": "No notification associated with id {} and userId {}".format(notificationId, user_id)}, 404
+		return {}, 200
+
+
+	@token_required
+	def put(self, notificationId):
+		opened = request.status.get("opened")
+		if opened is None:
+			return {"data": "must include opened field"}, 400
+		if not isinstance(opened, bool):
+			return {"data": "opened must be a boolean"}, 400
+		conn, cur = get_conn()
+		user_id = get_user_id(cur)
+		cur.execute("""
+		update Notifications set status=%s
+		where id=%s and userid=%s
+		returning id
+		""", (opened, notificationId, userId))
+		results = cur.fetchall()
+		if len(results) > 1:
+			conn.rollback()
+			close_conn(conn,cur)
+			return {"data": "unexpectedly modified more than 1 notification. rolling back"}, 500
+		close_conn(conn,cur)
+		if len(results) == 0:
+			return {"data": "No notification associated with id {} and userId {}".format(notificationId, user_id)}, 404
+		return {}, 200
+
+
+
 
 
 api.add_resource(Unprotected, "/unprotected")
@@ -480,6 +554,8 @@ api.add_resource(Subscriptions, "/subscriptions")
 api.add_resource(History, "/self/history/<int:id>")
 api.add_resource(Listens, "/users/self/podcasts/<int:podcastId>/episodes/time")
 api.add_resource(ManyListens, "/users/self/podcasts/<int:podcastId>/time")
+api.add_resource(Notifications, "/self/notifications")
+api.add_resource(Notification, "/self/notification/<int:notificationId>")
 
 if __name__ == '__main__':
 	app.run(debug=True)
