@@ -21,11 +21,11 @@ CORS(app)
 #CHANGE SECRET KEY
 app.config['SECRET_KEY'] = 'secret_key'
 # remote
-#conn_pool = SemaThreadPool(1, 50,\
-#	 dbname="ultracast", user="brojogan", password="GbB8j6Op", host="polybius.bowdens.me", port=5432)
-# local
 conn_pool = SemaThreadPool(1, 50,\
-	 dbname="ultracast")
+	 dbname="ultracast", user="brojogan", password="GbB8j6Op", host="polybius.bowdens.me", port=5432)
+# local
+#conn_pool = SemaThreadPool(1, 50,\
+#	 dbname="ultracast")
 
 def get_conn():
 	conn = conn_pool.getconn()
@@ -154,7 +154,7 @@ class Podcasts(Resource):
 		# todo: try catch this
 		search = request.args.get('search_query')
 		if search is None:
-			return {"data": "Bad Request"}, 400
+			return {"error": "Bad Request"}, 400
 		# todo: try catch this
 		conn, cur = get_conn()
 		# add search query to db
@@ -377,7 +377,7 @@ class Listens(Resource):
 		if episodeGuid is None:
 			cur.close()
 			conn_pool.putconn()
-			return {"data": "episodeGuid not included"}, 400
+			return {"error": "episodeGuid not included"}, 400
 
 		cur.execute("""
 			SELECT timestamp, complete from listens where
@@ -387,7 +387,7 @@ class Listens(Resource):
 		res = cur.fetchone()
 		close_conn(conn, cur)
 		if res is None:
-			return {"data":"invalid podcastId or episodeGuid"}, 400
+			return {"error":"invalid podcastId or episodeGuid"}, 400
 		return {"time": int(res[0]), "complete": res[1]}, 200
 
 	@token_required
@@ -399,16 +399,16 @@ class Listens(Resource):
 		duration = request.json.get("duration")
 		if timestamp is None:
 			close_conn(conn,cur)
-			return {"data": "timestamp not included"}, 400
+			return {"error": "timestamp not included"}, 400
 		if not isinstance(timestamp, int):
 			close_conn(conn,cur)
-			return {"data": "timestamp must be an integer"}, 400
+			return {"error": "timestamp must be an integer"}, 400
 		if episodeGuid is None:
 			close_conn(conn,cur)
-			return {"data": "episodeGuid not included"}, 400
+			return {"error": "episodeGuid not included"}, 400
 		if duration is None:
 			close_conn(conn,cur)
-			return {"data": "duration is not included"}, 400
+			return {"error": "duration is not included"}, 400
 		complete = timestamp >= 0.95 * duration
 		
 		# we're touching episodes so insert new episode (if it doesn't already exist)
