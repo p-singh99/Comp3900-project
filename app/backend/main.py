@@ -10,7 +10,9 @@ from functools import wraps
 import requests
 import feedparser
 import urllib.parse
+import re
 from SemaThreadPool import SemaThreadPool
+import math
 
 app = Flask(__name__)
 api = Api(app)
@@ -19,11 +21,12 @@ CORS(app)
 #CHANGE SECRET KEY
 app.config['SECRET_KEY'] = 'secret_key'
 # remote
-#conn_pool = SemaThreadPool(1, 50,\
-#	 dbname="ultracast", user="brojogan", password="GbB8j6Op", host="polybius.bowdens.me", port=5432)
-# local
 conn_pool = SemaThreadPool(1, 50,\
-	 dbname="ultracast")
+	 dbname="ultracast", user="brojogan", password="GbB8j6Op", host="polybius.bowdens.me", port=5432)
+# local
+#conn_pool = SemaThreadPool(1, 50,\
+#	 dbname="ultracast")
+	#  dbname="ultracast", password="newPassword", user="postgres", port=5433)
 
 def get_conn():
 	conn = conn_pool.getconn()
@@ -72,6 +75,32 @@ class Protected(Resource):
 	@token_required
 	def get(self):
 		return {'message': 'not anyone'}, 200
+
+class SubscriptionPanel(Resource):
+	def get(self):
+		conn,cur = get_conn()
+		uid = uid = get_user_id(cur)
+		cur.execute("""SELECT p.title, p.xml, p.id
+		               FROM   podcasts p
+		               FULL OUTER JOIN   subscriptions s
+		               on s.podcastId = p.id
+		               WHERE  s.userID = %s;
+		            """, (uid,))
+		podcasts = cur.fetchall()
+		results = []
+		for p in podcasts:
+			search = re.search('<guid.*>(.*)</guid>', p[1])
+			guid = search(group(1))
+			cur.execute("SELECT complete FROM Listens where episodeGuid = '%s' AND userId = %s;", (guid, uid))
+			bool = cur.fetchone()[0]
+			if bool == t:
+				continue;
+			title = p[0]
+			xml = p[1]
+			pid = p[2]
+			results.append({"title":title, "xml":xml, "pid":pid, "guid":guid})
+		close_conn(conn, cur)
+		return results, 200
 
 class Login(Resource):
 	def post(self):
@@ -328,12 +357,18 @@ class History(Resource):
 		offset = (pageNum - 1) * range
 		conn, cur = get_conn()
 		user_id = get_user_id(cur)
+		total_pages = 0
+		if id:
+			cur.execute("SELECT count(*) FROM listens l where l.userid=%s" % (user_id))
+			res = cur.fetchone()[0]
+			print(res)
+			total_pages = math.ceil(res / range )
 		cur.execute("SELECT p.id, p.xml, l.episodeguid, l.listenDate, l.timestamp FROM listens l, podcasts p where l.userid=%s and \
 			p.id = l.podcastid ORDER BY l.listenDate DESC LIMIT %s OFFSET %s" % (user_id, range, offset))
 		eps = cur.fetchall()
 		jsoneps = [{"pid" : ep[0], "xml": ep[1], "episodeguid": ep[2], "listenDate": ep[3].timestamp(), "timestamp": ep[4]} for ep in eps]
 		close_conn(conn, cur)
-		return {"history" : jsoneps}, 200
+		return {"history" : jsoneps, "numPages": total_pages}, 200
 
 class Listens(Resource):
 	@token_required
@@ -344,7 +379,7 @@ class Listens(Resource):
 		if episodeGuid is None:
 			cur.close()
 			conn_pool.putconn()
-			return {"data": "episodeGuid not included"}, 400
+			return {"error": "episodeGuid not included"}, 400
 
 		cur.execute("""
 			SELECT timestamp from listens where
@@ -354,7 +389,7 @@ class Listens(Resource):
 		res = cur.fetchone()
 		close_conn(conn, cur)
 		if res is None:
-			return {"data":"invalid podcastId or episodeGuid"}, 400
+			return {"error":"invalid podcastId or episodeGuid"}, 400
 		return {"time", int(res[0])}, 200
 
 	@token_required
@@ -366,13 +401,13 @@ class Listens(Resource):
 		title = request.json.get("title")
 		if timestamp is None:
 			close_conn(conn,cur)
-			return {"data": "timestamp not included"}, 400
+			return {"error": "timestamp not included"}, 400
 		if not isinstance(timestamp, int):
 			close_conn(conn,cur)
-			return {"data": "timestamp must be an integer"}, 400
+			return {"error": "timestamp must be an integer"}, 400
 		if episodeGuid is None:
 			close_conn(conn,cur)
-			return {"data": "episodeGuid not included"}, 400
+			return {"error": "episodeGuid not included"}, 400
 
 		# we're touching episodes so insert new episode (if it doesn't already exist)
 		cur.execute("""
@@ -548,10 +583,14 @@ class RejectRecommendations(Resource):
 class Ratings(Resource):
 	def get(self, id):
 		conn, cur = get_conn()
-		cur.execute("SELECT AVG(rating) FROM podcastratings WHERE podcastid=%s" % (id))
-		rating = cur.fetchone()[0]
+		cur.execute("SELECT AVG(rating) FROM podcastratings WHERE podcastid=%s" % (str(id)))
+		rating = cur.fetchone()
+		if rating[0]:
+			rating = str(round(rating[0],1))
+		else:
+			rating = "NA"
 		close_conn(conn,cur)
-		return {"rating": str(round(rating,1))}
+		return {"rating": rating}
 
 	def put(self,id):
 		conn, cur = get_conn()
@@ -559,14 +598,18 @@ class Ratings(Resource):
 		parser = reqparse.RequestParser()
 		parser.add_argument('rating', type=int, required=True, choices=(1,2,3,4,5), help="Rating not valid", location="json")
 		args = parser.parse_args()
+		#check if already rated
+		cur.execute("SELECT * FROM podcastratings where id=%s" % user_id)
+		if cur.fetchone()[0]:
+			cur.execute("DELETE FROM podcastratings WHERE id=%s" % user_id)
 		cur.execute("INSERT INTO podcastratings (userid, podcastid, rating) VALUES (%s, %s, %s)" % (user_id, id, args["rating"]))
 		conn.commit()
 		return {"success": "added"}
 
 
-
 api.add_resource(Unprotected, "/unprotected")
 api.add_resource(Protected, "/protected")
+api.add_resource(SubscriptionPanel, "/home")
 api.add_resource(Login, "/login")
 api.add_resource(Users, "/users")
 api.add_resource(Settings, "/users/self/settings")

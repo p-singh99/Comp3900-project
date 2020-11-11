@@ -26,11 +26,8 @@ font-size: 15px;
 #podcast li.episode {
   background-color: #2E2B3F;
   
-  margin: 20px 0;
-  margin-left: 20px;
-  padding: 10px 0px 0px 0px;
-  padding-bottom: 0px;
-  margin-bottom: 0px;
+  margin: 20px 0 0 20px;
+  /* padding: 10px 0px 0px 0px; */
   cursor: pointer;
 }
 
@@ -45,7 +42,11 @@ float: right;
 /* margin-right: 50px; */
 }
 
-#podcast .head, #podcast .play-div, #podcast .description {
+#podcast .head {
+  padding: 10px 20px 0 10px; /* padding-top moved from somewhere so it goes after the progress bar*/
+}
+
+#podcast .play-div, #podcast .description {
   padding: 0 20px 0 10px;
 }
 
@@ -125,4 +126,28 @@ margin-top: 20px;
 
 #podcast #episodes .pagination {
   justify-content: center;
+}
+
+#podcast a {
+  color: dodgerblue;
+}
+
+.episode .progress {
+  height: 10px; /* 1 rem */
+  margin-left: 10px;
+  flex: 1;
+}
+
+.episode .progress-bar {
+  background-color: #47ada3; /* what colour? */
+}
+
+.episode.finished {
+  filter: opacity(0.5);
+}
+
+.episode .progress-div {
+  margin-left: 10px;
+  display: flex;
+  /* width: 100%; */
 }

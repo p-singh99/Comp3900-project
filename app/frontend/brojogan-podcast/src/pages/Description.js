@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet';
 // import { useParams } from 'react-router-dom';
+import ProgressBar from 'react-bootstrap/ProgressBar';
+
 import { getPodcastFromXML } from '../rss';
 import { API_URL } from '../constants';
 import Pages from './../components/Pages';
@@ -15,7 +17,7 @@ import { isLoggedIn, fetchAPI } from '../auth-functions';
 // CORS bypass
 async function getRSS(id) {
   // return fetch(`${API_URL}/podcasts/${id}`).then(resp => resp.json());
-  return fetchAPI(`/podcasts/${id}`,'get',null);
+  return fetchAPI(`/podcasts/${id}`, 'get', null);
 
   /*
   let resp, data;
@@ -292,6 +294,8 @@ function toggleDescription(event) {
   }
 }
 
+//------------------------------------------------------------------------------------
+
 function getDate(timestamp) {
   let date = new Date(timestamp);
   // return date.toDateString(); // change to custom format
@@ -300,6 +304,16 @@ function getDate(timestamp) {
 
 function downloadEpisode(event) {
   alert(event.target.getAttribute('eid'));
+}
+
+function secondstoTime(seconds) {
+  let hours = Math.floor(seconds / (60 ** 2));
+  let minutes = Math.floor((seconds - hours * (60 ** 2)) / 60);
+  if (hours > 0) {
+    return `${hours}h ${minutes}m`
+  } else {
+    return `${minutes}m`;
+  }
 }
 
 function EpisodeDescription({ details: episode, context: { podcast, setPlaying, podcastId }, id }) {
@@ -315,8 +329,16 @@ function EpisodeDescription({ details: episode, context: { podcast, setPlaying, 
   // even though the entire episode div should be re-rendered with a completely new component...
   // I think it must be reacts Virtual DOM diff, it doesn't necessarily change classes I guess
   return (
-    <li className="episode" id={id} onClick={toggleDescription}>
+    // durationSeconds-5 because sometimes episode durations in the feed are too long
+    <li className={episode.progress >= episode.durationSeconds - 5 ? "episode finished" : "episode"} id={id} onClick={toggleDescription}>
+      {/* <li className={episode.complete ? "episode finished" : "episode"} id={id} onClick={toggleDescription}> */}
       {/* make this flexbox or grid? */}
+      {episode.progress > 0 &&
+        <div className="progress-div">
+          <p>Played: {episode.complete ? "Complete" : secondstoTime(episode.progress)}</p>
+          <ProgressBar max={episode.durationSeconds} now={episode.progress /*|| 0*/} />
+        </div>
+      }
       <div className="head">
         <span className="title">{episode.title}</span>
         <span className="date">{getDate(episode.timestamp)}</span>

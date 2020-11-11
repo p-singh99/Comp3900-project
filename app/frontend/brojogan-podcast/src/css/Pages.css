@@ -8,6 +8,6 @@ div.pages {
 }
 
 /* Overriding bootsrap css which adds a high z-index to active page. idk why but its very annoying */
-.page-item.active.page-item.active .page-link.page-link {
+.page-item.page-item .page-link.page-link {
     z-index: auto;
 }
