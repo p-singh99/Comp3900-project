@@ -7,7 +7,7 @@ import { fetchAPI } from './../auth-functions';
 import PagesFetch from './../components/PagesFetch';
 import { getPodcastFromXML } from './../rss';
 import { API_URL } from './../constants';
-import './../css/History.css';
+import './../css/history.css';
 
 // this is used in multiple pages, should extract to other file
 // async function getRSS(id, signal) {
