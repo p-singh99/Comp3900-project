@@ -217,7 +217,7 @@ function Description(props) {
                 : null}
               {/* <p id="podcast-description" dangerouslySetInnerHTML={{ __html: sanitiseDescription(podcast.description) }}></p> */}
               {getPodcastDescription(podcast)}
-              {podcast.link && <h6><a href={podcast.link} target="_blank" rel="nofollow">Podcast website</a></h6>}
+              {podcast.link && <h6><a href={podcast.link} target="_blank" rel="nofollow noopener noreferrer">Podcast website</a></h6>}
             </div>
           </div>
         </div>
@@ -282,9 +282,9 @@ function EpisodeDescription({ details: episode, context: { podcast, setPlaying, 
   let description;
   // in case the sanitiser fails, don't use innerHTML
   try {
-    description = <div className="description collapsed"> <p dangerouslySetInnerHTML={{ __html: sanitiseDescription(episode.description) }}></p><p><a href={episode.link} rel="nofollow" target="_blank">Episode website</a></p></div>;
+    description = <div className="description collapsed"> <p dangerouslySetInnerHTML={{ __html: sanitiseDescription(episode.description) }}></p><p><a href={episode.link} rel="nofollow noopener noreferrer" target="_blank">Episode website</a></p></div>;
   } catch {
-    description = <div className="description collapsed"><p>{unTagDescription(episode.description)}</p><p><a href={episode.link} rel="nofollow" target="_blank">Episode website</a></p></div>;
+    description = <div className="description collapsed"><p>{unTagDescription(episode.description)}</p><p><a href={episode.link} rel="nofollow noopener noreferrer" target="_blank">Episode website</a></p></div>;
   }
 
   // weird react bug that descriptions stay expanded after changing the page,
@@ -332,12 +332,15 @@ function EpisodeDescription({ details: episode, context: { podcast, setPlaying, 
   )
 }
 
+// https://mathiasbynens.github.io/rel-noopener/
+// https://css-tricks.com/use-target_blank/
 // maybe use DOMPurify instead, and should try to add rel="nofollow" to links
 // also should set target = _blank on all links
 // could also do that in js - get all links and loop through setting the attributes
 // or could set base target = _blank, and then change it on the ones we control
 // this doesn't really feel secure, this third party script could get bugs or be altered
 // should put the script in local folder
+// !!!!! need to add noopener noreffer to all links, this is a legit current vulnerability
 function sanitiseDescription(description) {
   // https://www.npmjs.com/package/xss
   // https://jsxss.com/en/options.

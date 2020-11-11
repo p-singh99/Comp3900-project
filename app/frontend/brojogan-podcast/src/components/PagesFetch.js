@@ -118,29 +118,6 @@ function PagesFetch({ Item, fetchItems, context }) {
     )
   }
 
-  // runs on page change. update displayed pages and page numbers.
-  // useEffect(() => {
-  //   console.log('pageState useeffect');
-  //   console.log(pageState);
-  //   if (!pageState) {
-  //     return;
-  //   }
-
-  //   const { page, lastPage, pageNum } = pageState;
-  //   console.log(page);
-  //   console.log(pageNum);
-
-  //   // there needs to be a way to make big jumps to the middle when there are a lot of pages
-  //   setPageJSX(
-  //     <div ref={startRef} className="pages">
-  //       {page.map(item => {
-  //         <Item details={item} />
-  //       })}
-  //       {pagination(pageNum, lastPage, pageChanged)}
-  //     </div>
-  //   );
-  // }, [pageState]);
-
   return (
     <React.Fragment>
       <div ref={startRef} className="pages">

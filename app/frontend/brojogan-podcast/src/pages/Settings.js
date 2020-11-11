@@ -3,10 +3,8 @@ import Modal from 'react-bootstrap/Modal';
 import { Helmet } from 'react-helmet';
 import { checkPassword, checkPasswordsMatch, checkField } from './../validation-functions';
 import { fetchAPI, logoutHandler, getUsername } from './../auth-functions';
-// import { API_URL } from './../constants';
 import './../css/Settings.css';
-import './../css/bootstrap-modal.css'
-// import 'bootstrap/dist/css/bootstrap.min.css';
+import './../css/bootstrap-modal.css'; // get rid of this, bootstrap css is already imported
 
 
 function handleDelete(event) {
