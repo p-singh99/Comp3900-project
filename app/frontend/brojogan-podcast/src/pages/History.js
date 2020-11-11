@@ -6,8 +6,7 @@ import ProgressBar from 'react-bootstrap/ProgressBar';
 import { fetchAPI } from './../auth-functions';
 import PagesFetch from './../components/PagesFetch';
 import { getPodcastFromXML } from './../rss';
-import { API_URL } from './../constants';
-import './../css/history.css';
+import './../css/History.css';
 
 // this is used in multiple pages, should extract to other file
 // async function getRSS(id, signal) {
@@ -30,8 +29,12 @@ import './../css/history.css';
 
 function History() {
   async function fetchItems(pgNum, signal) {
-    const data = await fetchAPI(`/self/history/${pgNum}`, 'get', null, signal);
+    // const data = await fetchAPI(`/self/history/${pgNum}`, 'get', null, signal);
+    const pageSize = 12;
+    const offset = (pgNum-1)*pageSize;
+    const data = await fetchAPI(`/self/history?offset=${offset}&limit=${pageSize}`, 'get', null, signal);
     console.log("History data:", data);
+    console.log(data.numPages);
     if (pgNum === 1) {
       return { items: data.history, numPages: data.numPages };
     } else {
