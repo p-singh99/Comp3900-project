@@ -8,7 +8,6 @@ class SemaThreadPool(ThreadedConnectionPool):
     
     def getconn(self, *args, **kwargs):
         self.semaphore.acquire()
-        print(self.semaphore._value)
         return super().getconn(*args, **kwargs)
 
     def putconn(self, *args, **kwargs):

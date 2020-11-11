@@ -34,8 +34,18 @@ def close_conn(conn, cur):
 	cur.close()
 	conn_pool.putconn(conn)
 
+def get_user_id(cur):
+	token = request.headers.get('token')
+	if token:
+		try:
+			data = jwt.decode(token, app.config['SECRET_KEY'])
+			cur.execute("SELECT id FROM users WHERE username ='%s' or email = '%s'" % (data['user'], data['user']))
+		except:
+			return None
+		return cur.fetchone()[0]
+	return None
+
 def create_token(username):
-	# implement some kind of token refreshing scheme
 	token = jwt.encode({'user' : username, 'exp' : datetime.datetime.utcnow() + datetime.timedelta(minutes=60)}, app.config['SECRET_KEY'])
 	return token.decode('UTF-8')
 
@@ -52,16 +62,7 @@ def token_required(f):
 		return f(*args, **kwargs)
 	return decorated
 
-def get_user_id(cur):
-	token = request.headers.get('token')
-	if token:
-		try:
-			data = jwt.decode(token, app.config['SECRET_KEY'])
-			cur.execute("SELECT id FROM users WHERE username ='%s' or email = '%s'" % (data['user'], data['user']))
-		except:
-			return None
-		return cur.fetchone()[0]
-	return None
+
 
 class Unprotected(Resource):
 	def get(self):
@@ -200,7 +201,6 @@ class Settings(Resource):
 					if not cur.fetchone():
 						close_conn(conn, cur)
 						return {"error": "Email already exists"}, 400
-
 				cur.execute("UPDATE users SET email='%s' WHERE username='%s' OR email='%s'" % (args['newemail'], username, username))
 			if hashedpassword:
 				cur.execute("UPDATE users SET hashedpassword='%s' WHERE username='%s' OR email = '%s'" % (hashedpassword.decode('UTF-8'), username, username))
@@ -461,9 +461,6 @@ class Recommendations(Resource):
 		recs = recs[:10]
 		#recsl = list(recs)
 		#sorted(recsl,key=lambda x: x[1])
-		#xml_list = [x[4] for x in recsl]
-		#xml_list = xml_list[:10]
-		# print(xml_list)
 		close_conn(conn, cur)
 		return {"recommendations" : recs}
 
@@ -539,6 +536,32 @@ class Notification(Resource):
 		return {}, 200
 
 
+class RejectRecommendations(Resource):
+	@token_required
+	def put(self, id):
+		conn, cur = get_conn()
+		user_id = get_user_id(cur)
+		cur.execute("INSERT INTO rejectedrecommendations (userid, podcastid) VALUES (%s, %s)" % (user_id, id))
+		conn.commit()
+		close_conn(conn,cur)
+
+class Ratings(Resource):
+	def get(self, id):
+		conn, cur = get_conn()
+		cur.execute("SELECT AVG(rating) FROM podcastratings WHERE podcastid=%s" % (id))
+		rating = cur.fetchone()[0]
+		close_conn(conn,cur)
+		return {"rating": str(round(rating,1))}
+
+	def put(self,id):
+		conn, cur = get_conn()
+		user_id = get_user_id(cur)
+		parser = reqparse.RequestParser()
+		parser.add_argument('rating', type=int, required=True, choices=(1,2,3,4,5), help="Rating not valid", location="json")
+		args = parser.parse_args()
+		cur.execute("INSERT INTO podcastratings (userid, podcastid, rating) VALUES (%s, %s, %s)" % (user_id, id, args["rating"]))
+		conn.commit()
+		return {"success": "added"}
 
 
 
@@ -556,6 +579,7 @@ api.add_resource(Listens, "/users/self/podcasts/<int:podcastId>/episodes/time")
 api.add_resource(ManyListens, "/users/self/podcasts/<int:podcastId>/time")
 api.add_resource(Notifications, "/self/notifications")
 api.add_resource(Notification, "/self/notification/<int:notificationId>")
+api.add_resource(Ratings, "/podcasts/<int:id>/rating")
 
 if __name__ == '__main__':
 	app.run(debug=True)
