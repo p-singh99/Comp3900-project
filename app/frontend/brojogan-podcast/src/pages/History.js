@@ -10,37 +10,38 @@ import { API_URL } from './../constants';
 import './../css/History.css';
 
 // this is used in multiple pages, should extract to other file
-async function getRSS(id, signal) {
-  let resp, data;
-  try {
-    resp = await fetch(`${API_URL}/podcasts/${id}`, { signal });
-    data = await resp.json();
-  } catch {
-    throw Error("Network error");
-  }
-  if (resp.status === 200) {
-    // console.log(data.xml);
-    return data.xml;
-  } else if (resp.status === 404) {
-    throw Error("Podcast does not exist");
-  } else {
-    throw Error("Error in retrieving podcast");
-  }
-}
+// async function getRSS(id, signal) {
+//   let resp, data;
+//   try {
+//     resp = await fetch(`${API_URL}/podcasts/${id}`, { signal });
+//     data = await resp.json();
+//   } catch {
+//     throw Error("Network error");
+//   }
+//   if (resp.status === 200) {
+//     // console.log(data.xml);
+//     return data.xml;
+//   } else if (resp.status === 404) {
+//     throw Error("Podcast does not exist");
+//   } else {
+//     throw Error("Error in retrieving podcast");
+//   }
+// }
 
 function History() {
   async function fetchItems(pgNum, signal) {
-    try {
-      const data = await fetchAPI(`/self/history/${pgNum}`, 'get', null, signal);
-      console.log("History data:", data);
-      if (pgNum === 1) {
-        return { items: data.history, numPages: data.numPages };
-      } else {
-        return { items: data.history };
-      }
-    } catch (err) {
-      throw err;
+    const data = await fetchAPI(`/self/history/${pgNum}`, 'get', null, signal);
+    console.log("History data:", data);
+    if (pgNum === 1) {
+      return { items: data.history, numPages: data.numPages };
+    } else {
+      return { items: data.history };
     }
+    // try {
+
+    // } catch (err) {
+    //   throw err;
+    // }
   }
 
   return (
@@ -79,12 +80,12 @@ function HistoryCard({ details }) {
 
     const setCard = async () => {
       try {
-        const xml = await getRSS(details.pid, controller.signal);
-        const podcast = getPodcastFromXML(xml);
+        // const xml = await getRSS(details.pid, controller.signal);
+        const podcast = getPodcastFromXML(details.xml);
         const episode = podcast.episodes.find(episode => episode.guid === details.episodeguid);
         setState({ podcast, episode });
       } catch (err) {
-        throw err;
+        setState({ error: "Error in retrieving details" });
       }
     }
     setCard();
@@ -96,31 +97,35 @@ function HistoryCard({ details }) {
       <div className="history-card">
         {state
           ?
-          <React.Fragment>
-            <Link to={`/podcast/${details.pid}`}><p>{state.podcast.title}</p></Link>
-            <Link to={`/podcast/${details.pid}`}><img src={state.episode.image ? state.episode.image : state.podcast.image} /></Link>
-            <p>{state.episode.title}</p>
-            <p>Listen Date: {getDate(details.listenDate * 1000)}</p>
-            <p>Progress: {details.timestamp} (for testing)</p>
-            <p>Episode duration: {state.episode.duration}</p>
-            {/* Some kind of progress bar based on state.timestamp.
+          (state.error
+            ? <p>{state.error}</p>
+            :
+            <React.Fragment>
+              <Link to={`/podcast/${details.pid}`}><p>{state.podcast.title}</p></Link>
+              <Link to={`/podcast/${details.pid}`}><img src={state.episode.image ? state.episode.image : state.podcast.image} /></Link>
+              <p>{state.episode.title}</p>
+              <p>Listen Date: {getDate(details.listenDate * 1000)}</p>
+              <p>Progress: {details.timestamp} (for testing)</p>
+              <p>Episode duration: {state.episode.duration}</p>
+              {/* Some kind of progress bar based on state.timestamp.
             Though it seems like the durations in the rss feeds are sometimes wrong */}
-            <ProgressBar max={state.episode.durationSeconds} now={details.timestamp /*|| 0*/} />
-          </React.Fragment>
+              <ProgressBar max={state.episode.durationSeconds} now={details.timestamp /*|| 0*/} />
+            </React.Fragment>
+          )
           :
           null}
       </div>
 
       {state
         ?
-        <div className="history-card2" style={{ 
+        <div className="history-card2" style={{
           backgroundImage: `linear-gradient(#111111, transparent 30px), url(${state.podcast.image})`,
           backgroundSize: 'contain',
           backgroundRepeat: 'no-repeat',
           // color: 'dodgerblue',
           height: '300px',
           width: '150px'
-          }}>
+        }}>
           {state.podcast.title}
         </div>
         : null}

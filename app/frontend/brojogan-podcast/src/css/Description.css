@@ -134,14 +134,20 @@ margin-top: 20px;
 
 .episode .progress {
   height: 10px; /* 1 rem */
-  /* margin-left: 10px; */
+  margin-left: 10px;
+  flex: 1;
 }
 
 .episode .progress-bar {
   background-color: #47ada3; /* what colour? */
 }
 
-
 .episode.finished {
   filter: opacity(0.5);
+}
+
+.episode .progress-div {
+  margin-left: 10px;
+  display: flex;
+  /* width: 100%; */
 }

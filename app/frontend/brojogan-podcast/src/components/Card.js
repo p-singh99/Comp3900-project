@@ -130,7 +130,7 @@ function SubCard({ details: podcast, context }) {
               if (podcastObj && podcastObj.podcast) {
                 console.log("recommended JSX:", podcastObj.podcast.episodes.slice(0,50));
                 return (
-                  podcastObj.podcast.episodes.slice(0, 50).map((episode, index) =>
+                  podcastObj.podcast.episodes.slice(0, 30).map((episode, index) =>
                     <div>
                       <p id="episode-list-card">
                         {/* <a id="episode-list-link" className={'search-page-link'} href={`/podcast/${podcast.pid}?episode=${episodes.length-index}`}> */}

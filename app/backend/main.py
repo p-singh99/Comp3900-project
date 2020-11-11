@@ -90,9 +90,10 @@ class SubscriptionPanel(Resource):
 		for p in podcasts:
 			search = re.search('<guid.*>(.*)</guid>', p[1])
 			guid = search(group(1))
-			cur.execute("SELECT * FROM Listens where episodeGuid = '%s' AND userId = %s;", (guid, uid))
-			if cur.rowcount != 0:
-				continue
+			cur.execute("SELECT complete FROM Listens where episodeGuid = '%s' AND userId = %s;", (guid, uid))
+			bool = cur.fetchone()[0]
+			if bool == t:
+				continue;
 			title = p[0]
 			xml = p[1]
 			pid = p[2]
