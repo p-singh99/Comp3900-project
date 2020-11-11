@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import { fetchAPI } from './../authFunctions';
 
 function SubscribeBtn({ defaultState, podcastID }) {
@@ -40,6 +40,10 @@ function SubscribeBtn({ defaultState, podcastID }) {
             subscribeHandler(podcastID);
         }
     }
+
+    useEffect(() => {
+        setSubscribeBtn(defaultState);
+    }, [defaultState]);
 
     return (
         <button className="subscribe-btn" onClick={(event) => handleClickRequest(event, podcastID)}>{subscribeBtn}</button>

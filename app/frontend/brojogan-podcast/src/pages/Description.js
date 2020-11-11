@@ -59,6 +59,9 @@ function Description(props) {
       if (subscription) {
         setSubscribeBtn('Unsubscribe');
       }
+      // } else {
+      //   setSubscribeBtn('Subscribe');
+      // }
     }
 
     const fetchPodcast = async (prefetchedPodcast) => {
