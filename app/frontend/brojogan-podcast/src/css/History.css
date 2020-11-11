@@ -8,6 +8,9 @@
     background: #aaaaaa;
     margin: 15px;
     width: 250px;
+    /* position: relative; */
+    display: flex;
+    flex-direction: column;
 }
 
 .history-card img {
@@ -18,4 +21,14 @@
     justify-content: center;
     /* align-items: center; */
     flex-basis: 100%; /* to put on new row */
+}
+
+/* .historycard-body {
+    display: flex;
+} */
+
+.history-card .progress {
+    margin-top: auto;
+    /* position: absolute; */
+    /* bottom: 10px; */
 }
