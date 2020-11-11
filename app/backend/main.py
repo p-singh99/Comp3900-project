@@ -381,7 +381,7 @@ class Listens(Resource):
 			return {"data": "episodeGuid not included"}, 400
 
 		cur.execute("""
-			SELECT timestamp from listens where
+			SELECT timestamp, complete from listens where
 			podcastId=%s and episodeGuid=%s and userId=%s
 		""",
 		(podcastId, episodeGuid, user_id))
@@ -389,7 +389,7 @@ class Listens(Resource):
 		close_conn(conn, cur)
 		if res is None:
 			return {"data":"invalid podcastId or episodeGuid"}, 400
-		return {"time", int(res[0])}, 200
+		return {"time", int(res[0]), "complete": res[1]}, 200
 
 	@token_required
 	def put(self, podcastId):
@@ -397,6 +397,7 @@ class Listens(Resource):
 		user_id = get_user_id(cur)
 		timestamp = request.json.get("time")
 		episodeGuid = request.json.get("episodeGuid")
+		duration = request.json.get("duration")
 		if timestamp is None:
 			close_conn(conn,cur)
 			return {"data": "timestamp not included"}, 400
@@ -406,7 +407,11 @@ class Listens(Resource):
 		if episodeGuid is None:
 			close_conn(conn,cur)
 			return {"data": "episodeGuid not included"}, 400
-
+		if duration is None:
+			close_conn(conn,cur)
+			return {"data": "duration is not included"}, 400
+		complete = timestamp >= 0.95 * duration:
+		
 		# we're touching episodes so insert new episode (if it doesn't already exist)
 		cur.execute("""
 			INSERT INTO episodes (podcastId, guid)
@@ -416,11 +421,11 @@ class Listens(Resource):
 		(podcastId, episodeGuid))
 
 		cur.execute("""
-			INSERT INTO listens (userId, podcastId, episodeGuid, listenDate, timestamp)
-			values (%s, %s, %s, now(), %s)
-			ON CONFLICT ON CONSTRAINT listens_pkey DO UPDATE set listenDate=now(), timestamp=%s;
+			INSERT INTO listens (userId, podcastId, episodeGuid, listenDate, timestamp, complete)
+			values (%s, %s, %s, now(), %s, %s)
+			ON CONFLICT ON CONSTRAINT listens_pkey DO UPDATE set listenDate=now(), timestamp=%s, complete=%s;
 		""",
-		(user_id, podcastId, episodeGuid, timestamp, timestamp))
+		(user_id, podcastId, episodeGuid, timestamp, complete, timestamp, complete))
 		conn.commit()
 		close_conn(conn,cur)
 		return {}, 200
@@ -431,7 +436,7 @@ class ManyListens(Resource):
 		conn, cur = get_conn()
 		user_id = get_user_id(cur)
 		cur.execute("""
-			select episodeGuid, listenDate, timestamp
+			select episodeGuid, listenDate, timestamp, complete
 			from listens where userid=%s and podcastid=%s
 		""",
 		(user_id, podcastId))
@@ -441,6 +446,7 @@ class ManyListens(Resource):
 			"episodeGuid": x[0],
 			"listenDate": str(x[1]),
 			"timestamp": x[2]
+			"complete": x[3]
 		} for x in res]
 		print("got res")
 		print(jsonready)

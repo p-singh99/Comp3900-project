@@ -10,7 +10,7 @@ import { fetchAPI, isLoggedIn } from './../auth-functions';
 // }
 
 function Footer({ state, setState }) {
-  function pingServer(progress) {
+  function pingServer(progress, duration) {
     if (isLoggedIn()) {
       console.log("pinging " + progress + " to server episodeguid = " + state.guid + ", podcastid = " + state.podcastID);
       let uri = '/users/self/podcasts/'+state.podcastID+'/episodes/time';
@@ -42,9 +42,9 @@ function Footer({ state, setState }) {
           src={state.src}
           currentTime={state.progress}
           listenInterval="30000" /*trigger onListen every 30 seconds*/
-          onPause={e=>pingServer(Math.floor(Number(e.target.currentTime)))}
-          onListen={e=>pingServer(Math.floor(Number(e.target.currentTime)))}
-          onSeeked={e=>pingServer(Math.floor(Number(e.target.currentTime)))}
+          onPause={e=>pingServer(Math.floor(Number(e.target.currentTime, e.target.duration)))}
+          onListen={e=>pingServer(Math.floor(Number(e.target.currentTime, e.target.duration)))}
+          onSeeked={e=>pingServer(Math.floor(Number(e.target.currentTime, e.target.duration)))}
           onCanPlay={e=>{
             if (! setPlayed) {
               setPlayed = true;
