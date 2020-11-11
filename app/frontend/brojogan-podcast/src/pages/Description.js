@@ -110,7 +110,7 @@ function Description(props) {
         // TODO: need to figure out how to check for 401s etc, here.
         let promises = [];
         if (prefetchedPodcast) {
-          updatePodcastDetails((prefetchedPodcast.podcast ? prefetchedPodcast.podcast : {}), prefetchedPodcast.subscription);
+          updatePodcastDetails((prefetchedPodcast.podcast ? prefetchedPodcast.podcast : {error: "Invalid podcast RSS"}), prefetchedPodcast.subscription);
           // setPodcastInfo(prefetchedPodcast.podcast);
           // if (prefetchedPodcast.subscription) {
           //   setSubscribeBtn('Unsubscribe');
@@ -151,7 +151,7 @@ function Description(props) {
               console.log(xml);
               if (xml.xml) {
                 podcast = getPodcastFromXML(xml.xml);
-                console.log(podcast);
+                console.log("Parsed podcast:", podcast);
               } else {
                 podcast = { error: "Error loading podcast" };
               }
