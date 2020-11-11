@@ -1,5 +1,5 @@
 import React, {useState} from 'react';
-import { fetchAPI } from './../auth-functions';
+import { fetchAPI } from './../authFunctions';
 
 function SubscribeBtn({ defaultState, podcastID }) {
     const [subscribeBtn, setSubscribeBtn] = useState(defaultState);
