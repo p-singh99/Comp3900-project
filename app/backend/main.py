@@ -349,22 +349,26 @@ class Subscriptions(Resource):
 class History(Resource):
 	@token_required
 	def get(self, id):
+		parser = reqparse.RequestParser()
+		parser.add_argument('offset', type=int, required=False, location="args")
+		parser.add_argument('limit', type=int, required=False, location="args")
+		args = parser.parse_args()
+		if (limit := args['limit']) is None:
+			limit = 12
 		pageNum = id
-		if pageNum <= 0:
+		if limit <= 0:
 			return {"error": "bad request"}, 400
-		range = 12
-		offset = (pageNum - 1) * range
+		if (offset := args['offset']) is None:
+			offset = (pageNum - 1) * limit
+		print("offset = " + str(offset))
 		conn, cur = get_conn()
 		user_id = get_user_id(cur)
-		total_pages = 0
-		if id:
-			cur.execute("SELECT count(*) FROM listens l where l.userid=%s" % (user_id))
-			res = cur.fetchone()[0]
-			print(res)
-			total_pages = math.ceil(res / range )
 		cur.execute("SELECT p.id, p.xml, l.episodeguid, l.listenDate, l.timestamp FROM listens l, podcasts p where l.userid=%s and \
-			p.id = l.podcastid ORDER BY l.listenDate DESC LIMIT %s OFFSET %s" % (user_id, range, offset))
+			p.id = l.podcastid ORDER BY l.listenDate DESC LIMIT %s OFFSET %s " % (user_id, limit, offset))
 		eps = cur.fetchall()
+		res = cur.rowcount
+		total_pages = math.ceil(res / limit )
+		print("res = " + str(res))
 		jsoneps = [{"pid" : ep[0], "xml": ep[1], "episodeguid": ep[2], "listenDate": ep[3].timestamp(), "timestamp": ep[4]} for ep in eps]
 		close_conn(conn, cur)
 		return {"history" : jsoneps, "numPages": total_pages}, 200
