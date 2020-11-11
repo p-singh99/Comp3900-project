@@ -26,7 +26,6 @@ app.config['SECRET_KEY'] = 'secret_key'
 # local
 conn_pool = SemaThreadPool(1, 50,\
 	 dbname="ultracast")
-	#  dbname="ultracast", password="newPassword", user="postgres", port=5433)
 
 def get_conn():
 	conn = conn_pool.getconn()
@@ -465,9 +464,8 @@ class Recommendations(Resource):
 				order by l.listendate DESC Limit 10;" % (user_id, user_id))
 		results = cur.fetchall()
 		for i in results:
-			cur.execute("select count(p.id) from podcasts p, subscriptions s where s.podcastid=%s and p.id=s.podcastid" % i[1])
+			cur.execute("select count(*) from subscriptions where podcastid=%s", (i[1],))
 			recs.append({"xml": i[0], "id": i[1], "subs": cur.fetchone()[0]})
-		
 		cur.execute("select query from searchqueries where userid=%s order by searchdate DESC limit 10" % user_id)
 		queries = cur.fetchall()
 		for query in queries:
@@ -495,7 +493,7 @@ class Recommendations(Resource):
 
 		results = cur.fetchall()
 		for i in results:
-			cur.execute("select count(p.id) from podcasts p, subscriptions s where s.podcastid=%s and p.id=s.podcastid" % i[1])
+			cur.execute("select count(*) from subscriptions where podcastid=%s", (i[1],))
 			recs.append({"xml": i[0], "id": i[1], "subs": cur.fetchone()[0]})
 
 		recs = recs[:10]
