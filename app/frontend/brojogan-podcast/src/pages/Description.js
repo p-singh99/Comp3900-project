@@ -134,58 +134,62 @@ function Description(props) {
 
         console.log(promises);
         // have both promises running until we can resolve both
-        Promise.all(promises).then(([first, second]) => {
-          // this [xml, times] thing won't work now that both are optional
-          // will fail if times is used but xml isn't, because times will get assigned as xml
-          // hence the below bad code
-          console.log("Promises all");
-          let times;
-          let podcast;
-          if (prefetchedPodcast) {
-            podcast = prefetchedPodcast.podcast;
-            times = first;
-          } else {
-            const xml = first;
-            // console.log('Received RSS :' + Date.now());
-            console.log(xml);
-            if (xml.xml) {
-              podcast = getPodcastFromXML(xml.xml);
-              console.log(podcast);
+        Promise.all(promises)
+          .then(([first, second]) => {
+            // this [xml, times] thing won't work now that both are optional
+            // will fail if times is used but xml isn't, because times will get assigned as xml
+            // hence the below bad code
+            console.log("Promises all");
+            let times;
+            let podcast;
+            if (prefetchedPodcast) {
+              podcast = prefetchedPodcast.podcast;
+              times = first;
             } else {
-              podcast = {};
-            }
-            // console.log('parsed XML: ' + Date.now());
-            // if (xml.subscription) {
-            //   setSubscribeBtn('Unsubscribe');
-            // }
-            updatePodcastDetails(podcast, xml.subscription);
-
-            // console.log("in start of use effect podcast is:");
-            // console.log(podcast);
-
-            // setPodcastInfo(podcast);
-            times = second;
-          }
-
-          // we might not have times since its only if we're logged in
-          if (times) {
-            console.log("times are: ");
-            console.log(times);
-            for (let time of times) {
-              let episode = podcast.episodes.find(e => e.guid === time.episodeGuid);
-              if (episode !== undefined) {
-                episode.progress = time.timestamp;
-                episode.listenDate = time.listenDate;
+              const xml = first;
+              // console.log('Received RSS :' + Date.now());
+              console.log(xml);
+              if (xml.xml) {
+                podcast = getPodcastFromXML(xml.xml);
+                console.log(podcast);
               } else {
-                console.error("episode with guid " + time.episodeGuid + " did not have a match in the fetched feed");
+                podcast = { error: "Error loading podcast" };
+              }
+              // console.log('parsed XML: ' + Date.now());
+              // if (xml.subscription) {
+              //   setSubscribeBtn('Unsubscribe');
+              // }
+              updatePodcastDetails(podcast, xml.subscription);
+
+              // console.log("in start of use effect podcast is:");
+              // console.log(podcast);
+
+              // setPodcastInfo(podcast);
+              times = second;
+            }
+
+            // we might not have times since its only if we're logged in
+            if (times) {
+              console.log("times are: ");
+              console.log(times);
+              for (let time of times) {
+                let episode = podcast.episodes.find(e => e.guid === time.episodeGuid);
+                if (episode !== undefined) {
+                  episode.progress = time.timestamp;
+                  episode.listenDate = time.listenDate;
+                } else {
+                  console.error("episode with guid " + time.episodeGuid + " did not have a match in the fetched feed");
+                }
               }
             }
-          }
 
-          console.log("podcast:", podcast);
-          setEpisodes({ episodes: (podcast ? podcast.episodes : null), showEpisode: episodeNum });
-          console.log(episodes);
-        });
+            console.log("podcast:", podcast);
+            setEpisodes({ episodes: (podcast ? podcast.episodes : null), showEpisode: episodeNum });
+            console.log(episodes);
+          })
+          .catch(error => {
+            displayError(error);
+          });
       } catch (error) {
         displayError(error);
       }
@@ -203,7 +207,8 @@ function Description(props) {
   }, [window.location]);
 
   function displayError(msg) {
-    setPodcast(<h1>{msg.toString()}</h1>);
+    // setPodcast(<h1>{msg.toString()}</h1>);
+    setPodcast({ error: msg.toString() });
   }
 
   // function setPodcastInfo(podcast) {
@@ -211,12 +216,12 @@ function Description(props) {
   //   setPodcast(podcast)
   // }
 
-  function isEmptyObj(obj) {
-    for (const i in obj) {
-      return false;
-    }
-    return true;
-  }
+  // function isEmptyObj(obj) {
+  //   for (const i in obj) {
+  //     return false;
+  //   }
+  //   return true;
+  // }
 
   function getPodcastDescription(podcast) {
     let podcastDescription;
@@ -233,9 +238,9 @@ function Description(props) {
       return (
         <h1>Loading...</h1>
       )
-    } else if (isEmptyObj(podcast)) {
+    } else if (podcast.error) {
       return (
-        <h1>Error loading podcast</h1>
+        <h1>{podcast.error}</h1>
       )
     } else {
       return (
