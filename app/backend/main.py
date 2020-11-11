@@ -10,6 +10,7 @@ from functools import wraps
 import requests
 import feedparser
 import urllib.parse
+import re
 from SemaThreadPool import SemaThreadPool
 import math
 
@@ -20,11 +21,11 @@ CORS(app)
 #CHANGE SECRET KEY
 app.config['SECRET_KEY'] = 'secret_key'
 # remote
-#conn_pool = SemaThreadPool(1, 50,\
-	 #dbname="ultracast", user="brojogan", password="GbB8j6Op", host="polybius.bowdens.me", port=5432)
-# local
 conn_pool = SemaThreadPool(1, 50,\
-	 dbname="ultracast")
+	 dbname="ultracast", user="brojogan", password="GbB8j6Op", host="polybius.bowdens.me", port=5432)
+# local
+#conn_pool = SemaThreadPool(1, 50,\
+#	 dbname="ultracast")
 	#  dbname="ultracast", password="newPassword", user="postgres", port=5433)
 
 def get_conn():
@@ -73,6 +74,32 @@ class Protected(Resource):
 	@token_required
 	def get(self):
 		return {'message': 'not anyone'}, 200
+
+class SubscriptionPanel(Resource):
+	def get(self):
+		conn,cur = get_conn()
+		uid = uid = get_user_id(cur)
+		cur.execute("""SELECT p.title, p.xml, p.id
+		               FROM   podcasts p
+		               FULL OUTER JOIN   subscriptions s
+		               on s.podcastId = p.id
+		               WHERE  s.userID = %s;
+		            """, (uid,))
+		podcasts = cur.fetchall()
+		results = []
+		for p in podcasts:
+			search = re.search('<guid.*>(.*)</guid>', p[1])
+			guid = search(group(1))
+			cur.execute("SELECT complete FROM Listens where episodeGuid = '%s' AND userId = %s;", (guid, uid))
+			bool = cur.fetchone()[0]
+			if bool == t:
+				continue;
+			title = p[0]
+			xml = p[1]
+			pid = p[2]
+			results.append({"title":title, "xml":xml, "pid":pid, "guid":guid})
+		close_conn(conn, cur)
+		return results, 200
 
 class Login(Resource):
 	def post(self):
@@ -334,6 +361,7 @@ class History(Resource):
 		if id:
 			cur.execute("SELECT count(*) FROM listens l where l.userid=%s" % (user_id))
 			res = cur.fetchone()[0]
+			print(res)
 			total_pages = math.ceil(res / range )
 		cur.execute("SELECT p.id, p.xml, l.episodeguid, l.listenDate, l.timestamp FROM listens l, podcasts p where l.userid=%s and \
 			p.id = l.podcastid ORDER BY l.listenDate DESC LIMIT %s OFFSET %s" % (user_id, range, offset))
@@ -494,10 +522,14 @@ class Notifications(Resource):
 class Ratings(Resource):
 	def get(self, id):
 		conn, cur = get_conn()
-		cur.execute("SELECT AVG(rating) FROM podcastratings WHERE podcastid=%s" % (id))
-		rating = cur.fetchone()[0]
+		cur.execute("SELECT AVG(rating) FROM podcastratings WHERE podcastid=%s" % (str(id)))
+		rating = cur.fetchone()
+		if rating[0]:
+			rating = str(round(rating[0],1))
+		else:
+			rating = "NA"
 		close_conn(conn,cur)
-		return {"rating": str(round(rating,1))}
+		return {"rating": rating}
 
 	def put(self,id):
 		conn, cur = get_conn()
@@ -507,7 +539,7 @@ class Ratings(Resource):
 		args = parser.parse_args()
 		#check if already rated
 		cur.execute("SELECT * FROM podcastratings where id=%s" % user_id)
-		if cur.fetchone():
+		if cur.fetchone()[0]:
 			cur.execute("DELETE FROM podcastratings WHERE id=%s" % user_id)
 		cur.execute("INSERT INTO podcastratings (userid, podcastid, rating) VALUES (%s, %s, %s)" % (user_id, id, args["rating"]))
 		conn.commit()
@@ -516,6 +548,7 @@ class Ratings(Resource):
 
 api.add_resource(Unprotected, "/unprotected")
 api.add_resource(Protected, "/protected")
+api.add_resource(SubscriptionPanel, "/home")
 api.add_resource(Login, "/login")
 api.add_resource(Users, "/users")
 api.add_resource(Settings, "/users/self/settings")
