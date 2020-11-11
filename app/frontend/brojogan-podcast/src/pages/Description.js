@@ -6,7 +6,7 @@ import ProgressBar from 'react-bootstrap/ProgressBar';
 import { getPodcastFromXML } from '../rss';
 import Pages from './../components/Pages';
 import './../css/Description.css';
-import { isLoggedIn, fetchAPI } from '../auth-functions';
+import { isLoggedIn, fetchAPI } from '../authFunctions';
 // import GetAppIcon from '@material-ui/icons/GetApp';
 // import {Icon} from '@material-ui/icons';
 

@@ -14,7 +14,7 @@ import Recommended from './pages/Recommended';
 import Subscriptions from './pages/Subscriptions';
 import About from './pages/About';
 import Settings from './pages/Settings'
-import { isLoggedIn, checkLogin } from './auth-functions';
+import { isLoggedIn, checkLogin } from './authFunctions';
 
 
 function App() {

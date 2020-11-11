@@ -1,5 +1,5 @@
 import React from 'react';
-import { isLoggedIn, getUsername } from './../auth-functions'
+import { isLoggedIn, getUsername } from './../authFunctions'
 import { Helmet } from 'react-helmet';
 
 // just an idea to try something
