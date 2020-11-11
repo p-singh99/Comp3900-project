@@ -30,17 +30,18 @@ async function getRSS(id, signal) {
 
 function History() {
   async function fetchItems(pgNum, signal) {
-    try {
-      const data = await fetchAPI(`/self/history/${pgNum}`, 'get', null, signal);
-      console.log("History data:", data);
-      if (pgNum === 1) {
-        return { items: data.history, numPages: data.numPages };
-      } else {
-        return { items: data.history };
-      }
-    } catch (err) {
-      throw err;
+    const data = await fetchAPI(`/self/history/${pgNum}`, 'get', null, signal);
+    console.log("History data:", data);
+    if (pgNum === 1) {
+      return { items: data.history, numPages: data.numPages };
+    } else {
+      return { items: data.history };
     }
+    // try {
+
+    // } catch (err) {
+    //   throw err;
+    // }
   }
 
   return (
@@ -84,7 +85,7 @@ function HistoryCard({ details }) {
         const episode = podcast.episodes.find(episode => episode.guid === details.episodeguid);
         setState({ podcast, episode });
       } catch (err) {
-        throw err;
+        setState({ error: "Error in retrieving details" });
       }
     }
     setCard();
@@ -96,31 +97,35 @@ function HistoryCard({ details }) {
       <div className="history-card">
         {state
           ?
-          <React.Fragment>
-            <Link to={`/podcast/${details.pid}`}><p>{state.podcast.title}</p></Link>
-            <Link to={`/podcast/${details.pid}`}><img src={state.episode.image ? state.episode.image : state.podcast.image} /></Link>
-            <p>{state.episode.title}</p>
-            <p>Listen Date: {getDate(details.listenDate * 1000)}</p>
-            <p>Progress: {details.timestamp} (for testing)</p>
-            <p>Episode duration: {state.episode.duration}</p>
-            {/* Some kind of progress bar based on state.timestamp.
+          (state.error
+            ? <p>{state.error}</p>
+            :
+            <React.Fragment>
+              <Link to={`/podcast/${details.pid}`}><p>{state.podcast.title}</p></Link>
+              <Link to={`/podcast/${details.pid}`}><img src={state.episode.image ? state.episode.image : state.podcast.image} /></Link>
+              <p>{state.episode.title}</p>
+              <p>Listen Date: {getDate(details.listenDate * 1000)}</p>
+              <p>Progress: {details.timestamp} (for testing)</p>
+              <p>Episode duration: {state.episode.duration}</p>
+              {/* Some kind of progress bar based on state.timestamp.
             Though it seems like the durations in the rss feeds are sometimes wrong */}
-            <ProgressBar max={state.episode.durationSeconds} now={details.timestamp /*|| 0*/} />
-          </React.Fragment>
+              <ProgressBar max={state.episode.durationSeconds} now={details.timestamp /*|| 0*/} />
+            </React.Fragment>
+          )
           :
           null}
       </div>
 
       {state
         ?
-        <div className="history-card2" style={{ 
+        <div className="history-card2" style={{
           backgroundImage: `linear-gradient(#111111, transparent 30px), url(${state.podcast.image})`,
           backgroundSize: 'contain',
           backgroundRepeat: 'no-repeat',
           // color: 'dodgerblue',
           height: '300px',
           width: '150px'
-          }}>
+        }}>
           {state.podcast.title}
         </div>
         : null}

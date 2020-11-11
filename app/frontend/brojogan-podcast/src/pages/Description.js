@@ -306,6 +306,16 @@ function downloadEpisode(event) {
   alert(event.target.getAttribute('eid'));
 }
 
+function secondstoTime(seconds) {
+  let hours = Math.floor(seconds / (60 ** 2));
+  let minutes = Math.floor((seconds - hours * (60 ** 2)) / 60);
+  if (hours > 0) {
+    return `${hours}h ${minutes}m`
+  } else {
+    return `${minutes}m`;
+  }
+}
+
 function EpisodeDescription({ details: episode, context: { podcast, setPlaying, podcastId }, id }) {
   let description;
   // in case the sanitiser fails, don't use innerHTML
@@ -320,11 +330,14 @@ function EpisodeDescription({ details: episode, context: { podcast, setPlaying, 
   // I think it must be reacts Virtual DOM diff, it doesn't necessarily change classes I guess
   return (
     // durationSeconds-5 because sometimes episode durations in the feed are too long
-    <li className={episode.progress >= episode.durationSeconds-5 ? "episode finished" : "episode"} id={id} onClick={toggleDescription}>
+    <li className={episode.progress >= episode.durationSeconds - 5 ? "episode finished" : "episode"} id={id} onClick={toggleDescription}>
+      {/* <li className={episode.complete ? "episode finished" : "episode"} id={id} onClick={toggleDescription}> */}
       {/* make this flexbox or grid? */}
-      {/* {episode.progress} */}
       {episode.progress > 0 &&
-        <ProgressBar max={episode.durationSeconds} now={episode.progress /*|| 0*/} label="Played" />
+        <div className="progress-div">
+          <p>Played: {episode.complete ? "Complete" : secondstoTime(episode.progress)}</p>
+          <ProgressBar max={episode.durationSeconds} now={episode.progress /*|| 0*/} />
+        </div>
       }
       <div className="head">
         <span className="title">{episode.title}</span>
