@@ -55,7 +55,7 @@ function Header() {
   }
   const textStyle = {
     margin: '0px 0px 0px 0px',
-    fontSize: '21px',
+    fontSize: '16px',
     color: '#64CFEB'
   }
 

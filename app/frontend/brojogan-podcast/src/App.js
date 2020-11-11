@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Redirect, BrowserRouter as Router, Route, Switch } from 'react-router-dom';
 import './App.css';
 import Header from './components/Header';
@@ -14,7 +14,7 @@ import Recommended from './pages/Recommended';
 import Subscriptions from './pages/Subscriptions';
 import About from './pages/About';
 import Settings from './pages/Settings'
-import { isLoggedIn } from './auth-functions';
+import { isLoggedIn, checkLogin } from './auth-functions';
 
 
 function App() {
@@ -34,6 +34,8 @@ function App() {
     console.log(state);
     setPlaying(state);
   }
+
+  useEffect(checkLogin, []);
 
   const defaultComponents = () => (
 

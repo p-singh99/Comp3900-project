@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import Modal from 'react-bootstrap/Modal';
 import { Helmet } from 'react-helmet';
+import {FiUser} from 'react-icons/fi';
+
 import { checkPassword, checkPasswordsMatch, checkField } from './../validation-functions';
 import { fetchAPI, logoutHandler, getUsername } from './../auth-functions';
 import './../css/Settings.css';
@@ -112,28 +114,42 @@ function Settings() {
         <title>Brojogan Podcasts - Settings</title>
       </Helmet>
 
-      <h1>Account Settings - {window.localStorage.getItem('username')}</h1>
+      <div className="page-heading">
+        <h2>Account Settings</h2>
+      </div>
+
+      <div id="account-icon-container">
+        <div id="user-icon">
+          <FiUser 
+            id='user-icon' 
+            color="yellow" 
+            size="2.5em"
+          />
+        </div>
+        {window.localStorage.getItem('username')}
+      </div>
+      
       <form id="settings-form" onSubmit={settingsHandler}>
-        <div>
+        <div className="settings-row">
           <label htmlFor="new-email-input">Email</label>
           {/* <input type="email" id="new-email-input" name="email" required className="settings" pattern="[a-zA-Z0-9%+_.-]+@[a-zA-Z0-9.-]+\.[A-Za-z0-9]+" maxLength="100" /> */}
-          <input type="email" id="new-email-input" name="email" required className="settings" maxLength="100" />
+          <input type="email" id="new-email-input" name="email" required className="settings-input" maxLength="100" />
         </div>
-        <div>
-          <p className="form-info">10-64 characters. Must contain a lower case letter and at least one number, uppercase letter or symbol (!@#$%^&amp;*()_-+={}]:;'&quot;&lt;&#44;&gt;.?/|\~`).</p>
+        <div className="settings-row">
           <label htmlFor="new-password-input1">New password</label>
-          <input type="password" id="new-password-input1" className="new-password-input settings" name="password1" onInput={(event) => checkPassword(event, document.forms["settings-form"])} minLength="10" maxLength="64" pattern="(?=.*[a-z])((?=.*\d)|(?=.*[A-Z])|(?=.*[!@#$%^&amp;*()_\-+=\{}\]:;'&quot;<,>.?\/|\\~`])).{0,}" /> {/* should use once attribute */}
+          <input type="password" id="new-password-input1" className="settings-input" name="password1" onInput={(event) => checkPassword(event, document.forms["settings-form"])} minLength="10" maxLength="64" pattern="(?=.*[a-z])((?=.*\d)|(?=.*[A-Z])|(?=.*[!@#$%^&amp;*()_\-+=\{}\]:;'&quot;<,>.?\/|\\~`])).{0,}" /> {/* should use once attribute */}
+          <p className="form-info">10-64 characters. Must contain a lower case letter and at least one number, uppercase letter or symbol (!@#$%^&amp;*()_-+={}]:;'&quot;&lt;&#44;&gt;.?/|\~`).</p>
         </div>
         <br />
-        <div>
+        <div className="settings-row">
           <label htmlFor="new-password-input2">Confirm new password</label>
-          <input type="password" id="new-password-input2" className="new-password-input settings" name="password2" onInput={(event) => checkPasswordsMatch(event, document.forms["settings-form"])} /> {/* should use once attribute */}
+          <input type="password" id="new-password-input2" className="settings-input" name="password2" onInput={(event) => checkPasswordsMatch(event, document.forms["settings-form"])} /> {/* should use once attribute */}
           <p id="password-error" className="error">Placeholder</p>
         </div>
-        <div>
-          <p>Enter your current password to confirm your identity.</p>
+        <div className="settings-row">
           <label htmlFor="old-password-input">Current password</label>
-          <input type="password" className="old-password-input settings" name="old-password" required />
+          <input type="password" className="settings-input" name="old-password" required />
+          <p className="form-info">Enter your current password to confirm your identity.</p>
         </div>
         {/* <p id="signup-error" className="error">Placeholder</p> */}
         <button type="submit" className="settings-btn">Save changes</button>
@@ -143,7 +159,7 @@ function Settings() {
 
       <h2 id="delete-heading">Delete Account</h2>
       <p>This action is permanent and cannot be undone. This will delete your account including all subscriptions, listening history and ratings.</p>
-      <button className="settings-btn delete-btn" onClick={() => { console.log("show"); setDeleteShow(true) }}>Delete Account</button>
+      <button id="delete-btn-settings" className="settings-btn delete-btn" onClick={() => { console.log("show"); setDeleteShow(true) }}>Delete Account</button>
 
       {/* Bootstrap requires importing bootstrap css which screws everything up because they couldn't be bothered using bootstrap-specific selectors */}
       <Modal show={deleteShow} onHide={hideModal}>

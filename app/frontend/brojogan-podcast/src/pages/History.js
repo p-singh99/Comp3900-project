@@ -29,8 +29,12 @@ import './../css/History.css';
 
 function History() {
   async function fetchItems(pgNum, signal) {
-    const data = await fetchAPI(`/self/history/${pgNum}`, 'get', null, signal);
+    // const data = await fetchAPI(`/self/history/${pgNum}`, 'get', null, signal);
+    const pageSize = 12;
+    const offset = (pgNum-1)*pageSize;
+    const data = await fetchAPI(`/self/history?offset=${offset}&limit=${pageSize}`, 'get', null, signal);
     console.log("History data:", data);
+    console.log(data.numPages);
     if (pgNum === 1) {
       return { items: data.history, numPages: data.numPages };
     } else {

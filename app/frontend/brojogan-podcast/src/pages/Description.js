@@ -215,7 +215,6 @@ function Description(props) {
                 //   </div>
                 // </form>
                 : null}
-              {/* <p id="podcast-description" dangerouslySetInnerHTML={{ __html: sanitiseDescription(podcast.description) }}></p> */}
               {getPodcastDescription(podcast)}
               {podcast.link && <h6><a href={podcast.link} target="_blank" rel="nofollow noopener noreferrer">Podcast website</a></h6>}
             </div>
@@ -352,14 +351,14 @@ function sanitiseDescription(description) {
     // no return, it does default
   }
 
-  const onIgnoreTagAttr = (tag, name, value, isWhiteAttr) => {
-    if (tag === 'a' && name === 'rel') {
-      return 'rel=nofollow'; // why does this work? Shouldn't I just return nofollow?
-    } else if (tag === 'a' && name === 'target') {
-      return 'target=_blank;'
-    }
-    // no return, it does default ie remove attibute
-  }
+  // const onIgnoreTagAttr = (tag, name, value, isWhiteAttr) => {
+  //   if (tag === 'a' && name === 'rel') {
+  //     return 'rel=nofollow'; // why does this work? Shouldn't I just return nofollow?
+  //   } else if (tag === 'a' && name === 'target') {
+  //     return 'target=_blank;'
+  //   }
+  //   // no return, it does default ie remove attibute
+  // }
 
   let options = {
     whiteList: {
@@ -369,10 +368,34 @@ function sanitiseDescription(description) {
     },
     stripIgnoreTag: true,
     onTag: onTag,
-    onIgnoreTagAttr: onIgnoreTagAttr
+    // onIgnoreTagAttr: onIgnoreTagAttr
   };
   description = window.filterXSS(description, options);
-  return description;
+  // use DOMParser on description, loop through nodes, if there are any that aren't <a> or <br>, throw error and don't use innerHTML
+  // and add target and rel to each <a>
+  // todo: and if there is an error in parsing, throw error and don't use innerHTML
+  const dom = (new DOMParser()).parseFromString(description, "text/html");
+  for (const node of dom.querySelectorAll("body *")) {
+    console.log(node);
+    let nodeName = node.nodeName.toLowerCase();
+    if (nodeName === "a") {
+      node.setAttribute("target", "_blank");
+      node.setAttribute("rel", "nofollow noopener noreferrer");
+    } else if (nodeName !== "br") {
+      console.log("Blocked node:", node);
+      throw Error("Sanitisation failed");
+    }
+    // if (!["a", "br"].includes(node.nodeName.toLowerCase())) {
+    //   console.log("Blocked node:", node);
+    //   throw Error("Failed sanitisation");
+    // }
+  }
+  // for (const node of dom.querySelectorAll("a")) {
+  //   node.setAttribute("target", "_blank");
+  //   node.setAttribute("rel", "nofollow noopener noreferrer");
+  // }
+  return dom.querySelector("body").innerHTML;
+  // return description;
 }
 
 // https://stackoverflow.com/questions/1912501/unescape-html-entities-in-javascript
