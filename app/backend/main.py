@@ -21,11 +21,11 @@ CORS(app)
 #CHANGE SECRET KEY
 app.config['SECRET_KEY'] = 'secret_key'
 # remote
-conn_pool = SemaThreadPool(1, 50,\
-	 dbname="ultracast", user="brojogan", password="GbB8j6Op", host="polybius.bowdens.me", port=5432)
-# local
 #conn_pool = SemaThreadPool(1, 50,\
-#	 dbname="ultracast")
+#	 dbname="ultracast", user="brojogan", password="GbB8j6Op", host="polybius.bowdens.me", port=5432)
+# local
+conn_pool = SemaThreadPool(1, 50,\
+	 dbname="ultracast")
 	#  dbname="ultracast", password="newPassword", user="postgres", port=5433)
 
 def get_conn():
@@ -389,7 +389,7 @@ class Listens(Resource):
 		close_conn(conn, cur)
 		if res is None:
 			return {"data":"invalid podcastId or episodeGuid"}, 400
-		return {"time", int(res[0]), "complete": res[1]}, 200
+		return {"time": int(res[0]), "complete": res[1]}, 200
 
 	@token_required
 	def put(self, podcastId):
@@ -410,7 +410,7 @@ class Listens(Resource):
 		if duration is None:
 			close_conn(conn,cur)
 			return {"data": "duration is not included"}, 400
-		complete = timestamp >= 0.95 * duration:
+		complete = timestamp >= 0.95 * duration
 		
 		# we're touching episodes so insert new episode (if it doesn't already exist)
 		cur.execute("""
@@ -445,7 +445,7 @@ class ManyListens(Resource):
 		jsonready = [{
 			"episodeGuid": x[0],
 			"listenDate": str(x[1]),
-			"timestamp": x[2]
+			"timestamp": x[2],
 			"complete": x[3]
 		} for x in res]
 		print("got res")
