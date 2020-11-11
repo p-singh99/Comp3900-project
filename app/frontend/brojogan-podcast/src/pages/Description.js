@@ -4,10 +4,10 @@ import { Helmet } from 'react-helmet';
 import ProgressBar from 'react-bootstrap/ProgressBar';
 
 import { getPodcastFromXML } from '../rss';
-import { API_URL } from '../constants';
 import Pages from './../components/Pages';
 import './../css/Description.css';
 import { isLoggedIn, fetchAPI } from '../auth-functions';
+import SubscribeBtn from '../components/SubscribeBtn';
 // import GetAppIcon from '@material-ui/icons/GetApp';
 // import {Icon} from '@material-ui/icons';
 
@@ -42,47 +42,9 @@ function Description(props) {
   const [podcast, setPodcast] = useState(null);
   // const [podcastTitle, setPodcastTitle] = useState(""); // overlaps with above
   const [subscribeBtn, setSubscribeBtn] = useState("Subscribe");
-  // const [episodes, setEpisodes] = useState([]);
   // const [showEpisodeNum, setShowEpisodeNum] = useState();
 
   const setPlaying = props.setPlaying;
-
-  function subscribeHandler() {
-    console.log("entered into subhandler");
-    var podcastID = window.location.pathname.substring(9);
-    console.log(podcastID);
-    let body = {};
-    body.podcastid = podcastID;
-    fetchAPI(`/podcasts/${podcastID}`, 'post', body)
-      .then(data => {
-
-      })
-  }
-
-  // unsubscription button
-  function unSubscribeHandler() {
-    console.log("entered into Unsubhandler");
-    var podcastID = window.location.pathname.substring(9);
-    console.log(podcastID);
-    let body = {};
-    body.podcastid = podcastID;
-    fetchAPI(`/podcasts/${podcastID}`, 'delete', body)
-      .then(data => {
-        setSubscribeBtn("Subscribe");
-      })
-  }
-
-  const handleClickRequest = (event) => {
-    if (subscribeBtn == 'Unsubscribe') {
-      /** User clicked to unsubscribe */
-      unSubscribeHandler();
-      setSubscribeBtn("Subscribe");
-    } else {
-      /** User clicked to Subscribe */
-      subscribeHandler();
-      setSubscribeBtn("Unsubscribe");
-    }
-  }
 
   // on page load:
   // const { id } = useParams(); 
@@ -184,7 +146,6 @@ function Description(props) {
 
           console.log("podcast:", podcast);
           setEpisodes({ episodes: (podcast ? podcast.episodes : null), showEpisode: episodeNum });
-          console.log(episodes);
         });
       } catch (error) {
         displayError(error);
@@ -200,7 +161,7 @@ function Description(props) {
     }
     fetchPodcast(podcastObj);
 
-  }, [window.location]);
+  }, [window.location, props]);
 
   function displayError(msg) {
     setPodcast(<h1>{msg.toString()}</h1>);
@@ -247,11 +208,12 @@ function Description(props) {
               <h3 id="podcast-author">{podcast.author}</h3>
               {isLoggedIn()
                 ?
-                <form id="subscribe-form" onClick={() => handleClickRequest()}>
-                  <div id="subscribe-btns">
-                    <button id="subscribe-btn" type="button">{subscribeBtn}</button>
-                  </div>
-                </form>
+                <SubscribeBtn defaultState={subscribeBtn} podcastID={window.location.pathname.split("/").pop()} />
+                // <form id="subscribe-form" onClick={() => handleClickRequest()}>
+                //   <div id="subscribe-btns">
+                //     <button id="subscribe-btn" type="button">{subscribeBtn}</button>
+                //   </div>
+                // </form>
                 : null}
               {/* <p id="podcast-description" dangerouslySetInnerHTML={{ __html: sanitiseDescription(podcast.description) }}></p> */}
               {getPodcastDescription(podcast)}

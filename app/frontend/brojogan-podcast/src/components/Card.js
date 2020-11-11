@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useHistory } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Accordion } from 'react-bootstrap';
 import Card from 'react-bootstrap/Card';
-import { API_URL } from '../constants';
+import SubscribeBtn from './SubscribeBtn';
 import { getPodcastFromXML } from './../rss';
 import { fetchAPI } from './../auth-functions';
 import './../css/Card.css';
@@ -10,46 +10,6 @@ import './../css/Card.css';
 
 function SubCard({ details: podcast, context }) {
   const [podcastObj, setPodcastObj] = useState();
-  const [subscribeBtn, setSubscribeBtn] = useState("Unsubscribe");
-
-  // should like track if a subscribe/unscubscribe request is already in the air before sending another
-  // copied from description.js, extract to another file
-  function subscribeHandler(podcastID) {
-    console.log("entered into subhandler");
-    console.log(podcastID);
-    let body = {};
-    body.podcastid = podcastID;
-    setSubscribeBtn("...");
-    fetchAPI(`/podcasts/${podcastID}`, 'post', body)
-      .then(data => {
-        setSubscribeBtn("Unsubscribe");
-      })
-  }
-
-  // unsubscription button
-  function unSubscribeHandler(podcastID) {
-    console.log("entered into Unsubhandler");
-    console.log(podcastID);
-    let body = {};
-    body.podcastid = podcastID;
-    setSubscribeBtn("...");
-    fetchAPI(`/podcasts/${podcastID}`, 'delete', body)
-      .then(data => {
-        setSubscribeBtn("Subscribe");
-      })
-  }
-
-  const handleClickRequest = (event, podcastID) => {
-    // event.preventDefault();
-    event.stopPropagation();
-    if (subscribeBtn == 'Unsubscribe') {
-      /** User clicked to unsubscribe */
-      unSubscribeHandler(podcastID);
-    } else {
-      /** User clicked to Subscribe */
-      subscribeHandler(podcastID);
-    }
-  }
 
   // note to self: when you do something like <Item props={state} />, when the state changes,
   // it doesn't make a new Item, it just changes the props
@@ -77,7 +37,7 @@ function SubCard({ details: podcast, context }) {
         displayError(error);
       }
     };
-    if (!podcast.episodes || podcast.episodes.length == 0) {
+    if (!podcast.episodes || podcast.episodes.length === 0) {
       setCard();
     } else { // the xml has already been parsed and episodes are available
       console.log("podcast:", podcast);
@@ -118,7 +78,8 @@ function SubCard({ details: podcast, context }) {
             <p className='subs-count'>
               Subscribers:- {podcast.subscribers}
             </p>
-            {context && context.subscribeButton && <button className="subscribe-btn" onClick={(event) => handleClickRequest(event, podcast.pid)}>{subscribeBtn}</button>}
+            {/* {context && context.subscribeButton && <button className="subscribe-btn" onClick={(event) => handleClickRequest(event, podcast.pid)}>{subscribeBtn}</button>} */}
+            {context && context.subscribeButton && <SubscribeBtn defaultState="Unsubscribe" podcastID={podcast.pid} />}
           </div>
         </Accordion.Toggle>
       </Card.Header>

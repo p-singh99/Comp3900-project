@@ -10,7 +10,7 @@ function isDigits(str) {
 // to be able to scroll to the item, the Item component will need to accept an id prop
 // and set this id as the id of the element. The only id used will be 'scroll-item'.
 // maybe should use #id thing?
-function PagesFetch({ Item, fetchItems, numPages, context }) {
+function PagesFetch({ Item, fetchItems, context }) {
   const [pageState, setPageState] = useState();
   // const [pageJSX, setPageJSX] = useState();
   // const scrollItemRef = useRef(null);
@@ -35,29 +35,28 @@ function PagesFetch({ Item, fetchItems, numPages, context }) {
     }
   }
 
-  async function getPage0() {
-    // get page 0, whose response includes the number of pages
-    try {
-      // const { items: page, numPages } = await fetchItems(1);
-      const { items: page, numPages } = await fetchItems(1);
-      console.log(page, numPages);
-      let pages = [];
-      for (let i = 0; i < numPages; i++) {
-        pages.push(null);
-      }
-      pages[1] = page;
-      console.log(pages, numPages, 1);
-      setPageState({ pages: pages, lastPage: numPages, pageNum: 1 });
-    } catch (err) {
-      throw err;
-    }
-  }
-
   // run once on page load.
   useEffect(() => {
-    // getPage(0);
+    async function getPage0() {
+      // get page 0, whose response includes the number of pages
+      try {
+        // const { items: page, numPages } = await fetchItems(1);
+        const { items: page, numPages } = await fetchItems(1);
+        console.log(page, numPages);
+        let pages = [];
+        for (let i = 0; i < numPages; i++) {
+          pages.push(null);
+        }
+        pages[1] = page;
+        console.log(pages, numPages, 1);
+        setPageState({ pages: pages, lastPage: numPages, pageNum: 1 });
+      } catch (err) {
+        throw err;
+      }
+    }
+
     getPage0();
-  }, []);
+  }, [fetchItems]);
 
   function pageChanged(event) {
     console.log(event.target);

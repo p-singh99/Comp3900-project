@@ -6,7 +6,6 @@ import ProgressBar from 'react-bootstrap/ProgressBar';
 import { fetchAPI } from './../auth-functions';
 import PagesFetch from './../components/PagesFetch';
 import { getPodcastFromXML } from './../rss';
-import { API_URL } from './../constants';
 import './../css/History.css';
 
 // this is used in multiple pages, should extract to other file
@@ -102,7 +101,7 @@ function HistoryCard({ details }) {
             :
             <React.Fragment>
               <Link to={`/podcast/${details.pid}`}><p>{state.podcast.title}</p></Link>
-              <Link to={`/podcast/${details.pid}`}><img src={state.episode.image ? state.episode.image : state.podcast.image} /></Link>
+              <Link to={`/podcast/${details.pid}`}><img src={state.episode.image ? state.episode.image : state.podcast.image} alt={`${state.podcast.title}: ${state.episode.title} icon`}/></Link>
               <p>{state.episode.title}</p>
               <p>Listen Date: {getDate(details.listenDate * 1000)}</p>
               <p>Progress: {details.timestamp} (for testing)</p>
