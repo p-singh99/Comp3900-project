@@ -24,8 +24,8 @@ app.config['SECRET_KEY'] = 'secret_key'
 conn_pool = SemaThreadPool(1, 50,\
 	 dbname="ultracast", user="brojogan", password="GbB8j6Op", host="polybius.bowdens.me", port=5432)
 # local
-#conn_pool = SemaThreadPool(1, 50,\
-#	 dbname="ultracast")
+# conn_pool = SemaThreadPool(1, 50,\
+# 	 dbname="ultracast")
 	#  dbname="ultracast", password="newPassword", user="postgres", port=5433)
 
 def get_conn():
