@@ -104,7 +104,7 @@ function HistoryCard({ details }) {
             :
             <React.Fragment>
               <Link to={`/podcast/${details.pid}`}><p>{state.podcast.title}</p></Link>
-              <Link to={`/podcast/${details.pid}`}><img src={state.episode.image ? state.episode.image : state.podcast.image} /></Link>
+              <Link to={`/podcast/${details.pid}`}><img src={state.episode.image ? state.episode.image : state.podcast.image} alt={`${state.podcast.title}: ${state.episode.title} icon`}/></Link>
               <p>{state.episode.title}</p>
               <p>Listen Date: {getDate(details.listenDate * 1000)}</p>
               <p>Progress: {details.timestamp} (for testing)</p>

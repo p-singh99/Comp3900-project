@@ -7,6 +7,7 @@ import { getPodcastFromXML } from '../rss';
 import Pages from './../components/Pages';
 import './../css/Description.css';
 import { isLoggedIn, fetchAPI } from '../authFunctions';
+import SubscribeBtn from '../components/SubscribeBtn';
 // import GetAppIcon from '@material-ui/icons/GetApp';
 // import {Icon} from '@material-ui/icons';
 
@@ -41,43 +42,6 @@ function Description(props) {
 
   const setPlaying = props.setPlaying;
 
-  function subscribeHandler() {
-    console.log("entered into subhandler");
-    var podcastID = window.location.pathname.substring(9);
-    console.log(podcastID);
-    let body = {};
-    body.podcastid = podcastID;
-    fetchAPI(`/podcasts/${podcastID}`, 'post', body)
-      .then(data => {
-
-      })
-  }
-
-  // unsubscription button
-  function unSubscribeHandler() {
-    console.log("entered into Unsubhandler");
-    var podcastID = window.location.pathname.substring(9);
-    console.log(podcastID);
-    let body = {};
-    body.podcastid = podcastID;
-    fetchAPI(`/podcasts/${podcastID}`, 'delete', body)
-      .then(data => {
-        setSubscribeBtn("Subscribe");
-      })
-  }
-
-  const handleClickRequest = (event) => {
-    if (subscribeBtn == 'Unsubscribe') {
-      /** User clicked to unsubscribe */
-      unSubscribeHandler();
-      setSubscribeBtn("Subscribe");
-    } else {
-      /** User clicked to Subscribe */
-      subscribeHandler();
-      setSubscribeBtn("Unsubscribe");
-    }
-  }
-
   // on page load:
   // const { id } = useParams(); 
   // useParams is insane and depending on whether the page is accessed by typing in the link, or by clicking on a link from somewhere else in the app,
@@ -95,6 +59,9 @@ function Description(props) {
       if (subscription) {
         setSubscribeBtn('Unsubscribe');
       }
+      // } else {
+      //   setSubscribeBtn('Subscribe');
+      // }
     }
 
     const fetchPodcast = async (prefetchedPodcast) => {
@@ -161,7 +128,6 @@ function Description(props) {
 
             console.log("podcast:", podcast);
             setEpisodes({ episodes: (podcast ? podcast.episodes : null), showEpisode: episodeNum });
-            console.log(episodes);
           })
           .catch(error => {
             displayError(error);
@@ -180,7 +146,7 @@ function Description(props) {
     }
     fetchPodcast(podcastObj);
 
-  }, [window.location]);
+  }, [window.location, props]);
 
   function displayError(msg) {
     // setPodcast(<h1>{msg.toString()}</h1>);
@@ -223,14 +189,15 @@ function Description(props) {
               <h3 id="podcast-author">{podcast.author}</h3>
               {isLoggedIn()
                 ?
-                <form id="subscribe-form" onClick={() => handleClickRequest()}>
-                  <div id="subscribe-btns">
-                    <button id="subscribe-btn" type="button">{subscribeBtn}</button>
-                  </div>
-                </form>
+                <SubscribeBtn defaultState={subscribeBtn} podcastID={window.location.pathname.split("/").pop()} />
+                // <form id="subscribe-form" onClick={() => handleClickRequest()}>
+                //   <div id="subscribe-btns">
+                //     <button id="subscribe-btn" type="button">{subscribeBtn}</button>
+                //   </div>
+                // </form>
                 : null}
               {getPodcastDescription(podcast)}
-              {podcast.link && <h6><a href={podcast.link} target="_blank" rel="nofollow">Podcast website</a></h6>}
+              {podcast.link && <h6><a href={podcast.link} target="_blank" rel="nofollow noopener noreferrer">Podcast website</a></h6>}
             </div>
           </div>
         </div>
@@ -295,9 +262,9 @@ function EpisodeDescription({ details: episode, context: { podcast, setPlaying, 
   let description;
   // in case the sanitiser fails, don't use innerHTML
   try {
-    description = <div className="description collapsed"> <p dangerouslySetInnerHTML={{ __html: sanitiseDescription(episode.description) }}></p><p><a href={episode.link} rel="nofollow" target="_blank">Episode website</a></p></div>;
+    description = <div className="description collapsed"> <p dangerouslySetInnerHTML={{ __html: sanitiseDescription(episode.description) }}></p><p><a href={episode.link} rel="nofollow noopener noreferrer" target="_blank">Episode website</a></p></div>;
   } catch {
-    description = <div className="description collapsed"><p>{unTagDescription(episode.description)}</p><p><a href={episode.link} rel="nofollow" target="_blank">Episode website</a></p></div>;
+    description = <div className="description collapsed"><p>{unTagDescription(episode.description)}</p><p><a href={episode.link} rel="nofollow noopener noreferrer" target="_blank">Episode website</a></p></div>;
   }
 
   // weird react bug that descriptions stay expanded after changing the page,
@@ -344,12 +311,15 @@ function EpisodeDescription({ details: episode, context: { podcast, setPlaying, 
   )
 }
 
+// https://mathiasbynens.github.io/rel-noopener/
+// https://css-tricks.com/use-target_blank/
 // maybe use DOMPurify instead, and should try to add rel="nofollow" to links
 // also should set target = _blank on all links
 // could also do that in js - get all links and loop through setting the attributes
 // or could set base target = _blank, and then change it on the ones we control
 // this doesn't really feel secure, this third party script could get bugs or be altered
 // should put the script in local folder
+// !!!!! need to add noopener noreffer to all links, this is a legit current vulnerability
 function sanitiseDescription(description) {
   // https://www.npmjs.com/package/xss
   // https://jsxss.com/en/options.

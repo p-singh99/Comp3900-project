@@ -56,9 +56,14 @@ function SignUp() {
 
   let [usernameHelpStatus, setUsernameStatus] = useState(false);
   let [passwordHelpStatus, setPasswordStatus] = useState(false);
+  const [pendingRequest, setPendingRequest] = useState(false);
 
   function signupHandler(event) {
     event.preventDefault();
+    if (pendingRequest) {
+      console.log("Pending request, not sending signup");
+      return;
+    }
     const form = document.forms['signUp-form'];
     const username = form.elements.username;
     const email = form.elements.email;
@@ -74,6 +79,7 @@ function SignUp() {
       formData.append("username", username.value);
       formData.append("password", password1.value);
       formData.append("email", email.value);
+      setPendingRequest(true);
       fetch(`${API_URL}/users`, { method: 'post', body: formData })
         .then(resp => {
           resp.json().then(data => {
@@ -81,13 +87,17 @@ function SignUp() {
               saveToken(data);
               // window.sessionStorage.setItem("newuser", true); // maybe - user stays as a new user for their entire first session
               history.push("/", {newUser: true});
+              console.log("resp status 201");
             } else {
+              console.log("resp status not 201");
               displaySignupErrors(data.error);
             }
+            setPendingRequest(false);
           })
         })
         .catch(error => { // will this catch error from resp.json()?
           displaySignupError('Network or other error');
+          setPendingRequest(false);
         });
     }
   }
