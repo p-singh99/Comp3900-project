@@ -26,7 +26,6 @@ conn_pool = SemaThreadPool(1, 50,\
 # local
 #conn_pool = SemaThreadPool(1, 50,\
 #	 dbname="ultracast")
-	#  dbname="ultracast", password="newPassword", user="postgres", port=5433)
 
 def get_conn():
 	conn = conn_pool.getconn()
@@ -156,7 +155,7 @@ class Podcasts(Resource):
 		# todo: try catch this
 		search = request.args.get('search_query')
 		if search is None:
-			return {"data": "Bad Request"}, 400
+			return {"error": "Bad Request"}, 400
 		# todo: try catch this
 		conn, cur = get_conn()
 		# add search query to db
@@ -350,6 +349,7 @@ class Subscriptions(Resource):
 class History(Resource):
 	@token_required
 	def get(self, id):
+		# id is pageNum
 		parser = reqparse.RequestParser()
 		#parser.add_argument('offset', type=int, required=False, location="args")
 		parser.add_argument('limit', type=int, required=False, location="args")
@@ -362,17 +362,22 @@ class History(Resource):
 		offset = (id - 1)*limit 
 		conn, cur = get_conn()
 		user_id = get_user_id(cur)
-		if id:
+		if id == 1:
 			cur.execute("SELECT p.id, p.xml, l.episodeguid, l.listenDate, l.timestamp FROM listens l, podcasts p where l.userid=%s and \
 			p.id = l.podcastid ORDER BY l.listenDate DESC" % (user_id))
 			total_pages = math.ceil( cur.rowcount / limit )
+			eps = cur.fetchmany(limit)
+			print(eps)
 		else:
 			cur.execute("SELECT p.id, p.xml, l.episodeguid, l.listenDate, l.timestamp FROM listens l, podcasts p where l.userid=%s and \
 				p.id = l.podcastid ORDER BY l.listenDate DESC LIMIT %s OFFSET %s " % (user_id, limit, offset))
-		eps = cur.fetchall()
+			eps = cur.fetchall()
 		jsoneps = [{"pid" : ep[0], "xml": ep[1], "episodeguid": ep[2], "listenDate": ep[3].timestamp(), "timestamp": ep[4]} for ep in eps]
 		close_conn(conn, cur)
-		return {"history" : jsoneps, "numPages": total_pages}, 200
+		if id == 1:
+			return {"history" : jsoneps, "numPages": total_pages}, 200
+		else:
+			return {"history" : jsoneps}, 200
 
 class Listens(Resource):
 	@token_required
@@ -383,18 +388,18 @@ class Listens(Resource):
 		if episodeGuid is None:
 			cur.close()
 			conn_pool.putconn()
-			return {"data": "episodeGuid not included"}, 400
+			return {"error": "episodeGuid not included"}, 400
 
 		cur.execute("""
-			SELECT timestamp from listens where
+			SELECT timestamp, complete from listens where
 			podcastId=%s and episodeGuid=%s and userId=%s
 		""",
 		(podcastId, episodeGuid, user_id))
 		res = cur.fetchone()
 		close_conn(conn, cur)
 		if res is None:
-			return {"data":"invalid podcastId or episodeGuid"}, 400
-		return {"time", int(res[0])}, 200
+			return {"error":"invalid podcastId or episodeGuid"}, 400
+		return {"time": int(res[0]), "complete": res[1]}, 200
 
 	@token_required
 	def put(self, podcastId):
@@ -402,16 +407,21 @@ class Listens(Resource):
 		user_id = get_user_id(cur)
 		timestamp = request.json.get("time")
 		episodeGuid = request.json.get("episodeGuid")
+		duration = request.json.get("duration")
 		if timestamp is None:
 			close_conn(conn,cur)
-			return {"data": "timestamp not included"}, 400
+			return {"error": "timestamp not included"}, 400
 		if not isinstance(timestamp, int):
 			close_conn(conn,cur)
-			return {"data": "timestamp must be an integer"}, 400
+			return {"error": "timestamp must be an integer"}, 400
 		if episodeGuid is None:
 			close_conn(conn,cur)
-			return {"data": "episodeGuid not included"}, 400
-
+			return {"error": "episodeGuid not included"}, 400
+		if duration is None:
+			close_conn(conn,cur)
+			return {"error": "duration is not included"}, 400
+		complete = timestamp >= 0.95 * duration
+		
 		# we're touching episodes so insert new episode (if it doesn't already exist)
 		cur.execute("""
 			INSERT INTO episodes (podcastId, guid)
@@ -421,11 +431,11 @@ class Listens(Resource):
 		(podcastId, episodeGuid))
 
 		cur.execute("""
-			INSERT INTO listens (userId, podcastId, episodeGuid, listenDate, timestamp)
-			values (%s, %s, %s, now(), %s)
-			ON CONFLICT ON CONSTRAINT listens_pkey DO UPDATE set listenDate=now(), timestamp=%s;
+			INSERT INTO listens (userId, podcastId, episodeGuid, listenDate, timestamp, complete)
+			values (%s, %s, %s, now(), %s, %s)
+			ON CONFLICT ON CONSTRAINT listens_pkey DO UPDATE set listenDate=now(), timestamp=%s, complete=%s;
 		""",
-		(user_id, podcastId, episodeGuid, timestamp, timestamp))
+		(user_id, podcastId, episodeGuid, timestamp, complete, timestamp, complete))
 		conn.commit()
 		close_conn(conn,cur)
 		return {}, 200
@@ -436,7 +446,7 @@ class ManyListens(Resource):
 		conn, cur = get_conn()
 		user_id = get_user_id(cur)
 		cur.execute("""
-			select episodeGuid, listenDate, timestamp
+			select episodeGuid, listenDate, timestamp, complete
 			from listens where userid=%s and podcastid=%s
 		""",
 		(user_id, podcastId))
@@ -445,7 +455,8 @@ class ManyListens(Resource):
 		jsonready = [{
 			"episodeGuid": x[0],
 			"listenDate": str(x[1]),
-			"timestamp": x[2]
+			"timestamp": x[2],
+			"complete": x[3]
 		} for x in res]
 		print("got res")
 		print(jsonready)
@@ -505,6 +516,17 @@ class Recommendations(Resource):
 		for i in results:
 			#cur.execute("select count(p.id) from podcasts p, subscriptions s where s.podcastid=%s and p.id=s.podcastid" % i[1])
 			recs.append({"xml": i[0], "id": i[1], "subs": 1})
+
+		# start merge stuff
+		# cur.execute("select count(*) from subscriptions where podcastid=%s", (i[1],))
+		# 	recs.append({"xml": i[0], "id": i[1], "subs": cur.fetchone()[0]})
+		# recs = recs[:10]
+		# #recsl = list(recs)
+		# #sorted(recsl,key=lambda x: x[1])
+		# #xml_list = [x[4] for x in recsl]
+		# #xml_list = xml_list[:10]
+		# # print(xml_list)
+		# end merge stuff
 
 		#recs = recs[:10]
 		close_conn(conn, cur)
