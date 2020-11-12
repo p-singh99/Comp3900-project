@@ -470,6 +470,7 @@ class Recommendations(Resource):
 				close_conn(conn, cur)
 				return {"recommendations" : recs}
 			#cur.execute("select count(p.id) from podcasts p, subscriptions s where s.podcastid=%s and p.id=s.podcastid" % i[1])
+			# cur.execute("select count(*) from subscriptions where podcastid=%s", (i[1],))
 			recs.append({"xml": i[0], "id": i[1], "subs": 1})
 			limit -= 1
 		cur.execute("select query from searchqueries where userid=%s order by searchdate DESC limit 10" % user_id)
@@ -491,6 +492,7 @@ class Recommendations(Resource):
 					close_conn(conn, cur)
 					return {"recommendations" : recs}
 				#cur.execute("select count(p.id) from podcasts p, subscriptions s where s.podcastid=%s and p.id=s.podcastid" % i[1])
+				# cur.execute("select count(*) from subscriptions where podcastid=%s", (i[1],))
 				recs.append({"xml": i[0], "id": i[1], "subs": 1})
 				limit -= 1
 		cur.execute("select p.xml, p.id, count(p.id) from podcasts p, podcastcategories pc, categories c \
