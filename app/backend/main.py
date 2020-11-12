@@ -364,7 +364,7 @@ class History(Resource):
 		user_id = get_user_id(cur)
 		if id:
 			cur.execute("SELECT p.id, p.xml, l.episodeguid, l.listenDate, l.timestamp FROM listens l, podcasts p where l.userid=%s and \
-			p.id = l.podcastid ORDER BY l.listenDate DESC LIMIT %s " % (user_id, limit))
+			p.id = l.podcastid ORDER BY l.listenDate DESC" % (user_id))
 			total_pages = math.ceil( cur.rowcount / limit )
 		else:
 			cur.execute("SELECT p.id, p.xml, l.episodeguid, l.listenDate, l.timestamp FROM listens l, podcasts p where l.userid=%s and \
@@ -466,7 +466,6 @@ class Recommendations(Resource):
 		results = cur.fetchall()
 		print(cur.rowcount)
 		for i in results:
-			print("loop")
 			if limit == 0:
 				close_conn(conn, cur)
 				return {"recommendations" : recs}
@@ -569,4 +568,4 @@ api.add_resource(ManyListens, "/users/self/podcasts/<int:podcastId>/time")
 api.add_resource(Ratings, "/podcasts/<int:id>/rating")
 
 if __name__ == '__main__':
-	app.run(debug=True)
+	app.run(debug=True, threaded=True)
