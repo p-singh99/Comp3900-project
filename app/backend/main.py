@@ -354,7 +354,8 @@ class History(Resource):
 		#parser.add_argument('offset', type=int, required=False, location="args")
 		parser.add_argument('limit', type=int, required=False, location="args")
 		args = parser.parse_args()
-		if (limit := args['limit']) is None:
+		limit = args['limit']
+		if args['limit'] is None:
 			limit = 12
 		if limit <= 0 or id <= 0:
 			return {"error": "bad request"}, 400
