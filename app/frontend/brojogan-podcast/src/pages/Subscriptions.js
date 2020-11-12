@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import Helmet from 'react-helmet';
-import ReactDOM from 'react-dom';
 import {fetchAPI} from '../authFunctions';
 import PodcastCards from '../components/PodcastCards';
 import './../css/SearchPage.css';
@@ -16,7 +15,6 @@ function Subscriptions() {
         }
       );
   }, []);
-  // can't use <Link> within ReactDOM.render() 
 
   return (
     <div id="subscription-page-div">

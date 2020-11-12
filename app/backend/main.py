@@ -348,25 +348,27 @@ class Subscriptions(Resource):
 # allow passing the page size or doing offset limit thing?
 class History(Resource):
 	@token_required
-	def get(self):
+	def get(self, id):
 		parser = reqparse.RequestParser()
-		parser.add_argument('offset', type=int, required=False, location="args")
+		#parser.add_argument('offset', type=int, required=False, location="args")
 		parser.add_argument('limit', type=int, required=False, location="args")
 		args = parser.parse_args()
-		if (limit := args['limit']) is None:
+		limit = args['limit']
+		if args['limit'] is None:
 			limit = 12
-		pageNum = id
-		if limit <= 0:
+		if limit <= 0 or id <= 0:
 			return {"error": "bad request"}, 400
-		if (offset := args['offset']) is None:
-			offset = (pageNum - 1) * limit
+		offset = (id - 1)*limit 
 		conn, cur = get_conn()
 		user_id = get_user_id(cur)
-		cur.execute("SELECT p.id, p.xml, l.episodeguid, l.listenDate, l.timestamp FROM listens l, podcasts p where l.userid=%s and \
-			p.id = l.podcastid ORDER BY l.listenDate DESC LIMIT %s OFFSET %s " % (user_id, limit, offset))
+		if id:
+			cur.execute("SELECT p.id, p.xml, l.episodeguid, l.listenDate, l.timestamp FROM listens l, podcasts p where l.userid=%s and \
+			p.id = l.podcastid ORDER BY l.listenDate DESC LIMIT %s " % (user_id, limit))
+			total_pages = math.ceil( cur.rowcount / limit )
+		else:
+			cur.execute("SELECT p.id, p.xml, l.episodeguid, l.listenDate, l.timestamp FROM listens l, podcasts p where l.userid=%s and \
+				p.id = l.podcastid ORDER BY l.listenDate DESC LIMIT %s OFFSET %s " % (user_id, limit, offset))
 		eps = cur.fetchall()
-		res = cur.rowcount
-		total_pages = math.ceil(res / limit )
 		jsoneps = [{"pid" : ep[0], "xml": ep[1], "episodeguid": ep[2], "listenDate": ep[3].timestamp(), "timestamp": ep[4]} for ep in eps]
 		close_conn(conn, cur)
 		return {"history" : jsoneps, "numPages": total_pages}, 200
@@ -581,7 +583,7 @@ api.add_resource(Podcasts, "/podcasts")
 api.add_resource(Podcast, "/podcasts/<int:id>")
 api.add_resource(Recommendations, "/self/recommendations")
 api.add_resource(Subscriptions, "/subscriptions")
-api.add_resource(History, "/self/history")
+api.add_resource(History, "/self/history/<int:id>")
 api.add_resource(Listens, "/users/self/podcasts/<int:podcastId>/episodes/time")
 api.add_resource(ManyListens, "/users/self/podcasts/<int:podcastId>/time")
 api.add_resource(Ratings, "/podcasts/<int:id>/rating")

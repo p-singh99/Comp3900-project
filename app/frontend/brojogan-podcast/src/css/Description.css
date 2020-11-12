@@ -59,7 +59,7 @@ width: 100%;
 }
 
 
-#subscribe-btn {
+.subscribe-btn {
 z-index: 1;
 }
 
@@ -68,7 +68,7 @@ z-index: 1;
   font-size: 0.9em;
 }
 
-#subscribe-btn, .download, .play {
+.subscribe-btn, .download, .play {
 background-color: #6E59D6;
 border: none;
 }

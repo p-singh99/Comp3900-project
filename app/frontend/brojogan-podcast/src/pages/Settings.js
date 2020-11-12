@@ -6,8 +6,7 @@ import {FiUser} from 'react-icons/fi';
 import { checkPassword, checkPasswordsMatch, checkField } from './../validationFunctions';
 import { fetchAPI, logoutHandler, getUsername } from './../authFunctions';
 import './../css/Settings.css';
-import './../css/bootstrap-modal.css';
-// import 'bootstrap/dist/css/bootstrap.min.css';
+import './../css/bootstrap-modal.css'; // get rid of this, bootstrap css is already imported
 
 
 function handleDelete(event) {

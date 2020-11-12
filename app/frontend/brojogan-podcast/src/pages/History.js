@@ -29,10 +29,10 @@ import './../css/History.css';
 
 function History() {
   async function fetchItems(pgNum, signal) {
-    // const data = await fetchAPI(`/self/history/${pgNum}`, 'get', null, signal);
+    const data = await fetchAPI(`/self/history/${pgNum}`, 'get', null, signal);
     const pageSize = 12;
     const offset = (pgNum-1)*pageSize;
-    const data = await fetchAPI(`/self/history?offset=${offset}&limit=${pageSize}`, 'get', null, signal);
+    //const data = await fetchAPI(`/self/history?offset=${offset}&limit=${pageSize}`, 'get', null, signal);
     console.log("History data:", data);
     console.log(data.numPages);
     if (pgNum === 1) {
@@ -104,7 +104,7 @@ function HistoryCard({ details }) {
             :
             <React.Fragment>
               <Link to={`/podcast/${details.pid}`}><p>{state.podcast.title}</p></Link>
-              <Link to={`/podcast/${details.pid}`}><img src={state.episode.image ? state.episode.image : state.podcast.image} /></Link>
+              <Link to={`/podcast/${details.pid}`}><img src={state.episode.image ? state.episode.image : state.podcast.image} alt={`${state.podcast.title}: ${state.episode.title} icon`}/></Link>
               <p>{state.episode.title}</p>
               <p>Listen Date: {getDate(details.listenDate * 1000)}</p>
               <p>Progress: {details.timestamp} (for testing)</p>
