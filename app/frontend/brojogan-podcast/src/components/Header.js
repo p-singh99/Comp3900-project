@@ -7,7 +7,7 @@ import DropDownMenu from './../components/DropDownMenu';
 // import Search from './../components/SearchPage.js';
 import notifications from './../images/notifications.png';
 import settings from './../images/settings.png';
-import {logoutHandler, authFailed, isLoggedIn, getUsername} from './../auth-functions';
+import {logoutHandler, authFailed, isLoggedIn, getUsername} from './../authFunctions';
 import { useHistory } from 'react-router-dom';
 import {API_URL} from './../constants';
 
@@ -55,7 +55,7 @@ function Header() {
   }
   const textStyle = {
     margin: '0px 0px 0px 0px',
-    fontSize: '21px',
+    fontSize: '16px',
     color: '#64CFEB'
   }
 

@@ -1,7 +1,7 @@
 import React, {useState, useEffect} from 'react';
 import ReactDOM from 'react-dom';
 import { Helmet } from 'react-helmet';
-import { isLoggedIn, fetchAPI } from '../auth-functions';
+import { isLoggedIn, fetchAPI } from '../authFunctions';
 import PodcastCards from '../components/PodcastCards';
 import {getPodcastFromXML} from '../rss';
 

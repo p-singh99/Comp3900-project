@@ -3,35 +3,38 @@ import { Helmet } from 'react-helmet';
 import { Link } from 'react-router-dom';
 import ProgressBar from 'react-bootstrap/ProgressBar';
 
-import { fetchAPI } from './../auth-functions';
+import { fetchAPI } from './../authFunctions';
 import PagesFetch from './../components/PagesFetch';
 import { getPodcastFromXML } from './../rss';
-import { API_URL } from './../constants';
 import './../css/History.css';
 
 // this is used in multiple pages, should extract to other file
-async function getRSS(id, signal) {
-  let resp, data;
-  try {
-    resp = await fetch(`${API_URL}/podcasts/${id}`, { signal });
-    data = await resp.json();
-  } catch {
-    throw Error("Network error");
-  }
-  if (resp.status === 200) {
-    // console.log(data.xml);
-    return data.xml;
-  } else if (resp.status === 404) {
-    throw Error("Podcast does not exist");
-  } else {
-    throw Error("Error in retrieving podcast");
-  }
-}
+// async function getRSS(id, signal) {
+//   let resp, data;
+//   try {
+//     resp = await fetch(`${API_URL}/podcasts/${id}`, { signal });
+//     data = await resp.json();
+//   } catch {
+//     throw Error("Network error");
+//   }
+//   if (resp.status === 200) {
+//     // console.log(data.xml);
+//     return data.xml;
+//   } else if (resp.status === 404) {
+//     throw Error("Podcast does not exist");
+//   } else {
+//     throw Error("Error in retrieving podcast");
+//   }
+// }
 
 function History() {
   async function fetchItems(pgNum, signal) {
-    const data = await fetchAPI(`/self/history/${pgNum}`, 'get', null, signal);
+    // const data = await fetchAPI(`/self/history/${pgNum}`, 'get', null, signal);
+    const pageSize = 12;
+    const offset = (pgNum-1)*pageSize;
+    const data = await fetchAPI(`/self/history?offset=${offset}&limit=${pageSize}`, 'get', null, signal);
     console.log("History data:", data);
+    console.log(data.numPages);
     if (pgNum === 1) {
       return { items: data.history, numPages: data.numPages };
     } else {
@@ -80,8 +83,7 @@ function HistoryCard({ details }) {
 
     const setCard = async () => {
       try {
-        const xml = await getRSS(details.pid, controller.signal);
-        const podcast = getPodcastFromXML(xml);
+        const podcast = getPodcastFromXML(details.xml);
         const episode = podcast.episodes.find(episode => episode.guid === details.episodeguid);
         setState({ podcast, episode });
       } catch (err) {
