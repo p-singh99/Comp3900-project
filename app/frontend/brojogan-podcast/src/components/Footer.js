@@ -50,7 +50,9 @@ function Footer({ state, setState }) {
               setPlayed = true;
               console.log("can play!");
               e.target.currentTime=state.progress
-            }}}
+            }
+            pingServer(Math.floor(Number(e.target.currentTime)));
+          }}
         />
       </div>
     </div>

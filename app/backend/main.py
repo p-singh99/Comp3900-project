@@ -13,6 +13,8 @@ import urllib.parse
 import re
 from SemaThreadPool import SemaThreadPool
 import math
+from rss import update_rss
+import threading
 
 app = Flask(__name__)
 api = Api(app)
@@ -21,11 +23,11 @@ CORS(app)
 #CHANGE SECRET KEY
 app.config['SECRET_KEY'] = 'secret_key'
 # remote
-conn_pool = SemaThreadPool(1, 50,\
-	 dbname="ultracast", user="brojogan", password="GbB8j6Op", host="polybius.bowdens.me", port=5432)
-# local
 #conn_pool = SemaThreadPool(1, 50,\
-#	 dbname="ultracast")
+#	 dbname="ultracast", user="brojogan", password="GbB8j6Op", host="polybius.bowdens.me", port=5432)
+# local
+conn_pool = SemaThreadPool(1, 50,\
+	 dbname="ultracast")
 	#  dbname="ultracast", password="newPassword", user="postgres", port=5433)
 
 def get_conn():
@@ -279,12 +281,13 @@ class Podcast(Resource):
 		flag = False
 		if cur.rowcount != 0:
 			flag = True
-		cur.execute("SELECT xml, id FROM Podcasts WHERE id=(%s)", (id,))
+		cur.execute("SELECT xml, id, rssfeed FROM Podcasts WHERE id=(%s)", (id,))
 		res = cur.fetchone()
 		if res is None:
 			return {}, 404
 		xml = res[0]
 		id  = res[1]
+		rssfeed=res[2]
 
 		cur.execute("SELECT count(*) from subscriptions where podcastid=(%s)", (id,))
 		res = cur.fetchone()
@@ -293,6 +296,9 @@ class Podcast(Resource):
 			subscribers = res[0]
 
 		close_conn(conn,cur)
+
+		thread = threading.Thread(target=update_rss, args=(rssfeed, conn_pool), daemon=True)
+		thread.start()
 		return {"xml": xml, "id": id, "subscription": flag, "subscribers": subscribers}, 200
 
 
@@ -505,19 +511,23 @@ class Notifications(Resource):
 		conn, cur = get_conn()
 		user_id=get_user_id(cur)
 		cur.execute("""
-		select (p.title, p.id, e.title, e.created, e.guid, u.status, n.id) from
+		select p.title, p.id, e.title, e.created, e.guid, u.status, u.id from
 		notifications u
-		join podcasts p on n.podcastid=p.id
-		join episodes e on n.episodeguid=e.guid
+		join episodes e on u.episodeguid=e.guid
+		join podcasts p on e.podcastid=p.id
 		where u.userid=%s
 		""", (user_id,))
 		results = cur.fetchall()
 		close_conn(conn,cur)
+		for result in results:
+			print(result)
+		if results is None:
+			return {}, 200
 		json = [{
 			"podcastTitle": x[0],
 			"podcastId":    x[1],
-			"episodeTitle": x[1],
-			"dateCreated":  x[3],
+			"episodeTitle": x[2],
+			"dateCreated":  str(x[3]),
 			"episodeGuid":  x[4],
 			"status":       x[5],
 			"id": 		x[6]
