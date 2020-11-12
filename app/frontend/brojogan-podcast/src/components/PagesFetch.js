@@ -17,6 +17,8 @@ function PagesFetch({ Item, fetchItems, context }) {
   const startRef = useRef(null);
   let controller = new AbortController(); // not sure if okay to initialise here
 
+  // todo: prefetch the next page
+
   async function getPage(pgNum) {
     console.log("getPage pageState:", pageState);
     console.log("pages[pgNum]:", pageState.pages[pgNum]);
@@ -28,7 +30,7 @@ function PagesFetch({ Item, fetchItems, context }) {
         console.log(page);
         let pages = [...pageState.pages];
         pages[pgNum] = page;
-        setPageState({ ...pageState, pages: pages, pageNum: pgNum });
+        setPageState({ ...pageState, pages: pages, pageNum: pgNum, pageChanging: false });
         setError(null);
       } catch (err) {
         setError(err.toString());
@@ -49,7 +51,7 @@ function PagesFetch({ Item, fetchItems, context }) {
         }
         pages[1] = page;
         console.log(pages, numPages, 1);
-        setPageState({ pages: pages, lastPage: numPages, pageNum: 1 });
+        setPageState({ pages: pages, lastPage: numPages, pageNum: 1, pageChanging: false });
         setError(null);
       } catch (err) {
         setError(err.toString());
@@ -74,6 +76,7 @@ function PagesFetch({ Item, fetchItems, context }) {
       pageNum = parseInt(event.target.text, 10);
     }
     if (pageNum) {
+      setPageState({...pageState, pageChanging: true})
       getPage(pageNum);
       startRef.current.scrollIntoView({ behavior: 'smooth' });
       // this only works sometimes in Firefox...
@@ -128,7 +131,7 @@ function PagesFetch({ Item, fetchItems, context }) {
         : null
       }
 
-      {pageState
+      {pageState && !pageState.pageChanging
         ? pageState.pages[pageState.pageNum].map(item => {
           return <Item details={item} context={context} />
         })

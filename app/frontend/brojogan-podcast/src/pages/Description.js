@@ -120,6 +120,7 @@ function Description(props) {
                 if (episode !== undefined) {
                   episode.progress = time.timestamp;
                   episode.listenDate = time.listenDate;
+                  episode.complete = time.complete;
                 } else {
                   console.error("episode with guid " + time.episodeGuid + " did not have a match in the fetched feed");
                 }
@@ -272,12 +273,12 @@ function EpisodeDescription({ details: episode, context: { podcast, setPlaying, 
   // I think it must be reacts Virtual DOM diff, it doesn't necessarily change classes I guess
   return (
     // durationSeconds-5 because sometimes episode durations in the feed are too long
-    <li className={episode.progress >= episode.durationSeconds - 5 ? "episode finished" : "episode"} id={id} onClick={toggleDescription}>
-      {/* <li className={episode.complete ? "episode finished" : "episode"} id={id} onClick={toggleDescription}> */}
+    // <li className={episode.progress >= episode.durationSeconds - 5 ? "episode finished" : "episode"} id={id} onClick={toggleDescription}>
+    <li className={episode.complete ? "episode finished" : "episode"} id={id} onClick={toggleDescription}>
       {/* make this flexbox or grid? */}
       {episode.durationSeconds && episode.progress > 0 &&
         <div className="progress-div">
-          <p>Played: {episode.complete ? "Complete" : secondstoTime(episode.progress)}</p>
+          <div>Played: {episode.complete ? "Complete" : secondstoTime(episode.progress)}</div>
           <ProgressBar max={episode.durationSeconds} now={episode.progress /*|| 0*/} />
         </div>
       }
