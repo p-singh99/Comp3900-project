@@ -342,7 +342,7 @@ class Subscriptions(Resource):
 			author = p[1]
 			description = p[2]
 			pID = p[3]
-			results.append({"subscribers" : subscribers, "title" : title, "author" : author, "description" : description, "pid" : pID})
+			results.append({"subscribers" : subscribers, "title" : title, "author" : author, "description" : description, "pid" : pID, "rating": p[4]})
 		close_conn(conn, cur)
 		return results, 200
 
@@ -580,7 +580,7 @@ api.add_resource(Subscriptions, "/subscriptions")
 api.add_resource(History, "/self/history/<int:id>")
 api.add_resource(Listens, "/users/self/podcasts/<int:podcastId>/episodes/time")
 api.add_resource(ManyListens, "/users/self/podcasts/<int:podcastId>/time")
-api.add_resource(Ratings, "self/ratings/<int:id>")
+api.add_resource(Ratings, "/self/ratings/<int:id>")
 
 if __name__ == '__main__':
 	app.run(debug=True, threaded=True)
