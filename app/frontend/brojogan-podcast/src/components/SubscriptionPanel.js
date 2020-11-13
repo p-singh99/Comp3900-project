@@ -47,8 +47,11 @@ function SubscriptionPanel() {
   }
 
   useEffect (() => {
-    if (isLoggedIn) {
+    if (isLoggedIn()) {
+      console.log(`Logged in`);
       loadEpisodes();
+    } else {
+      console.log(`Not logged in`);
     }
   }, []);
 
