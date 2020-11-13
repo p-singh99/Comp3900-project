@@ -1,6 +1,7 @@
 import React from 'react';
 import { isLoggedIn, getUsername } from './../auth-functions'
 import { Helmet } from 'react-helmet';
+import SubscriptionPanel from './../components/SubscriptionPanel';
 
 // just an idea to try something
 function welcome(newUser) {
@@ -22,8 +23,9 @@ function Home(props) {
       </Helmet>
 
       <h1>
-        {welcome(newUser)}
+        {/* {welcome(newUser)} */}
       </h1>
+      < SubscriptionPanel/>
     </div>
   );
 }

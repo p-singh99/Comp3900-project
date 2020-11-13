@@ -78,7 +78,8 @@ class Protected(Resource):
 class SubscriptionPanel(Resource):
 	def get(self):
 		conn,cur = get_conn()
-		uid = uid = get_user_id(cur)
+		uid = get_user_id(cur)
+		print(uid)
 		cur.execute("""SELECT p.title, p.xml, p.id
 		               FROM   podcasts p
 		               FULL OUTER JOIN   subscriptions s
@@ -87,12 +88,16 @@ class SubscriptionPanel(Resource):
 		            """, (uid,))
 		podcasts = cur.fetchall()
 		results = []
+		# s = re.search('<guid.*>(.*)</guid>', podcasts[3][1])
+		# print(s)
 		for p in podcasts:
+			# print(p[1])
 			search = re.search('<guid.*>(.*)</guid>', p[1])
-			guid = search(group(1))
-			cur.execute("SELECT complete FROM Listens where episodeGuid = '%s' AND userId = %s;", (guid, uid))
-			bool = cur.fetchone()[0]
-			if bool == t:
+			print(search)
+			guid = search.group(1)
+			cur.execute("SELECT complete FROM Listens where episodeGuid = '%s' AND userId = %s;" % (guid, uid))
+			# bool = cur.fetchone()[0]
+			if cur.fetchone() == None:
 				continue;
 			title = p[0]
 			xml = p[1]
