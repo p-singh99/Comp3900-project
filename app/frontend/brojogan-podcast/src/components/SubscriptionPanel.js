@@ -1,5 +1,5 @@
 import React, {useState, useEffect} from 'react';
-import {isLoggedIn, fetchAPI} from './../auth-functions';
+import {isLoggedIn, fetchAPI} from './../authFunctions';
 import {getPodcastFromXML} from './../rss';
 import EpisodeComponent from './EpisodeComponent';
 
