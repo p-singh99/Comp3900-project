@@ -80,4 +80,4 @@ create or replace view searchvector as
 
 -- ratings view
 create or replace view ratingsview as
-    select p.id as id, AVG(r.rating) from podcasts p, podcastratings r where p.id = r.podcastid group by p.id;
+    select id, AVG(rating) FROM podcasts left outer join podcastratings on (podcastid = id) group by id;

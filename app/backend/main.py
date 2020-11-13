@@ -326,13 +326,8 @@ class Subscriptions(Resource):
 	def get(self):
 		conn, cur = get_conn()
 		uid = get_user_id(cur)
-		cur.execute("""SELECT p.title, p.author, p.description, p.id r.rating
-		               FROM   podcasts p
-		               FULL OUTER JOIN subscriptions s
-		                       on s.podcastId = p.id 
-						JOIN ratingsview r on (p.id=r.id)
-		               WHERE  s.userID = %s;
-		            """, (uid,))
+		cur.execute("SELECT p.title, p.author, p.description, p.id, r.avg FROM podcasts p, ratingsview r, subscriptions s \
+			WHERE s.podcastId = p.id and s.userID = %s and r.id = p.id;", (uid,))
 		podcasts = cur.fetchall()
 		results = []
 		for p in podcasts:
@@ -342,7 +337,10 @@ class Subscriptions(Resource):
 			author = p[1]
 			description = p[2]
 			pID = p[3]
-			results.append({"subscribers" : subscribers, "title" : title, "author" : author, "description" : description, "pid" : pID, "rating": p[4]})
+			rating = p[4]
+			if rating:
+				rating = int(round(p[4],1))
+			results.append({"subscribers" : subscribers, "title" : title, "author" : author, "description" : description, "pid" : pID, "rating": rating})
 		close_conn(conn, cur)
 		return results, 200
 
