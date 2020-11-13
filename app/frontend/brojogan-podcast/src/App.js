@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState, createRef, useEffect} from 'react';
 import { Redirect, BrowserRouter as Router, Route, Switch } from 'react-router-dom';
 import './App.css';
 import Header from './components/Header';
@@ -19,8 +19,8 @@ import { isLoggedIn } from './auth-functions';
 
 function App() {
   // on app load, check if token valid using useeffect?
-
-  const [playing, setPlaying] = useState({
+  const ref = createRef();
+  let playing = {
     title: "No Podcast Playing",
     podcastTitle: "",
     src: "",
@@ -28,11 +28,11 @@ function App() {
     guid: "",
     podcastID: "",
     progress: 0.0
-  });
+  };
+
   function changePlaying(state) {
-    console.log("new state is");
-    console.log(state);
-    setPlaying(state);
+    playing = state;
+    ref.current.updateState(state);
   }
 
   const defaultComponents = () => (
@@ -57,7 +57,7 @@ function App() {
         </div>
       </div>
       <footer>
-        <Footer state={playing} setState={changePlaying} />
+        <Footer ref={ref} />
       </footer>
       {/* move <footer></footer> into Footer component? It breaks it for some reason, makes it overlap with content */}
     </body>

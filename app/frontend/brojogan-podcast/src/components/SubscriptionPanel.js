@@ -24,6 +24,7 @@ function SubscriptionPanel() {
                     image: res.image,
                     pid: item.pid}
                   );
+
       }
       const Rows = 
       setNewEpisodes(
