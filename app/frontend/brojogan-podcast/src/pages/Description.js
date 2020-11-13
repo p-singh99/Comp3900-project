@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet';
 // import { useParams } from 'react-router-dom';
 import ProgressBar from 'react-bootstrap/ProgressBar';
+import ReactStars from 'react-rating-stars-component';
 
 import { getPodcastFromXML } from '../rss';
 import Pages from './../components/Pages';
@@ -35,10 +36,13 @@ async function getRSS(id) {
   }*/
 }
 
+
 function Description(props) {
   const [episodes, setEpisodes] = useState(); // []
   const [podcast, setPodcast] = useState(null);
   const [subscribeBtn, setSubscribeBtn] = useState("Subscribe");
+  const [userRating, setUserRating] = useState(undefined);
+  // const [pendingRating, setPendingRating] = useState(false);
 
   const setPlaying = props.setPlaying;
 
@@ -71,7 +75,7 @@ function Description(props) {
         // TODO: need to figure out how to check for 401s etc, here.
         let promises = [];
         if (prefetchedPodcast) {
-          updatePodcastDetails((prefetchedPodcast.podcast ? prefetchedPodcast.podcast : {error: "Error loading podcast"}), prefetchedPodcast.subscription);
+          updatePodcastDetails((prefetchedPodcast.podcast ? prefetchedPodcast.podcast : { error: "Error loading podcast" }), prefetchedPodcast.subscription);
         } else {
           const xmlPromise = getRSS(id);
 
@@ -82,21 +86,24 @@ function Description(props) {
         if (isLoggedIn()) {
           let timesPromise = fetchAPI('/users/self/podcasts/' + id + '/time', 'get');
           promises.push(timesPromise);
+          let ratingPromise = fetchAPI(`/self/ratings/${id}`);
+          promises.push(ratingPromise);
         }
 
         console.log(promises);
         // have both promises running until we can resolve both
         Promise.all(promises)
-          .then(([first, second]) => {
+          .then(([first, second, third]) => {
             // this [xml, times] thing won't work now that both are optional
             // will fail if times is used but xml isn't, because times will get assigned as xml
             // hence the below bad code
             console.log("Promises all");
-            let times;
+            let times, rating;
             let podcast;
             if (prefetchedPodcast) {
               podcast = prefetchedPodcast.podcast;
               times = first;
+              rating = second;
             } else {
               const xml = first;
               console.log(xml);
@@ -109,10 +116,12 @@ function Description(props) {
               updatePodcastDetails(podcast, xml.subscription);
 
               times = second;
+              rating = third;
             }
 
             // we might not have times since its only if we're logged in
-            if (times) {
+            if (isLoggedIn()) {
+              // times
               console.log("times are: ");
               console.log(times);
               for (let time of times) {
@@ -125,6 +134,13 @@ function Description(props) {
                   console.error("episode with guid " + time.episodeGuid + " did not have a match in the fetched feed");
                 }
               }
+
+              // rating
+              setUserRating(rating.rating);
+              console.log("rating.rating:", rating.rating);
+              // user rating: undefined means not yet set
+              // null means the rating has been received and the answer is that the user hasn't set one
+              // number means the number is the rating
             }
 
             console.log("podcast:", podcast);
@@ -161,6 +177,18 @@ function Description(props) {
   //   return true;
   // }
 
+  async function ratingChanged(newRating) {
+    const podcastID = window.location.pathname.split("/").pop();
+    console.log("Rating changed:", newRating);
+    try {
+      await fetchAPI(`/self/ratings/${podcastID}`, 'put', { rating: newRating });
+    } catch (err) {
+      // show some kind of error
+      console.log(err);
+    }
+    // could cancel old requests when a new one is made but probably not woth it
+  }
+
   function getPodcastDescription(podcast) {
     let podcastDescription;
     try {
@@ -188,6 +216,32 @@ function Description(props) {
             <div id="podcast-name-author">
               <h1 id="podcast-name">{podcast.title}</h1>
               <h3 id="podcast-author">{podcast.author}</h3>
+              <div id="rating">
+                <ReactStars
+                  // This is literally just a picture of a star
+                  count={1}
+                  size={24}
+                  activeColor="#ffd700"
+                  isHalf={false}
+                  edit={false}
+                  value={1}
+                />
+                <div id="current-rating-num">1.4</div>
+                <div id="current-rating-after">/5</div>
+                {/* {console.log("!pendingRating:", !pendingRating)} */}
+                {userRating || userRating === null // don't render until user's rating has been retrieved, so don't have to force re-render later
+                  ?
+                  <ReactStars classNames="choose-rating"
+                    count={5}
+                    onChange={ratingChanged}
+                    size={24}
+                    activeColor="#ffd700"
+                    isHalf={false}
+                    value={userRating}
+                  // key={userRating} // force re-render once the current user rating has been fetched
+                  />
+                  : null}
+              </div>
               {isLoggedIn()
                 ?
                 <SubscribeBtn defaultState={subscribeBtn} podcastID={window.location.pathname.split("/").pop()} />
@@ -213,6 +267,7 @@ function Description(props) {
       </Helmet>
 
       {getPodcastHTML(podcast)}
+      {/* It seems like JSX returned gets updated based on state that is returned? */}
 
       <div id="episodes">
         <ul>
@@ -236,6 +291,71 @@ function toggleDescription(event) {
     // maybe want to do this fancier using js not css
   }
 }
+
+// function RatingsWrapper(props) {
+//   // const [body, setBody] = useState(null);
+
+//   useEffect(() => {
+//     console.log("Edit =", props.edit);
+//     ReactDOM.render(
+//       <ReactStars key={props.edit} classNames="choose-rating"
+//         count={props.count}
+//         onChange={props.onChange}
+//         size={props.size}
+//         activeColor={props.activeColor}
+//         isHalf={props.isHalf}
+//         value={props.value}
+//         edit={props.edit}
+//       />,
+//       document.getElementById("ratings-wrapper")
+//     )
+//   }, [props])
+
+//   return (
+//     <div id="ratings-wrapper"></div>
+//   )
+// }
+// {/* key is being used because I want to toggle the stars from editable to read-only
+//                 when there is a pending request
+//                 Actually I think maybe not, it's annoying that they become uneditable
+//                 I think users don't want to have to think about how requests take time to get to the server */}
+//                 {/* <RatingsWrapper
+//                   count={5}
+//                   onChange={ratingChanged}
+//                   size={24}
+//                   activeColor="#ffd700"
+//                   isHalf={false}
+//                   value={userRating}
+//                   edit={!pendingRating}
+//                 /> */}
+// edit={!pendingRating}
+// key={!pendingRating}
+
+/*
+async function ratingChanged(newRating) {
+    // if (pendingRating) {
+    //   console.log("Pending rating, don't send rating");
+    //   return;
+    // }
+    // setPendingRating(true);
+    // setUserRating(newRating);
+    // const tmpUserRating = userRating;
+    const podcastID = window.location.pathname.split("/").pop();
+    console.log("Rating changed:", newRating);
+    try {
+      await fetchAPI(`/self/ratings/${podcastID}`, 'put', { rating: newRating });
+      // `/self/ratings/{podcastID}`?
+    } catch (err) {
+      // show some kind of error
+      console.log(err);
+      // setUserRating(tmpUserRating);
+    }
+    // console.log("tmp user Rating:", tmpUserRating);
+    // setPendingRating(false);
+    // could cancel old requests when a new one is made but probably not woth it
+  }
+*/
+
 
 //------------------------------------------------------------------------------------
 

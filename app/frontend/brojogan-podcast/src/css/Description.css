@@ -151,3 +151,28 @@ margin-top: 20px;
   display: flex;
   /* width: 100%; */
 }
+
+#rating {
+  display: flex;
+  /* justify-items: center; */
+}
+
+#rating #current-rating-num {
+  padding-top: 6px; /* bad way to try to align with star image */
+  font-size: 20px;
+  font-weight: bold;
+}
+
+#rating #current-rating-after {
+  padding-top: 14px;
+  padding-left: 3px;
+  font-size: 13px;
+}
+
+#rating .choose-rating {
+  padding-left: 40px;
+}
+
+#rating .choose-rating:focus {
+  outline: none;
+}
