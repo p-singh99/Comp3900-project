@@ -1,0 +1,46 @@
+#episode-list-title {
+  margin-bottom: 30px;
+}
+
+#episode-list {
+  display: flex;
+  flex-direction: row;
+  gap: 15px;
+  background-color: #2E2B3F;
+  margin-bottom: 10px;
+  border-radius: 10px;
+  padding: 7px;
+  border: 1px dotted gray;
+}
+
+#episode-list-text {
+  height: auto;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  flex-wrap: wrap;
+}
+
+.episode-component-p {
+  margin: 0px;
+}
+
+#podcast-title {
+  color: #06C170;
+}
+
+#podcast-title a {
+  color: #06C170;
+}
+
+#episode-title a {
+  color: white;
+}
+/* a {
+  color: red;
+} */
+.episode-list-container {
+  height: 250px;
+  overflow-x: hidden;
+  overflow-y: auto;
+}

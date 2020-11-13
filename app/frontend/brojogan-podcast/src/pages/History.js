@@ -6,6 +6,8 @@ import ProgressBar from 'react-bootstrap/ProgressBar';
 import { fetchAPI } from './../authFunctions';
 import PagesFetch from './../components/PagesFetch';
 import { getPodcastFromXML } from './../rss';
+
+import { API_URL } from './../constants';
 import './../css/History.css';
 
 // this is used in multiple pages, should extract to other file
