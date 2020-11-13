@@ -354,9 +354,7 @@ class History(Resource):
 		#parser.add_argument('offset', type=int, required=False, location="args")
 		parser.add_argument('limit', type=int, required=False, location="args")
 		args = parser.parse_args()
-		limit = args['limit']
-		if args['limit'] is None:
-			limit = 12
+		limit = args['limit'] if args['limit'] is not None else 12
 		if limit <= 0 or id <= 0:
 			return {"error": "bad request"}, 400
 		offset = (id - 1)*limit 
@@ -366,18 +364,13 @@ class History(Resource):
 			cur.execute("SELECT p.id, p.xml, l.episodeguid, l.listenDate, l.timestamp FROM listens l, podcasts p where l.userid=%s and \
 			p.id = l.podcastid ORDER BY l.listenDate DESC" % (user_id))
 			total_pages = math.ceil( cur.rowcount / limit )
-			eps = cur.fetchmany(limit)
-			print(eps)
 		else:
 			cur.execute("SELECT p.id, p.xml, l.episodeguid, l.listenDate, l.timestamp FROM listens l, podcasts p where l.userid=%s and \
 				p.id = l.podcastid ORDER BY l.listenDate DESC LIMIT %s OFFSET %s " % (user_id, limit, offset))
-			eps = cur.fetchall()
+		eps = cur.fetchmany(limit)
 		jsoneps = [{"pid" : ep[0], "xml": ep[1], "episodeguid": ep[2], "listenDate": ep[3].timestamp(), "timestamp": ep[4]} for ep in eps]
 		close_conn(conn, cur)
-		if id == 1:
-			return {"history" : jsoneps, "numPages": total_pages}, 200
-		else:
-			return {"history" : jsoneps}, 200
+		return jsonify(history=jsoneps, numPages=total_pages if id == 1  else '', status=200)
 
 class Listens(Resource):
 	@token_required
@@ -465,25 +458,28 @@ class ManyListens(Resource):
 class Recommendations(Resource):
 	@token_required
 	def get(self):
-		#recs = set()
 		recs = []
+		# to remove duplicates
+		temp = []
 		limit = 10
 		conn, cur = get_conn()
 		user_id = get_user_id(cur)
 		# Finds the most recently listened to podcasts that are not subscribed to
-		cur.execute("select p.xml, p.id from podcasts p, listens l where p.id = l.podcastid and l.userid=%s and \
+		cur.execute("select p.xml, p.id, l.listendate from podcasts p, listens l where p.id = l.podcastid and l.userid=%s and \
 			p.id not in (select p.id from podcasts p, subscriptions s where s.userid=%s and s.podcastid=p.id) \
-				order by l.listendate DESC Limit %s;" % (user_id, user_id, limit))
+				group by p.id, l.listendate order by l.listendate DESC Limit %s;" % (user_id, user_id, limit))
 		results = cur.fetchall()
-		print(cur.rowcount)
 		for i in results:
 			if limit == 0:
 				close_conn(conn, cur)
 				return {"recommendations" : recs}
-			#cur.execute("select count(p.id) from podcasts p, subscriptions s where s.podcastid=%s and p.id=s.podcastid" % i[1])
-			# cur.execute("select count(*) from subscriptions where podcastid=%s", (i[1],))
-			recs.append({"xml": i[0], "id": i[1], "subs": 1})
+			if (any(i[1] in j for j in temp)):
+				continue
+			else:
+				temp.append((i[0], i[1], 1))
+			#recs.append({"xml": i[0], "id": i[1], "subs": 1})
 			limit -= 1
+		[recs.append({"xml": i[0], "id": i[1], "subs": 1}) for i in temp]
 		cur.execute("select query from searchqueries where userid=%s order by searchdate DESC limit 10" % user_id)
 		queries = cur.fetchall()
 		for query in queries:
@@ -496,37 +492,24 @@ class Recommendations(Resource):
 				p.id = pc.podcastid and pc.categoryid=c.id and c.id in (select distinct c.id from categories c, subscriptions s, podcastcategories pc \
 					where s.userId=%s and s.podcastid = pc.podcastid and pc.categoryid = c.id) and \
 						p.title not in (select p.title from podcasts p, subscriptions s where p.id = s.podcastid and \
-							s.userid=%s) group by p.xml, p.id order by count(p.xml) DESC LIMIT %s", (query[0],query[0], user_id, user_id, limit))
+							s.userid=%s) group by p.id order by count(p.id) DESC LIMIT %s", (query[0],query[0], user_id, user_id, limit))
 			results = cur.fetchall()
 			for i in results:
 				if limit == 0:
 					close_conn(conn, cur)
 					return {"recommendations" : recs}
-				#cur.execute("select count(p.id) from podcasts p, subscriptions s where s.podcastid=%s and p.id=s.podcastid" % i[1])
-				# cur.execute("select count(*) from subscriptions where podcastid=%s", (i[1],))
 				recs.append({"xml": i[0], "id": i[1], "subs": 1})
 				limit -= 1
-		cur.execute("select p.xml, p.id, count(p.id) from podcasts p, podcastcategories pc, categories c \
+		cur.execute("select distinct(p.xml), p.id, count(p.id) from podcasts p, podcastcategories pc, categories c \
 			where p.id=pc.podcastid and pc.categoryid=c.id and c.id in (select distinct c.id from categories c, subscriptions s, podcastcategories pc \
 				where s.userId=%s and s.podcastid = pc.podcastid and pc.categoryid = c.id) and \
 					p.title not in (select p.title from podcasts p, subscriptions s where p.id = s.podcastid and \
-						s.userid=%s) group by p.xml, p.id order by count(p.xml) DESC LIMIT %s;" % (user_id, user_id, limit))
+						s.userid=%s) group by p.xml, p.id order by count(p.id) DESC LIMIT %s;" % (user_id, user_id, limit))
 
 		results = cur.fetchall()
 		for i in results:
 			#cur.execute("select count(p.id) from podcasts p, subscriptions s where s.podcastid=%s and p.id=s.podcastid" % i[1])
 			recs.append({"xml": i[0], "id": i[1], "subs": 1})
-
-		# start merge stuff
-		# cur.execute("select count(*) from subscriptions where podcastid=%s", (i[1],))
-		# 	recs.append({"xml": i[0], "id": i[1], "subs": cur.fetchone()[0]})
-		# recs = recs[:10]
-		# #recsl = list(recs)
-		# #sorted(recsl,key=lambda x: x[1])
-		# #xml_list = [x[4] for x in recsl]
-		# #xml_list = xml_list[:10]
-		# # print(xml_list)
-		# end merge stuff
 
 		#recs = recs[:10]
 		close_conn(conn, cur)
