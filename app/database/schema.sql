@@ -45,7 +45,12 @@ CREATE TABLE PodcastCategories (
 
 CREATE TABLE Episodes (
     podcastId           integer not null,
-    guid                text unique not null,
+    guid                text not null,
+    created             timestamp not null,
+    title               text,
+    pubDate             text,
+    description         text,
+    duration            text,
     FOREIGN KEY (podcastId) references Podcasts (id),
     PRIMARY KEY (podcastId, guid)
 );
@@ -97,14 +102,15 @@ CREATE TABLE RejectedRecommendations (
     PRIMARY KEY (userId, podcastId)
 );
 
+CREATE TYPE notificationStatus AS ENUM ('unread', 'read', 'dismissed');
+
 CREATE TABLE Notifications (
     userId              integer not null,
     podcastId           integer not null,
     episodeGuid         text not null,
     epsiodeName         text not null,
-    created             timestamp,
-    opened              boolean,
     id                  serial unique not null,
+    status              notificationStatus not null,
     FOREIGN KEY (userId) references Users (id),
     FOREIGN KEY (podcastId, episodeGuid) references Episodes (podcastId, guid),
     PRIMARY KEY (userId, podcastId, episodeGuid)
