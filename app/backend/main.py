@@ -459,31 +459,35 @@ class Recommendations(Resource):
 	@token_required
 	def get(self):
 		recs = []
-		# to remove duplicates
 		temp = []
 		limit = 10
 		conn, cur = get_conn()
 		user_id = get_user_id(cur)
+
+		# cur.execute("select * from podcasts left join podcastsubscribers on podcasts.id=podcastsubscribers.id")
+		# print(f"total = {cur.rowcount}")
+		# 	print(str(i[1]) + " " + str(i[2]))
+
 		# Finds the most recently listened to podcasts that are not subscribed to
-		cur.execute("select p.xml, p.id, l.listendate from podcasts p, listens l where p.id = l.podcastid and l.userid=%s and \
+		cur.execute("select p.xml, p.id, p.count, l.listendate from podcastsubscribers p join listens l on (l.podcastid=p.id) where l.userid=%s and \
 			p.id not in (select p.id from podcasts p, subscriptions s where s.userid=%s and s.podcastid=p.id) \
-				group by p.id, l.listendate order by l.listendate DESC Limit %s;" % (user_id, user_id, limit))
+				 order by l.listendate DESC Limit %s;" % (user_id, user_id, limit))
 		results = cur.fetchall()
 		for i in results:
+			print(i[1])
 			if limit == 0:
 				close_conn(conn, cur)
+				[recs.append({"xml": i[0], "id": i[1], "subs": i[2]}) for i in temp]
 				return {"recommendations" : recs}
-			if (any(i[1] in j for j in temp)):
-				continue
-			else:
-				temp.append((i[0], i[1], 1))
+			if not (any(i[1] in j for j in temp)):
+				temp.append((i[0], i[1], i[2]))
+				limit -= 1
 			#recs.append({"xml": i[0], "id": i[1], "subs": 1})
-			limit -= 1
-		[recs.append({"xml": i[0], "id": i[1], "subs": 1}) for i in temp]
+		[recs.append({"xml": i[0], "id": i[1], "subs": i[2]}) for i in temp]
 		cur.execute("select query from searchqueries where userid=%s order by searchdate DESC limit 10" % user_id)
 		queries = cur.fetchall()
 		for query in queries:
-			cur.execute("select p.xml, p.id, count(p.id) from podcasts p, podcastcategories pc, categories c where p.title in (SELECT v.title\
+			cur.execute("select p.xml, p.id, p.count, count(p.id) from podcastsubscribers p, podcastcategories pc, categories c where p.id in (SELECT v.id\
 				FROM   searchvector v\
 				FULL OUTER JOIN Subscriptions s ON s.podcastId = v.id\
 				WHERE  v.vector @@ plainto_tsquery(%s)\
@@ -491,16 +495,17 @@ class Recommendations(Resource):
 			ORDER BY  ts_rank(v.vector, plainto_tsquery(%s)) desc LIMIT 10) and\
 				p.id = pc.podcastid and pc.categoryid=c.id and c.id in (select distinct c.id from categories c, subscriptions s, podcastcategories pc \
 					where s.userId=%s and s.podcastid = pc.podcastid and pc.categoryid = c.id) and \
-						p.title not in (select p.title from podcasts p, subscriptions s where p.id = s.podcastid and \
-							s.userid=%s) group by p.id order by count(p.id) DESC LIMIT %s", (query[0],query[0], user_id, user_id, limit))
+						p.id not in (select p.id from podcasts p, subscriptions s where p.id = s.podcastid and \
+							s.userid=%s) group by p.xml, p.id, p.count order by count(p.id) DESC LIMIT %s", (query[0],query[0], user_id, user_id, limit))
 			results = cur.fetchall()
 			for i in results:
+				print(i[1])
 				if limit == 0:
 					close_conn(conn, cur)
 					return {"recommendations" : recs}
-				recs.append({"xml": i[0], "id": i[1], "subs": 1})
+				recs.append({"xml": i[0], "id": i[1], "subs": i[2]})
 				limit -= 1
-		cur.execute("select distinct(p.xml), p.id, count(p.id) from podcasts p, podcastcategories pc, categories c \
+		cur.execute("select p.xml, p.id, count(p.id) from podcasts p, podcastcategories pc, categories c \
 			where p.id=pc.podcastid and pc.categoryid=c.id and c.id in (select distinct c.id from categories c, subscriptions s, podcastcategories pc \
 				where s.userId=%s and s.podcastid = pc.podcastid and pc.categoryid = c.id) and \
 					p.title not in (select p.title from podcasts p, subscriptions s where p.id = s.podcastid and \
@@ -508,9 +513,8 @@ class Recommendations(Resource):
 
 		results = cur.fetchall()
 		for i in results:
-			#cur.execute("select count(p.id) from podcasts p, subscriptions s where s.podcastid=%s and p.id=s.podcastid" % i[1])
 			recs.append({"xml": i[0], "id": i[1], "subs": 1})
-
+		[recs.append({"xml": i[0], "id": i[1], "subs": i[2]}) for i in temp]
 		#recs = recs[:10]
 		close_conn(conn, cur)
 		return {"recommendations" : recs}
@@ -551,12 +555,19 @@ class Ratings(Resource):
 		parser.add_argument('rating', type=int, required=True, choices=(1,2,3,4,5), help="Rating not valid", location="json")
 		args = parser.parse_args()
 		#check if already rated
-		cur.execute("SELECT * FROM podcastratings where id=%s" % user_id)
-		if cur.fetchone()[0]:
-			cur.execute("DELETE FROM podcastratings WHERE id=%s" % user_id)
+		cur.execute("SELECT rating FROM podcastratings where userid=%s" % user_id)
+		if cur.fetchone():
+			print("RUN")
+			cur.execute("DELETE FROM podcastratings WHERE userid=%s" % user_id)
+			conn.commit()
 		cur.execute("INSERT INTO podcastratings (userid, podcastid, rating) VALUES (%s, %s, %s)" % (user_id, id, args["rating"]))
 		conn.commit()
 		return {"success": "added"}
+	
+	# class BestPodcasts(Resource):
+	# 	def get():
+	# 		conn, cur = get_conn()
+	# 		cur.execute("SELECT * FROM podcastsubscribers")
 
 
 api.add_resource(Unprotected, "/unprotected")
