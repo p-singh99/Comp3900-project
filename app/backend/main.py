@@ -159,7 +159,7 @@ class Podcasts(Resource):
 		# todo: try catch this
 		search = request.args.get('search_query')
 		if search is None:
-			return {"data": "Bad Request"}, 400
+			return {"error": "Bad Request"}, 400
 		# todo: try catch this
 		conn, cur = get_conn()
 		# add search query to db
@@ -388,7 +388,7 @@ class Listens(Resource):
 			return {"error": "episodeGuid not included"}, 400
 
 		cur.execute("""
-			SELECT timestamp from listens where
+			SELECT timestamp, complete from listens where
 			podcastId=%s and episodeGuid=%s and userId=%s
 		""",
 		(podcastId, episodeGuid, user_id))
@@ -396,7 +396,7 @@ class Listens(Resource):
 		close_conn(conn, cur)
 		if res is None:
 			return {"error":"invalid podcastId or episodeGuid"}, 400
-		return {"time", int(res[0])}, 200
+		return {"time": int(res[0]), "complete": res[1]}, 200
 
 	@token_required
 	def put(self, podcastId):
@@ -404,7 +404,8 @@ class Listens(Resource):
 		user_id = get_user_id(cur)
 		timestamp = request.json.get("time")
 		episodeGuid = request.json.get("episodeGuid")
-		title = request.json.get("title")
+		duration = request.json.get("duration")
+		print("request.json is {}".format(request.json))
 		if timestamp is None:
 			close_conn(conn,cur)
 			return {"error": "timestamp not included"}, 400
@@ -414,21 +415,29 @@ class Listens(Resource):
 		if episodeGuid is None:
 			close_conn(conn,cur)
 			return {"error": "episodeGuid not included"}, 400
-
+		if duration is None:
+			close_conn(conn,cur)
+			return {"error": "duration is not included"}, 400
+		complete = timestamp >= 0.95 * duration
+		
+		try:
 		# we're touching episodes so insert new episode (if it doesn't already exist)
-		cur.execute("""
-			INSERT INTO episodes (podcastId, guid, title, created)
-			values (%s, %s, %s, now())
-			ON CONFLICT DO NOTHING
-		""",
-		(podcastId, episodeGuid, title))
+			cur.execute("""
+				update episodes 
+				set duration=%s
+				where guid=%s and podcastId=%s
+			""",
+			(duration, episodeGuid, podcastId))
+		except Exception as e:
+			close_conn(conn,cur)
+			return {"error": "Failed to update episodes, probably because the episode does not exist:\n{}".format(str(e))}, 400
 
 		cur.execute("""
-			INSERT INTO listens (userId, podcastId, episodeGuid, listenDate, timestamp)
-			values (%s, %s, %s, now(), %s)
-			ON CONFLICT ON CONSTRAINT listens_pkey DO UPDATE set listenDate=now(), timestamp=%s;
+			INSERT INTO listens (userId, podcastId, episodeGuid, listenDate, timestamp, complete)
+			values (%s, %s, %s, now(), %s, %s)
+			ON CONFLICT ON CONSTRAINT listens_pkey DO UPDATE set listenDate=now(), timestamp=%s, complete=%s;
 		""",
-		(user_id, podcastId, episodeGuid, timestamp, timestamp))
+		(user_id, podcastId, episodeGuid, timestamp, complete, timestamp, complete))
 		conn.commit()
 		close_conn(conn,cur)
 		return {}, 200
@@ -439,7 +448,7 @@ class ManyListens(Resource):
 		conn, cur = get_conn()
 		user_id = get_user_id(cur)
 		cur.execute("""
-			select episodeGuid, listenDate, timestamp
+			select episodeGuid, listenDate, timestamp, complete
 			from listens where userid=%s and podcastid=%s
 		""",
 		(user_id, podcastId))
@@ -448,7 +457,8 @@ class ManyListens(Resource):
 		jsonready = [{
 			"episodeGuid": x[0],
 			"listenDate": str(x[1]),
-			"timestamp": x[2]
+			"timestamp": x[2],
+			"complete": x[3]
 		} for x in res]
 		print("got res")
 		print(jsonready)

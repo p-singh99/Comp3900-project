@@ -10,12 +10,12 @@ import { fetchAPI, isLoggedIn } from './../auth-functions';
 // }
 
 function Footer({ state, setState }) {
-  function pingServer(progress) {
+  function pingServer(progress, duration) {
     if (isLoggedIn()) {
-      console.log("pinging " + progress + " to server episodeguid = " + state.guid + ", podcastid = " + state.podcastID);
+      console.log("pinging " + progress + "/" + duration + " to server episodeguid = " + state.guid + ", podcastid = " + state.podcastID);
       let uri = '/users/self/podcasts/'+state.podcastID+'/episodes/time';
-      console.log("sending to " + uri);
-      fetchAPI(uri, 'put', {'time': progress, 'episodeGuid': state.guid, 'title': state.title}).then(() => console.log("updated"))
+      let body = {'time': progress, 'episodeGuid': state.guid, 'duration': duration};
+      fetchAPI(uri, 'put', body).then(() => console.log("updated"))
     } else {
       console.log("not logged in");
     }
@@ -42,16 +42,16 @@ function Footer({ state, setState }) {
           src={state.src}
           currentTime={state.progress}
           listenInterval="30000" /*trigger onListen every 30 seconds*/
-          onPause={e=>pingServer(Math.floor(Number(e.target.currentTime)))}
-          onListen={e=>pingServer(Math.floor(Number(e.target.currentTime)))}
-          onSeeked={e=>pingServer(Math.floor(Number(e.target.currentTime)))}
+          onPause={e=>pingServer(Math.floor(Number(e.target.currentTime)), e.target.duration)}
+          onListen={e=>pingServer(Math.floor(Number(e.target.currentTime)), e.target.duration)}
+          onSeeked={e=>pingServer(Math.floor(Number(e.target.currentTime)), e.target.duration)}
           onCanPlay={e=>{
             if (! setPlayed) {
               setPlayed = true;
               console.log("can play!");
               e.target.currentTime=state.progress
             }
-            pingServer(Math.floor(Number(e.target.currentTime)));
+            pingServer(Math.floor(Number(e.target.currentTime)), e.target.duration);
           }}
         />
       </div>

@@ -127,7 +127,7 @@ def _update_rss(url, pool):
     cur.execute("""
         select guid from episodes
         where podcastId=%s
-    """, (podcastId))
+    """, (podcastId,))
     res = cur.fetchall()
     existingEpisodes = []
     if res:
