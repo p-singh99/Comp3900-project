@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Accordion } from 'react-bootstrap';
 import Card from 'react-bootstrap/Card';
+import ReactStars from 'react-rating-stars-component';
+
 import SubscribeBtn from './SubscribeBtn';
 import { getPodcastFromXML } from './../rss';
 import { fetchAPI } from './../authFunctions';
@@ -10,12 +12,15 @@ import './../css/Card.css';
 
 function SubCard({ details: podcast, context }) {
   const [podcastObj, setPodcastObj] = useState();
+  console.log("Podcast:", podcast);
 
   // note to self: when you do something like <Item props={state} />, when the state changes,
   // it doesn't make a new Item, it just changes the props
   // so you have to add a useEffect trigger on the props and setState to null while it's loading
   useEffect(() => {
     setPodcastObj(null);
+
+    // todo: so subscription endpoint returns title, author, description etc, we should use that?
 
     const controller = new AbortController();
     const setCard = async () => {
@@ -66,7 +71,7 @@ function SubCard({ details: podcast, context }) {
       <Card.Header className="card-header">
         <Accordion.Toggle className={'accordion-toggle'} as={Card.Header} variant="link" eventKey={podcast.pid}>
           <div className='card-header-div'>
-            <img src={(podcastObj && podcastObj.podcast) ? podcastObj.podcast.image : 'https://i.pinimg.com/originals/92/63/04/926304843ea8e8b9bc22c52c755ec34f.gif'} alt={`${podcast.title} icon`}/>
+            <img src={(podcastObj && podcastObj.podcast) ? podcastObj.podcast.image : 'https://i.pinimg.com/originals/92/63/04/926304843ea8e8b9bc22c52c755ec34f.gif'} alt={`${podcast.title} icon`} />
             {/* Random loading gif from google, totally dodge */}
             {/* change to use image returned with search results */}
             {/* <a className={'search-page-link'} href={"/podcast/" + podcast.pid}>
@@ -75,6 +80,25 @@ function SubCard({ details: podcast, context }) {
             <Link className={'search-page-link'} to={{ pathname: `/podcast/${podcast.pid}`, state: { podcastObj: podcastObj } }}>
               {podcast.title}
             </Link>
+            <div className="rating">
+              <ReactStars
+                // This is literally just a picture of a star
+                count={1}
+                size={24}
+                activeColor="#ffd700"
+                isHalf={false}
+                edit={false}
+                value={1}
+              />
+              {podcast.rating
+                ?
+                <React.Fragment>
+                  <div className="current-rating-num">{podcast.rating}</div>
+                  <div className="current-rating-after">/5</div>
+                </React.Fragment>
+                : <div className="no-ratings">No ratings</div>
+              }
+            </div>
             <p className='subs-count'>
               Subscribers:- {podcast.subscribers}
             </p>
@@ -89,7 +113,7 @@ function SubCard({ details: podcast, context }) {
             {/* It's extremely laggy showing all the episodes for massive (1000+ episode) podcasts*/}
             {(() => {
               if (podcastObj && podcastObj.podcast) {
-                console.log("recommended JSX:", podcastObj.podcast.episodes.slice(0,50));
+                console.log("recommended JSX:", podcastObj.podcast.episodes.slice(0, 50));
                 return (
                   podcastObj.podcast.episodes.slice(0, 30).map((episode, index) =>
                     <div>
