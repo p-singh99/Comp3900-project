@@ -326,10 +326,11 @@ class Subscriptions(Resource):
 	def get(self):
 		conn, cur = get_conn()
 		uid = get_user_id(cur)
-		cur.execute("""SELECT p.title, p.author, p.description, p.id
+		cur.execute("""SELECT p.title, p.author, p.description, p.id r.rating
 		               FROM   podcasts p
-		               FULL OUTER JOIN   subscriptions s
-		                       on s.podcastId = p.id
+		               FULL OUTER JOIN subscriptions s
+		                       on s.podcastId = p.id 
+						JOIN ratingsview r on (p.id=r.id)
 		               WHERE  s.userID = %s;
 		            """, (uid,))
 		podcasts = cur.fetchall()
@@ -539,14 +540,11 @@ class Notifications(Resource):
 class Ratings(Resource):
 	def get(self, id):
 		conn, cur = get_conn()
-		cur.execute("SELECT AVG(rating) FROM podcastratings WHERE podcastid=%s" % (str(id)))
+		user_id = get_user_id(cur)
+		cur.execute("SELECT rating FROM podcastratings WHERE podcastid=%s and userid=%s" % (id, user_id))
 		rating = cur.fetchone()
-		if rating[0]:
-			rating = str(round(rating[0],1))
-		else:
-			rating = "NA"
-		close_conn(conn,cur)
-		return {"rating": rating}
+		close_conn(conn, cur)
+		return {"rating": rating}, 200
 
 	def put(self,id):
 		conn, cur = get_conn()
@@ -557,17 +555,16 @@ class Ratings(Resource):
 		#check if already rated
 		cur.execute("SELECT rating FROM podcastratings where userid=%s" % user_id)
 		if cur.fetchone():
-			print("RUN")
-			cur.execute("DELETE FROM podcastratings WHERE userid=%s" % user_id)
-			conn.commit()
-		cur.execute("INSERT INTO podcastratings (userid, podcastid, rating) VALUES (%s, %s, %s)" % (user_id, id, args["rating"]))
+			cur.execute("UPDATE podcastratings SET rating=%s WHERE userid=%s and podcastid=%s" % (args["rating"], user_id, id))
+		else:
+			cur.execute("INSERT INTO podcastratings (userid, podcastid, rating) VALUES (%s, %s, %s)" % (user_id, id, args["rating"]))
 		conn.commit()
 		return {"success": "added"}
 	
-	# class BestPodcasts(Resource):
-	# 	def get():
-	# 		conn, cur = get_conn()
-	# 		cur.execute("SELECT * FROM podcastsubscribers")
+# class BestPodcasts(Resource):
+# 	def get():
+# 		conn, cur = get_conn()
+# 		cur.execute("SELECT * FROM podcastsubscribers")
 
 
 api.add_resource(Unprotected, "/unprotected")
@@ -583,7 +580,7 @@ api.add_resource(Subscriptions, "/subscriptions")
 api.add_resource(History, "/self/history/<int:id>")
 api.add_resource(Listens, "/users/self/podcasts/<int:podcastId>/episodes/time")
 api.add_resource(ManyListens, "/users/self/podcasts/<int:podcastId>/time")
-api.add_resource(Ratings, "/podcasts/<int:id>/rating")
+api.add_resource(Ratings, "self/ratings/<int:id>")
 
 if __name__ == '__main__':
 	app.run(debug=True, threaded=True)

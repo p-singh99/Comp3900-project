@@ -76,3 +76,8 @@ create or replace view searchvector as
         setweight(to_tsvector(coalesce(description)), 'C') as vector,
     podcasts.*
     from podcasts;
+
+
+-- ratings view
+create or replace view ratingsview as
+    select p.id as id, AVG(r.rating) from podcasts p, podcastratings r where p.id = r.podcastid group by p.id;
