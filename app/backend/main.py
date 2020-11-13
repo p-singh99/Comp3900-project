@@ -540,7 +540,12 @@ class Ratings(Resource):
 		conn, cur = get_conn()
 		user_id = get_user_id(cur)
 		cur.execute("SELECT rating FROM podcastratings WHERE podcastid=%s and userid=%s" % (id, user_id))
-		rating = cur.fetchone()
+		res = cur.fetchone()
+		print("rating:", res)
+		if res:
+			rating = res[0]
+		else:
+			rating = None
 		close_conn(conn, cur)
 		return {"rating": rating}, 200
 
@@ -551,7 +556,7 @@ class Ratings(Resource):
 		parser.add_argument('rating', type=int, required=True, choices=(1,2,3,4,5), help="Rating not valid", location="json")
 		args = parser.parse_args()
 		#check if already rated
-		cur.execute("SELECT rating FROM podcastratings where userid=%s" % user_id)
+		cur.execute("SELECT rating FROM podcastratings where userid=%s and podcastid=%s" % (user_id, id))
 		if cur.fetchone():
 			cur.execute("UPDATE podcastratings SET rating=%s WHERE userid=%s and podcastid=%s" % (args["rating"], user_id, id))
 		else:
