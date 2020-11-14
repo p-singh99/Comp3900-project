@@ -180,8 +180,19 @@ class Podcasts(Resource):
 				ORDER BY  ts_rank(v.vector, plainto_tsquery(%s)) desc;
 				""",
 				(search,search))
-
 		podcasts = cur.fetchall()
+		cur.execute("""SELECT p.id, p.title, p.author, p.description, ps.count
+		               FROM   podcasts p
+		               LEFT JOIN podcastcategories t
+		                      ON t.podcastid = p.id
+		               LEFT JOIN categories c
+		                      ON t.categoryid = c.id
+		               LEFT JOIN podcastsubscribers ps
+		                      ON ps.id = p.id
+		               WHERE     to_tsvector(c.name) @@ plainto_tsquery(%s);
+		            """,
+		            (search,))
+		categories = cur.fetchall()
 		results = []
 		for p in podcasts:
 			subscribers = p[0]
@@ -190,8 +201,14 @@ class Podcasts(Resource):
 			description = p[3]
 			pID = p[4]
 			results.append({"subscribers" : subscribers, "title" : title, "author" : author, "description" : description, "pid" : pID})
+		for c in categories:
+			if any(c[0] in sublist for sublist in results):
+				continue
+			results.append({"subscribers" : c[4], "title" : c[1], "author" : c[2], "description" : c[3], "pid" : c[0]})
 		close_conn(conn, cur)
 		return results, 200
+
+
 
 class Settings(Resource):
 	@token_required
