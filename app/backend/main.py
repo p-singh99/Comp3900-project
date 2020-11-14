@@ -93,11 +93,12 @@ class SubscriptionPanel(Resource):
 			# print(p[1])
 			search = re.search('<guid.*>(.*)</guid>', p[1])
 			print(search)
-			guid = search.group(1)
-			cur.execute("SELECT complete FROM Listens where episodeGuid = '%s' AND userId = %s;" % (guid, uid))
+			if search:
+				guid = search.group(1)
+				cur.execute("SELECT complete FROM Listens where episodeGuid = '%s' AND userId = %s;" % (guid, uid))
 			# bool = cur.fetchone()[0]
 			if cur.fetchone() == None:
-				continue;
+				continue
 			title = p[0]
 			xml = p[1]
 			pid = p[2]
@@ -153,6 +154,37 @@ class Users(Resource):
 		close_conn(conn, cur)
 		# return token
 		return {'token' : create_token(username), 'user': username}, 201
+
+	@token_required
+	def delete(self):
+		conn, cur = get_conn()
+		user_id = get_user_id(cur)
+		parser = reqparse.RequestParser(bundle_errors=True)
+		parser.add_argument('password', type=str, required=True, help="Need old password", location="json")
+		args = parser.parse_args()
+		cur.execute("SELECT hashedpassword FROM users WHERE id='%s'" % user_id)
+		old_pw = cur.fetchone()[0].strip()
+		if bcrypt.checkpw(args["password"].encode('UTF-8'), old_pw.encode('utf-8')):
+			# delete from users
+			cur.execute("DELETE FROM users WHERE id=%s" % user_id)
+			# delete all subscriptions
+			cur.execute("DELETE FROM subscriptions WHERE userId=%s" % user_id)
+			# delete podcast account
+			cur.execute("DELETE FROM podcastratings WHERE userId=%s" % user_id)
+			# delete episode ratings
+			cur.execute("DELETE FROM episoderatings WHERE userId=%s" % user_id)
+			# delete listens
+			cur.execute("DELETE FROM listens WHERE userId=%s" % user_id)
+			# delete seach queries
+			cur.execute("DELETE FROM searchqueries WHERE userId=%s" % user_id)
+			# delete rejected recommendations
+			cur.execute("DELETE FROM rejectedrecommendations WHERE userId=%s" % user_id)
+			conn.commit()
+			close_conn(conn,cur)
+			return {"data" : "account deleted"}, 200
+		else:
+			close_conn(conn,cur)
+			return {"error" : "wrong password"}, 400
 
 
 class Podcasts(Resource):
@@ -243,37 +275,6 @@ class Settings(Resource):
 		close_conn(conn,cur)
 		return {"error" : "wrong password"}, 400
 
-	@token_required
-	def delete(self):
-		conn, cur = get_conn()
-		user_id = get_user_id(cur)
-		parser = reqparse.RequestParser(bundle_errors=True)
-		parser.add_argument('password', type=str, required=True, help="Need old password", location="json")
-		args = parser.parse_args()
-		cur.execute("SELECT hashedpassword FROM users WHERE id='%s'" % user_id)
-		old_pw = cur.fetchone()[0].strip()
-		if bcrypt.checkpw(args["password"].encode('UTF-8'), old_pw.encode('utf-8')):
-			# delete from users
-			cur.execute("DELETE FROM users WHERE id=%s" % user_id)
-			# delete all subscriptions
-			cur.execute("DELETE FROM subscriptions WHERE userId=%s" % user_id)
-			# delete podcast account
-			cur.execute("DELETE FROM podcastratings WHERE userId=%s" % user_id)
-			# delete episode ratings
-			cur.execute("DELETE FROM episoderatings WHERE userId=%s" % user_id)
-			# delete listens
-			cur.execute("DELETE FROM listens WHERE userId=%s" % user_id)
-			# delete seach queries
-			cur.execute("DELETE FROM searchqueries WHERE userId=%s" % user_id)
-			# delete rejected recommendations
-			cur.execute("DELETE FROM rejectedrecommendations WHERE userId=%s" % user_id)
-			conn.commit()
-			close_conn(conn,cur)
-			return {"data" : "account deleted"}, 200
-		else:
-			close_conn(conn,cur)
-			return {"error" : "wrong password"}, 400
-
 
 class Podcast(Resource):
 	def get(self, id):
@@ -295,9 +296,10 @@ class Podcast(Resource):
 		subscribers = 0
 		if res is not None:
 			subscribers = res[0]
-
+		cur.execute("SELECT rating from ratingsview where id=%s" % id)
+		rating = cur.fetchone()[0] if cur.fetchone() else None
 		close_conn(conn,cur)
-		return {"xml": xml, "id": id, "subscription": flag, "subscribers": subscribers}, 200
+		return {"xml": xml, "id": id, "subscription": flag, "subscribers": subscribers, "rating": rating}, 200
 
 
 	@token_required
@@ -359,6 +361,7 @@ class History(Resource):
 		parser.add_argument('limit', type=int, required=False, location="args")
 		args = parser.parse_args()
 		limit = args['limit'] if args['limit'] is not None else 12
+		print(limit)
 		if limit <= 0 or id <= 0:
 			return {"error": "bad request"}, 400
 		offset = (id - 1)*limit 
@@ -372,6 +375,8 @@ class History(Resource):
 			cur.execute("SELECT p.id, p.xml, l.episodeguid, l.listenDate, l.timestamp FROM listens l, podcasts p where l.userid=%s and \
 				p.id = l.podcastid ORDER BY l.listenDate DESC LIMIT %s OFFSET %s " % (user_id, limit, offset))
 		eps = cur.fetchmany(limit)
+		print(eps)
+		# change to episodes
 		jsoneps = [{"pid" : ep[0], "xml": ep[1], "episodeguid": ep[2], "listenDate": ep[3].timestamp(), "timestamp": ep[4]} for ep in eps]
 		close_conn(conn, cur)
 		return jsonify(history=jsoneps, numPages=total_pages if id == 1  else '', status=200)
@@ -462,66 +467,75 @@ class ManyListens(Resource):
 class Recommendations(Resource):
 	@token_required
 	def get(self):
-		recs = []
-		temp = []
-		limit = 10
 		conn, cur = get_conn()
 		user_id = get_user_id(cur)
-
-		# cur.execute("select * from podcasts left join podcastsubscribers on podcasts.id=podcastsubscribers.id")
-		# print(f"total = {cur.rowcount}")
-		# 	print(str(i[1]) + " " + str(i[2]))
-
-		# Finds the most recently listened to podcasts that are not subscribed to
-		cur.execute("select p.xml, p.id, p.count, l.listendate from podcastsubscribers p join listens l on (l.podcastid=p.id) where l.userid=%s and \
-			p.id not in (select p.id from podcasts p, subscriptions s where s.userid=%s and s.podcastid=p.id) \
-				 order by l.listendate DESC Limit %s;" % (user_id, user_id, limit))
-		results = cur.fetchall()
-		for i in results:
-			print(i[1])
-			if limit == 0:
-				close_conn(conn, cur)
-				[recs.append({"xml": i[0], "id": i[1], "subs": i[2]}) for i in temp]
-				return {"recommendations" : recs}
-			if not (any(i[1] in j for j in temp)):
-				temp.append((i[0], i[1], i[2]))
-				limit -= 1
-			#recs.append({"xml": i[0], "id": i[1], "subs": 1})
-		[recs.append({"xml": i[0], "id": i[1], "subs": i[2]}) for i in temp]
-		cur.execute("select query from searchqueries where userid=%s order by searchdate DESC limit 10" % user_id)
-		queries = cur.fetchall()
-		for query in queries:
-			cur.execute("select p.xml, p.id, p.count, count(p.id) from podcastsubscribers p, podcastcategories pc, categories c where p.id in (SELECT v.id\
-				FROM   searchvector v\
-				FULL OUTER JOIN Subscriptions s ON s.podcastId = v.id\
-				WHERE  v.vector @@ plainto_tsquery(%s)\
-				GROUP BY  (s.userid, v.title, v.author, v.description, v.id, v.vector)\
-			ORDER BY  ts_rank(v.vector, plainto_tsquery(%s)) desc LIMIT 10) and\
-				p.id = pc.podcastid and pc.categoryid=c.id and c.id in (select distinct c.id from categories c, subscriptions s, podcastcategories pc \
-					where s.userId=%s and s.podcastid = pc.podcastid and pc.categoryid = c.id) and \
-						p.id not in (select p.id from podcasts p, subscriptions s where p.id = s.podcastid and \
-							s.userid=%s) group by p.xml, p.id, p.count order by count(p.id) DESC LIMIT %s", (query[0],query[0], user_id, user_id, limit))
-			results = cur.fetchall()
-			for i in results:
-				print(i[1])
-				if limit == 0:
-					close_conn(conn, cur)
-					return {"recommendations" : recs}
-				recs.append({"xml": i[0], "id": i[1], "subs": i[2]})
-				limit -= 1
-		cur.execute("select p.xml, p.id, count(p.id) from podcasts p, podcastcategories pc, categories c \
-			where p.id=pc.podcastid and pc.categoryid=c.id and c.id in (select distinct c.id from categories c, subscriptions s, podcastcategories pc \
-				where s.userId=%s and s.podcastid = pc.podcastid and pc.categoryid = c.id) and \
-					p.title not in (select p.title from podcasts p, subscriptions s where p.id = s.podcastid and \
-						s.userid=%s) group by p.xml, p.id order by count(p.id) DESC LIMIT %s;" % (user_id, user_id, limit))
-
-		results = cur.fetchall()
-		for i in results:
-			recs.append({"xml": i[0], "id": i[1], "subs": 1})
-		[recs.append({"xml": i[0], "id": i[1], "subs": i[2]}) for i in temp]
-		#recs = recs[:10]
-		close_conn(conn, cur)
+		recs = []
+		cur.execute("select distinct * from recommendations(%s)" % user_id)
+		[recs.append({"xml": i[0], "id": i[1], "subs": i[2]}) for i in cur.fetchall()]
+		close_conn(conn,cur)
 		return {"recommendations" : recs}
+
+	# def get(self):
+	# 	recs = []
+	# 	temp = []
+	# 	limit = 10
+	# 	conn, cur = get_conn()
+	# 	user_id = get_user_id(cur)
+
+	# 	# cur.execute("select * from podcasts left join podcastsubscribers on podcasts.id=podcastsubscribers.id")
+	# 	# print(f"total = {cur.rowcount}")
+	# 	# 	print(str(i[1]) + " " + str(i[2]))
+
+	# 	# Finds the most recently listened to podcasts that are not subscribed to
+	# 	cur.execute("select p.xml, p.id, p.count, l.listendate from podcastsubscribers p join listens l on (l.podcastid=p.id) where l.userid=%s and \
+	# 		p.id not in (select p.id from podcasts p, subscriptions s where s.userid=%s and s.podcastid=p.id) \
+	# 			 order by l.listendate DESC Limit %s;" % (user_id, user_id, limit))
+	# 	results = cur.fetchall()
+	# 	for i in results:
+	# 		print(i[1])
+	# 		if limit == 0:
+	# 			close_conn(conn, cur)
+	# 			[recs.append({"xml": i[0], "id": i[1], "subs": i[2]}) for i in temp]
+	# 			return {"recommendations" : recs}
+	# 		if not (any(i[1] in j for j in temp)):
+	# 			temp.append((i[0], i[1], i[2]))
+	# 			limit -= 1
+	# 		#recs.append({"xml": i[0], "id": i[1], "subs": 1})
+	# 	[recs.append({"xml": i[0], "id": i[1], "subs": i[2]}) for i in temp]
+	# 	cur.execute("select query from searchqueries where userid=%s order by searchdate DESC limit 10" % user_id)
+	# 	queries = cur.fetchall()
+	# 	for query in queries:
+	# 		cur.execute("select p.xml, p.id, p.count, count(p.id) from podcastsubscribers p, podcastcategories pc, categories c where p.id in (SELECT v.id\
+	# 			FROM   searchvector v\
+	# 			FULL OUTER JOIN Subscriptions s ON s.podcastId = v.id\
+	# 			WHERE  v.vector @@ plainto_tsquery(%s)\
+	# 			GROUP BY  (s.userid, v.title, v.author, v.description, v.id, v.vector)\
+	# 		ORDER BY  ts_rank(v.vector, plainto_tsquery(%s)) desc LIMIT 10) and\
+	# 			p.id = pc.podcastid and pc.categoryid=c.id and c.id in (select distinct c.id from categories c, subscriptions s, podcastcategories pc \
+	# 				where s.userId=%s and s.podcastid = pc.podcastid and pc.categoryid = c.id) and \
+	# 					p.id not in (select p.id from podcasts p, subscriptions s where p.id = s.podcastid and \
+	# 						s.userid=%s) group by p.xml, p.id, p.count order by count(p.id) DESC LIMIT %s", (query[0],query[0], user_id, user_id, limit))
+	# 		results = cur.fetchall()
+	# 		for i in results:
+	# 			print(i[1])
+	# 			if limit == 0:
+	# 				close_conn(conn, cur)
+	# 				return {"recommendations" : recs}
+	# 			recs.append({"xml": i[0], "id": i[1], "subs": i[2]})
+	# 			limit -= 1
+	# 	cur.execute("select p.xml, p.id, count(p.id) from podcasts p, podcastcategories pc, categories c \
+	# 		where p.id=pc.podcastid and pc.categoryid=c.id and c.id in (select distinct c.id from categories c, subscriptions s, podcastcategories pc \
+	# 			where s.userId=%s and s.podcastid = pc.podcastid and pc.categoryid = c.id) and \
+	# 				p.title not in (select p.title from podcasts p, subscriptions s where p.id = s.podcastid and \
+	# 					s.userid=%s) group by p.xml, p.id order by count(p.id) DESC LIMIT %s;" % (user_id, user_id, limit))
+
+	# 	results = cur.fetchall()
+	# 	for i in results:
+	# 		recs.append({"xml": i[0], "id": i[1], "subs": 1})
+	# 	[recs.append({"xml": i[0], "id": i[1], "subs": i[2]}) for i in temp]
+	# 	#recs = recs[:10]
+	# 	close_conn(conn, cur)
+	# 	return {"recommendations" : recs}
 
 class RejectRecommendations(Resource):
 	@token_required
@@ -545,12 +559,7 @@ class Ratings(Resource):
 		conn, cur = get_conn()
 		user_id = get_user_id(cur)
 		cur.execute("SELECT rating FROM podcastratings WHERE podcastid=%s and userid=%s" % (id, user_id))
-		res = cur.fetchone()
-		print("rating:", res)
-		if res:
-			rating = res[0]
-		else:
-			rating = None
+		rating = cur.fetchone()[0] if cur.fetchone() else None
 		close_conn(conn, cur)
 		return {"rating": rating}, 200
 
@@ -569,26 +578,31 @@ class Ratings(Resource):
 		conn.commit()
 		return {"success": "added"}
 	
-# class BestPodcasts(Resource):
-# 	def get():
-# 		conn, cur = get_conn()
-# 		cur.execute("SELECT * FROM podcastsubscribers")
-
+class BestPodcasts(Resource):
+	def get(self):
+		conn, cur = get_conn()
+		cur.execute("SELECT * FROM podcastsubscribers ORDER BY count DESC Limit 10")
+		top_subbed = cur.fetchall()
+		cur.execute("SELECT * FROM ratingsview ORDER BY rating DESC Limit 10")
+		top_rated = cur.fetchall()
+		close_conn(conn,cur)
+		return {"topSubbed": top_subbed, "topRated": top_rated}, 200
 
 api.add_resource(Unprotected, "/unprotected")
 api.add_resource(Protected, "/protected")
-api.add_resource(SubscriptionPanel, "/home")
+api.add_resource(SubscriptionPanel, "/self/subscription-panel")
 api.add_resource(Login, "/login")
 api.add_resource(Users, "/users")
-api.add_resource(Settings, "/users/self/settings")
+api.add_resource(Settings, "/self/settings")
 api.add_resource(Podcasts, "/podcasts")
 api.add_resource(Podcast, "/podcasts/<int:id>")
 api.add_resource(Recommendations, "/self/recommendations")
 api.add_resource(Subscriptions, "/subscriptions")
 api.add_resource(History, "/self/history/<int:id>")
-api.add_resource(Listens, "/users/self/podcasts/<int:podcastId>/episodes/time")
-api.add_resource(ManyListens, "/users/self/podcasts/<int:podcastId>/time")
+api.add_resource(Listens, "/self/podcasts/<int:podcastId>/episodes/time")
+api.add_resource(ManyListens, "/self/podcasts/<int:podcastId>/time")
 api.add_resource(Ratings, "/self/ratings/<int:id>")
+api.add_resource(BestPodcasts, "/toppodcasts")
 
 if __name__ == '__main__':
 	app.run(debug=True, threaded=True)

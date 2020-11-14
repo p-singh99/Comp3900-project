@@ -19,7 +19,7 @@ function handleDelete(event) {
   }
 
   let body = { "password": password };
-  fetchAPI('/users/self/settings', 'delete', body)
+  fetchAPI('/self/settings', 'delete', body)
     .then(() => {
       alert("Success. Account deleted.");
       logoutHandler();
@@ -76,7 +76,7 @@ function Settings() {
       data.newemail = email.value ? email.value : null;
       setError("...");
       // confirmation popup?
-      fetchAPI('/users/self/settings', 'put', data)
+      fetchAPI('/self/settings', 'put', data)
         .then(() => {
           displayMessage("Success");
           if (email.value) {
@@ -94,7 +94,7 @@ function Settings() {
     document.getElementById("new-email-input").value = "Loading...";
     const fetchEmail = async () => {
       try {
-        const data = await fetchAPI('/users/self/settings');
+        const data = await fetchAPI('/self/settings');
         if (data.email) {
           setCurrentEmail(data.email);
           document.getElementById("new-email-input").value = data.email;

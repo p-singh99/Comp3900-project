@@ -10,7 +10,7 @@ function SubscriptionPanel() {
 
   const loadEpisodes = () => {
     setNewEpisodes('Loading');
-    let results = fetchAPI('/home', 'get', null);
+    let results = fetchAPI('/self/subscription-panel', 'get', null);
     results.then(items => {
       console.log(`Result is: ${JSON.stringify(items)}`);
       for (let item of items) {
