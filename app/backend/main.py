@@ -202,8 +202,7 @@ class Podcasts(Resource):
 			pID = p[4]
 			results.append({"subscribers" : subscribers, "title" : title, "author" : author, "description" : description, "pid" : pID})
 		for c in categories:
-			if any(c[0] in sublist for sublist in results):
-				continue
+			if !any(c[0] in sublist for sublist in results):
 			results.append({"subscribers" : c[4], "title" : c[1], "author" : c[2], "description" : c[3], "pid" : c[0]})
 		close_conn(conn, cur)
 		return results, 200
