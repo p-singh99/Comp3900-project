@@ -76,7 +76,7 @@ function PagesFetch({ Item, fetchItems, context }) {
       pageNum = parseInt(event.target.text, 10);
     }
     if (pageNum) {
-      setPageState({...pageState, pageChanging: true})
+      setPageState({ ...pageState, pageChanging: true })
       getPage(pageNum);
       startRef.current.scrollIntoView({ behavior: 'smooth' });
       // this only works sometimes in Firefox...
@@ -131,13 +131,15 @@ function PagesFetch({ Item, fetchItems, context }) {
         : null
       }
 
-      {pageState && !pageState.pageChanging
+      {pageState && !pageState.pageChanging && pageState.lastPage > 0
         ? pageState.pages[pageState.pageNum].map(item => {
           return <Item details={item} context={context} />
         })
-        : <h1>Loading...</h1>}
+        : (pageState && !pageState.pageChanging && pageState.lastPage === 0
+          ? <h1>You have no history</h1>
+          : <h1>Loading...</h1>)}
 
-      {pageState
+      {pageState && pageState.lastPage > 0
         ? pagination(pageState.pageNum, pageState.lastPage, pageChanged)
         : null}
     </React.Fragment>
