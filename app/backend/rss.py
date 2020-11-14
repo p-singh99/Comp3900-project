@@ -149,20 +149,20 @@ def _update_rss(url, pool):
             duration = x.get("itunes:duration")
             pubdate = x.get("pubDate")
             if guid not in existingEpisodes:
-                episodes.append((podcastId, title, guid, description, duration, pubdate))
+                episodes.append((podcastId, title, guid, description, duration, pubdate, str(datetime.datetime.utcnow())))
     except Exception as e:
         return False, "title or guid missing from one or more episodes: {}".format(str(e))
     conn = pool.getconn()
     cur = conn.cursor()
     execute_values(cur, """
-    insert into episodes (podcastid, title, guid, description, duration, pubdate)
+    insert into episodes (podcastid, title, guid, description, duration, pubdate, created)
     values %s
-    on conflict (guid) do nothing
+    on conflict (podcastId, guid) do nothing
     """, episodes)
-    cur.execute("""
-    update episodes set created=now() at time zone 'utc'
-    where podcastid=%s and created is null
-    """, (podcastId,))
+    #cur.execute("""
+    #update episodes set created=now() at time zone 'utc'
+    #where podcastid=%s and created is null
+    #""", (podcastId,))
     conn.commit()
 
     # now that the episodes are inserted, we must add the notifications
@@ -181,15 +181,13 @@ def _update_rss(url, pool):
             notifications.append(
                 (podcastId, x[2], s[0], 'unread')
             )
-    
 
-    # ignore notifications for now
-    #execute_values(cur,"""
-    #insert into notifications (podcastid, episodeguid, userid, status)
-    #values %s
-    #on conflict (podcastid, episodeguid, userid) do nothing
-    #""", notifications)
-    #conn.commit()
+    execute_values(cur,"""
+    insert into notifications (podcastid, episodeguid, userid, status)
+    values %s
+    on conflict (podcastid, episodeguid, userid) do nothing
+    """, notifications)
+    conn.commit()
     cur.close()
     pool.putconn(conn)
     return True, "inserted episodes and notifications"

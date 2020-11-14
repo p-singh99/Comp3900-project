@@ -4,14 +4,12 @@ import time
 
 conn = pool.getconn()
 cur = conn.cursor()
-cur.execute("select id from podcasts")
+cur.execute("select id from podcasts where id not in (select podcastId from episodes)")
 podcastIds = [x[0] for x in cur.fetchall()]
-cur.execute("select count(*) from podcasts")
-total = cur.fetchone()[0]
-cur.close()
+total = len(podcastIds)
 pool.putconn(conn)
 
 for i, podcastId in enumerate(podcastIds):
     r = requests.get("http://localhost:5000/podcasts/{}".format(podcastId))
     print("{}/{}: {}".format(i, total, podcastId))
-    time.sleep(1/5)
+    time.sleep(1/3)
