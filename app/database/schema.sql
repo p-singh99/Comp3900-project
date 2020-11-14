@@ -109,7 +109,6 @@ CREATE TABLE Notifications (
     userId              integer not null,
     podcastId           integer not null,
     episodeGuid         text not null,
-    epsiodeName         text not null,
     id                  serial unique not null,
     status              notificationStatus not null,
     FOREIGN KEY (userId) references Users (id),

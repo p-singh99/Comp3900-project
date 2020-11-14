@@ -14,8 +14,7 @@ import Recommended from './pages/Recommended';
 import Subscriptions from './pages/Subscriptions';
 import About from './pages/About';
 import Settings from './pages/Settings'
-import { isLoggedIn } from './auth-functions';
-
+import { fetchAPI, isLoggedIn } from './auth-functions';
 
 function App() {
   // on app load, check if token valid using useeffect?
@@ -34,6 +33,7 @@ function App() {
     console.log(state);
     setPlaying(state);
   }
+
 
   const defaultComponents = () => (
 

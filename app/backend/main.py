@@ -51,7 +51,7 @@ def get_user_id(cur):
 	return None
 
 def create_token(username):
-	token = jwt.encode({'user' : username, 'exp' : datetime.datetime.utcnow() + datetime.timedelta(minutes=60)}, app.config['SECRET_KEY'])
+	token = jwt.encode({'user' : username, 'exp' : datetime.datetime.utcnow() + datetime.timedelta(hours=24)}, app.config['SECRET_KEY'])
 	return token.decode('UTF-8')
 
 def token_required(f):
@@ -521,11 +521,27 @@ class Notifications(Resource):
 		conn, cur = get_conn()
 		user_id=get_user_id(cur)
 		cur.execute("""
+		select p.rssfeed from
+		subscriptions s
+		join podcasts p on s.podcastId=p.id
+		where s.userId = %s
+		""", (user_id,))
+		results = cur.fetchall()
+		subscribedPodcasts = []
+		if results:
+			subscribedPodcasts = [x[0] for x in results]
+		for sp in subscribedPodcasts:
+			thread = threading.Thread(target=update_rss, args=(sp, conn_pool), daemon=True)
+			thread.start()
+
+		cur.execute("""
 		select p.title, p.id, e.title, e.created, e.guid, u.status, u.id from
 		notifications u
 		join episodes e on u.episodeguid=e.guid
 		join podcasts p on e.podcastid=p.id
 		where u.userid=%s
+		and (u.status='read' or u.status='unread')
+		order by e.created desc
 		""", (user_id,))
 		results = cur.fetchall()
 		close_conn(conn,cur)
@@ -551,15 +567,17 @@ class Notification(Resource):
 		conn,cur = get_conn()
 		user_id=get_user_id(cur)
 		cur.execute("""
-		delete from notifications
+		update notifications
+		set status='dismissed'
 		where id=%s and userId=%s
 		returning id
-		""", (notificationId, userId))
+		""", (notificationId, user_id))
 		results = cur.fetchall()
 		if len(results) > 1:
 			conn.rollback()
 			close_conn(conn,cur)
 			return {"data": "unexpectedly deleted more than 1 notification. rolling back"}, 500
+		conn.commit()
 		close_conn(conn,cur)
 		if len(results) == 0:
 			return {"data": "No notification associated with id {} and userId {}".format(notificationId, user_id)}, 404
@@ -568,23 +586,24 @@ class Notification(Resource):
 
 	@token_required
 	def put(self, notificationId):
-		opened = request.status.get("opened")
-		if opened is None:
-			return {"data": "must include opened field"}, 400
-		if not isinstance(opened, bool):
-			return {"data": "opened must be a boolean"}, 400
+		status = request.json.get("status")
+		if status is None:
+			return {"data": "must include status field"}, 400
+		if not isinstance(status, str) and status not in ['read', 'unread', 'dismissed']:
+			return {"data": "status must be one of read, undread, or dismissed"}, 400
 		conn, cur = get_conn()
 		user_id = get_user_id(cur)
 		cur.execute("""
 		update Notifications set status=%s
 		where id=%s and userid=%s
 		returning id
-		""", (opened, notificationId, userId))
+		""", (status, notificationId, user_id))
 		results = cur.fetchall()
 		if len(results) > 1:
 			conn.rollback()
 			close_conn(conn,cur)
 			return {"data": "unexpectedly modified more than 1 notification. rolling back"}, 500
+		conn.commit()
 		close_conn(conn,cur)
 		if len(results) == 0:
 			return {"data": "No notification associated with id {} and userId {}".format(notificationId, user_id)}, 404

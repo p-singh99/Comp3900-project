@@ -3,10 +3,18 @@ import xmltodict
 import socket
 import requests
 from psycopg2.extras import execute_values
+from threading import BoundedSemaphore, Lock
 
 
 # spend no more than 10 seconds trying to fetch an rss feed
 socket.setdefaulttimeout(10)
+
+sem = BoundedSemaphore(value=10)
+# using a dict of locks we can have only 1 thread 
+# updating each podcast at a time, so future podcasts
+# will fail
+dictLock = Lock()
+urlLocks = {}
 
 def fetch_xml(url):
     try:
@@ -18,9 +26,32 @@ def fetch_xml(url):
 
 
 def update_rss(url, pool):
-    print("entering update rss for {}".format(url))
-    updated, msg = _update_rss(url,pool)
-    print("exiting update rss with. {} update: {}".format("did" if updated else "did not", msg))
+    # grab the dict lock, then check to see if a lock
+    # for the url exists. if it does, acquire it
+    # then release the dict lock
+    # Do this before entering the semaphore so
+    # that waiting on the dict lock/url lock 
+    # wont waste space in the semaphore
+    dictLock.acquire()
+    if urlLocks.get(url):
+        urlLocks[url].acquire()
+    else:
+        urlLocks[url] = Lock()
+        urlLocks[url].acquire()
+    dictLock.release()
+
+    sem.acquire()
+    try:
+        print("entering update rss for {}".format(url))
+        
+        updated, msg = _update_rss(url,pool)
+        print("exiting update rss {} with. {} update: {}".format(url, "did" if updated else "did not", msg))
+    except Exception as e:
+        print("an uncaught error occured in _update_rss: for {}".format(url))
+        print(e)
+    finally:
+        sem.release()
+        urlLocks[url].release()
 
 
 # code to fetch an rss feed and read it into the database

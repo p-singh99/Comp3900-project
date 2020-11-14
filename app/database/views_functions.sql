@@ -11,6 +11,13 @@ select podcasts.xml, podcasts.id, count(subscriptions.podcastid)
 from podcasts left outer join subscriptions on id=podcastid
 group by podcasts.xml, podcasts.id, subscriptions.podcastid;
 
+-- notifications details view
+create or replace view notificationDetails as
+select n.userId, n.podcastId, n.episodeGuid, e.title as episodeTitle, p.title as podcastTitle, n.id
+from notifications n
+join podcasts p on n.podcastId=p.id
+join episodes e on n.episodeGuid=e.guid;
+
 -- HELPER FUNCTIONS --
 
 create or replace function subscribed_podcasts_for_user(_userId integer)
