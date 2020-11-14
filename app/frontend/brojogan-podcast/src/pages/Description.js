@@ -84,7 +84,7 @@ function Description(props) {
 
         // if we're logged in we'll get the listened data for this podcast
         if (isLoggedIn()) {
-          let timesPromise = fetchAPI('/users/self/podcasts/' + id + '/time', 'get');
+          let timesPromise = fetchAPI('/self/podcasts/' + id + '/time', 'get');
           promises.push(timesPromise);
           let ratingPromise = fetchAPI(`/self/ratings/${id}`);
           promises.push(ratingPromise);

@@ -89,7 +89,7 @@ export default class Footer extends React.Component {
   pingServer(progress) {
     if (isLoggedIn()) {
       console.log("pinging " + progress + " to server episodeguid = " + this.state.guid + ", podcastid = " + this.state.podcastID);
-      let uri = '/users/self/podcasts/'+ this.state.podcastID+'/episodes/time';
+      let uri = '/self/podcasts/'+ this.state.podcastID+'/episodes/time';
       console.log("sending to " + uri);
       fetchAPI(uri, 'put', {'time': progress, 'episodeGuid': this.state.guid}).then(() => console.log("updated"))
     } else {
