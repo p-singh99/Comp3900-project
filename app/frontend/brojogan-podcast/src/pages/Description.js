@@ -105,15 +105,16 @@ function Description(props) {
               times = first;
               rating = second;
             } else {
-              const xml = first;
-              console.log(xml);
-              if (xml.xml) {
-                podcast = getPodcastFromXML(xml.xml);
+              const podcastDetails = first;
+              console.log(podcastDetails);
+              if (podcastDetails.xml) {
+                podcast = getPodcastFromXML(podcastDetails.xml);
+                podcast.rating = podcastDetails.rating;
                 console.log("Parsed podcast:", podcast);
               } else {
                 podcast = { error: "Error loading podcast" };
               }
-              updatePodcastDetails(podcast, xml.subscription);
+              updatePodcastDetails(podcast, podcastDetails.subscription);
 
               times = second;
               rating = third;
@@ -121,7 +122,7 @@ function Description(props) {
 
             // we might not have times since its only if we're logged in
             if (isLoggedIn()) {
-              // times
+              // user's current time position in each episode
               console.log("times are: ");
               console.log(times);
               for (let time of times) {
@@ -135,7 +136,7 @@ function Description(props) {
                 }
               }
 
-              // rating
+              // user's current rating of the podcast
               setUserRating(rating.rating);
               console.log("rating.rating:", rating.rating);
               // user rating: undefined means not yet set
@@ -216,7 +217,7 @@ function Description(props) {
             <div id="podcast-name-author">
               <h1 id="podcast-name">{podcast.title}</h1>
               <h3 id="podcast-author">{podcast.author}</h3>
-              <div id="rating">
+              <div className="rating">
                 <ReactStars
                   // This is literally just a picture of a star
                   count={1}
@@ -226,8 +227,14 @@ function Description(props) {
                   edit={false}
                   value={1}
                 />
-                <div id="current-rating-num">1.4</div>
-                <div id="current-rating-after">/5</div>
+                {podcast.rating
+                  ?
+                  <React.Fragment>
+                    <div className="current-rating-num">{podcast.rating.toFixed(1)}</div>
+                    <div className="current-rating-after">/5</div>
+                  </React.Fragment>
+                  : <div className="no-ratings">No ratings</div>
+                }
                 {/* {console.log("!pendingRating:", !pendingRating)} */}
                 {userRating || userRating === null // don't render until user's rating has been retrieved, so don't have to force re-render later
                   ?
@@ -267,7 +274,7 @@ function Description(props) {
       </Helmet>
 
       {getPodcastHTML(podcast)}
-      {/* It seems like JSX returned gets updated based on state that is returned? */}
+      {/* It seems like JSX returned gets updated based on state that is in the JSX that is returned? */}
 
       <div id="episodes">
         <ul>
@@ -291,71 +298,6 @@ function toggleDescription(event) {
     // maybe want to do this fancier using js not css
   }
 }
-
-// function RatingsWrapper(props) {
-//   // const [body, setBody] = useState(null);
-
-//   useEffect(() => {
-//     console.log("Edit =", props.edit);
-//     ReactDOM.render(
-//       <ReactStars key={props.edit} classNames="choose-rating"
-//         count={props.count}
-//         onChange={props.onChange}
-//         size={props.size}
-//         activeColor={props.activeColor}
-//         isHalf={props.isHalf}
-//         value={props.value}
-//         edit={props.edit}
-//       />,
-//       document.getElementById("ratings-wrapper")
-//     )
-//   }, [props])
-
-//   return (
-//     <div id="ratings-wrapper"></div>
-//   )
-// }
-// {/* key is being used because I want to toggle the stars from editable to read-only
-//                 when there is a pending request
-//                 Actually I think maybe not, it's annoying that they become uneditable
-//                 I think users don't want to have to think about how requests take time to get to the server */}
-//                 {/* <RatingsWrapper
-//                   count={5}
-//                   onChange={ratingChanged}
-//                   size={24}
-//                   activeColor="#ffd700"
-//                   isHalf={false}
-//                   value={userRating}
-//                   edit={!pendingRating}
-//                 /> */}
-// edit={!pendingRating}
-// key={!pendingRating}
-
-/*
-async function ratingChanged(newRating) {
-    // if (pendingRating) {
-    //   console.log("Pending rating, don't send rating");
-    //   return;
-    // }
-    // setPendingRating(true);
-    // setUserRating(newRating);
-    // const tmpUserRating = userRating;
-    const podcastID = window.location.pathname.split("/").pop();
-    console.log("Rating changed:", newRating);
-    try {
-      await fetchAPI(`/self/ratings/${podcastID}`, 'put', { rating: newRating });
-      // `/self/ratings/{podcastID}`?
-    } catch (err) {
-      // show some kind of error
-      console.log(err);
-      // setUserRating(tmpUserRating);
-    }
-    // console.log("tmp user Rating:", tmpUserRating);
-    // setPendingRating(false);
-    // could cancel old requests when a new one is made but probably not woth it
-  }
-*/
-
 
 //------------------------------------------------------------------------------------
 

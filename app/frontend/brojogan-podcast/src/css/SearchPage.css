@@ -54,13 +54,6 @@
   width: 100%;
 }
 
-.subs-count {
-  /* margin-left: auto; */
-  color: white;
-  font-weight: normal;
-  padding: 0.25rem 0.25rem 0.25rem 1rem;
-}
-
 .card-body {
   background-color: #2E2B3F;
 }

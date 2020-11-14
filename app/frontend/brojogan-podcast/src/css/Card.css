@@ -39,26 +39,35 @@
     /* padding: 5px 0; */
 }
 
-.card .rating {
+.subs-count {
+  /* margin-left: auto; */
+  color: white;
+  font-weight: normal;
+  padding: 0.25rem 0.25rem 0.25rem 1rem;
+}
+
+.rating {
   margin-left: auto;
   display: flex;
+  align-items: center;
   color: white;
+  margin-top: -10px; /* better way than this? */
 }
 
 /* this is doubled up, copied from Description.css */
 .rating .current-rating-num {
-  padding-top: 6px; /* bad way to try to align with star image */
+  margin-left: 8px;
   font-size: 20px;
   font-weight: bold;
 }
 
 .rating .current-rating-after {
-  padding-top: 14px;
+  padding-top: 8px;
   padding-left: 3px;
-  font-size: 13px;
+  font-size: 14px;
 }
 
-.card .no-ratings {
-  padding-top: 6px;
+.rating .no-ratings {
+  margin-left: 5px;
   font-weight: normal;
 }

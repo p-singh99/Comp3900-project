@@ -61,6 +61,7 @@ width: 100%;
 
 .subscribe-btn {
 z-index: 1;
+margin: 5px 0 10px 0;
 }
 
 #podcast .description {
@@ -121,7 +122,7 @@ background-color: none;
 background-color: red;
 margin-left: 20px;
 margin-right: 20px;
-margin-top: 20px;
+margin-top: 10px;
 }
 
 #podcast #episodes .pagination {
@@ -152,27 +153,34 @@ margin-top: 20px;
   /* width: 100%; */
 }
 
-#rating {
-  display: flex;
-  /* justify-items: center; */
-}
+/* .rating css comes from Card.css */
 
-#rating #current-rating-num {
-  padding-top: 6px; /* bad way to try to align with star image */
+/* #rating {
+  display: flex;
+  align-items: center;
+} */
+/* gap: 10px; */
+
+/* #rating #current-rating-num {
+  margin-left: 8px;
   font-size: 20px;
   font-weight: bold;
-}
+} */
 
-#rating #current-rating-after {
-  padding-top: 14px;
-  padding-left: 3px;
-  font-size: 13px;
-}
+/* #rating #current-rating-after {
+  padding-top: 8px;
+  margin-left: 3px;
+  font-size: 14px;
+} */
 
-#rating .choose-rating {
+/* #rating #no-rating {
+  margin-left: 5px;
+} */
+
+.rating .choose-rating {
   padding-left: 40px;
 }
 
-#rating .choose-rating:focus {
+.rating .choose-rating:focus {
   outline: none;
 }
