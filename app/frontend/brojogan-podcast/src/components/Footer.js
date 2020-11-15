@@ -16,8 +16,8 @@ const audioPlayerStyle = {
 };
 
 export default class Footer extends React.Component {
-  constructor (props) {
-    super (props);
+  constructor(props) {
+    super(props);
     this.state = {
       title: "No Podcast Playing",
       podcastTitle: "",
@@ -34,10 +34,14 @@ export default class Footer extends React.Component {
 
   pingServer(progress, duration) {
     if (isLoggedIn()) {
-      console.log("pinging " + progress + "/" + duration + " to server episodeguid = " + this.state.guid + ", podcastid = " + this.state.podcastID);
-      let uri = '/self/podcasts/'+this.state.podcastID+'/episodes/time';
-      let body = {'time': progress, 'episodeGuid': this.state.guid, 'duration': duration};
-      fetchAPI(uri, 'put', body).then(() => console.log("updated"))
+      if (duration) {
+        console.log("pinging " + progress + "/" + duration + " to server episodeguid = " + this.state.guid + ", podcastid = " + this.state.podcastID);
+        let uri = '/self/podcasts/' + this.state.podcastID + '/episodes/time';
+        let body = { 'time': progress, 'episodeGuid': this.state.guid, 'duration': duration };
+        fetchAPI(uri, 'put', body).then(() => console.log("updated"))
+      } else {
+        console.log("NOT pinging " + progress + "/" + duration + " to server episodeguid = " + this.state.guid + ", podcastid = " + this.state.podcastID);
+      }
     } else {
       console.log("not logged in");
     }
@@ -51,44 +55,44 @@ export default class Footer extends React.Component {
     this.setState(state);
   }
   render() {
-    let setPlayed=false;
+    let setPlayed = false;
     return (
       <div id='footer-div'>
-         <div id='player'>
-            <div id="podcast-playing-details">
-              <Link to={`/podcast/${this.state.podcastID}`}><img src={this.state.thumb} className="thumbnail"></img></Link>
-              <div id="podcast-playing-info">
-                <p id="podcast-episode-title">
-                  {this.state.title}  
-                </p>
-                <p id="podcast-playing-title">
-                  {this.state.podcastTitle}
-                </p>
-              </div>
+        <div id='player'>
+          <div id="podcast-playing-details">
+            <Link to={`/podcast/${this.state.podcastID}`}><img src={this.state.thumb} className="thumbnail"></img></Link>
+            <div id="podcast-playing-info">
+              <p id="podcast-episode-title">
+                {this.state.title}
+              </p>
+              <p id="podcast-playing-title">
+                {this.state.podcastTitle}
+              </p>
             </div>
-            <AudioPlayer
-              style={audioPlayerStyle}
-              layout="horizontal"
-              autoPlay
-              src={this.state.src}
-              currentTime={this.state.progress}
-              listenInterval="30000" /*trigger onListen every 30 seconds*/
-              onPause={e=>this.pingServer(Math.floor(Number(e.target.currentTime)), e.target.duration)}
-              onListen={e=>this.pingServer(Math.floor(Number(e.target.currentTime)), e.target.duration)}
-              onSeeked={e=>this.pingServer(Math.floor(Number(e.target.currentTime)), e.target.duration)}
-              onCanPlay={e=>{
-                if (! setPlayed) {
-                  setPlayed = true;
-                  console.log("can play!");
-                  e.target.currentTime=this.state.progress
-                }
-                this.pingServer(Math.floor(Number(e.target.currentTime)), e.target.duration)
-                }}
-            />
           </div>
+          <AudioPlayer
+            style={audioPlayerStyle}
+            layout="horizontal"
+            autoPlay
+            src={this.state.src}
+            currentTime={this.state.progress}
+            listenInterval="30000" /*trigger onListen every 30 seconds*/
+            onPause={e => this.pingServer(Math.floor(Number(e.target.currentTime)), e.target.duration)}
+            onListen={e => this.pingServer(Math.floor(Number(e.target.currentTime)), e.target.duration)}
+            onSeeked={e => this.pingServer(Math.floor(Number(e.target.currentTime)), e.target.duration)}
+            onCanPlay={e => {
+              if (!setPlayed) {
+                setPlayed = true;
+                console.log("can play!");
+                e.target.currentTime = this.state.progress
+              }
+              this.pingServer(Math.floor(Number(e.target.currentTime)), e.target.duration)
+            }}
+          />
         </div>
+      </div>
     );
-      
+
   }
 }
 
