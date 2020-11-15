@@ -166,7 +166,7 @@ function SubCard({ details: podcast, context }) {
                   episodes.slice(0, 30).map((episode, index) =>
                     <div>
                       <p id="episode-list-card">
-                        <Link to={{ pathname: `/podcast/${podcast.pid}?${getEpisodeAppendage(index, context.chunkedEpisodes)}`, state: { podcastObj: podcastObj } }} id="episode-list-link" className="search-page-link">
+                        <Link to={{ pathname: `/podcast/${podcast.pid}?${getEpisodeAppendage(index, context && context.chunkedEpisodes)}`, state: { podcastObj: podcastObj } }} id="episode-list-link" className="search-page-link">
                           {/* <b>{getEpisodeNumber(index) + '. '}</b> */}
                           {episode.title}
                         </Link>
