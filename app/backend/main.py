@@ -166,7 +166,7 @@ class Podcasts(Resource):
 				""",
 				(search,search))
 		podcasts = cur.fetchall()
-		cur.execute("""SELECT DISTINCT p.id, p.title, p.author, p.description, ps.count, p.thumbnail, vr.coalesce
+		cur.execute("""SELECT DISTINCT p.id, p.title, p.author, p.description, ps.count, p.thumbnail, rv.coalesce
 		               FROM   podcasts p
 		               LEFT JOIN podcastcategories t
 		                      ON t.podcastid = p.id
@@ -174,8 +174,8 @@ class Podcasts(Resource):
 		                      ON t.categoryid = c.id
 		               LEFT JOIN podcastsubscribers ps
 		                      ON ps.id = p.id
-		               LEFT JOIN ratingsview
-		                      ON p.id = vr.id
+		               LEFT JOIN ratingsview rv
+		                      ON p.id = rv.id
 		               WHERE  to_tsvector(c.name) @@ plainto_tsquery(%s) and p.id not in (select podcastid from search(%s));
 		            """,
 		            (search,search))
