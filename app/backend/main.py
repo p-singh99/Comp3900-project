@@ -142,7 +142,7 @@ class Users(Resource):
 			error = True
 			error_msg.append("Username already exists")
 		# check if email exists in database
-		cur.execute("SELECT * FROM users WHERE email='%s'" % email)
+		cur.execute("SELECT * FROM users WHERE email='%s'", (email,))
 		if cur.fetchone():
 			error = True
 			error_msg.append("Email already exists")
