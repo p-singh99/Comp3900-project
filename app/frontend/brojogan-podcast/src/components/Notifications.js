@@ -40,33 +40,32 @@ function Notification({notification, dismissNotification}) {
         
 }
 
-function Notifications ({state, setState, visibility}) {
+function Notifications ({visibility}) {
+    const [state, setState] = useState([]);
     if (!intervalSet) {
         intervalSet = true;
         console.log("setting interval");
         window.setInterval(() => {
-        if (isLoggedIn()) {
-            console.log("fetching notifications");
-            fetchAPI('/self/notifications', 'get', null)
-            .then(newNotifications => {
-            console.log("Setting notifications:");
-            console.log(newNotifications);
-            setState(newNotifications);
-            })
-        }
+            if (isLoggedIn()) {
+                console.log("fetching notifications");
+                fetchAPI('/self/notifications', 'get', null)
+                .then(newNotifications => {
+                    console.log("Setting notifications:");
+                    console.log(newNotifications);
+                    setState(newNotifications);
+                })
+            }
         }, 60000);
-
         console.log("fetching notifications");
         if (isLoggedIn()) {
-        fetchAPI('/self/notifications', 'get', null)
-        .then(newNotifications => {
-            console.log("Setting notifications:");
-            console.log(newNotifications);
-            setState(newNotifications);
-        })
-
+            fetchAPI('/self/notifications', 'get', null)
+                .then(newNotifications => {
+                    console.log("Setting notifications:");
+                    console.log(newNotifications);
+                    setState(newNotifications);
+                })
         }
-  }
+    }
 
     function dismissNotification(notification) {
         sendDelete(notification);
