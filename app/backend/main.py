@@ -156,17 +156,17 @@ class Podcasts(Resource):
 		startNum = request.args.get('offset')
 		limitNum = request.args.get('limit')
 
-		cur.execute("""SELECT count(s.podcastid), v.title, v.author, v.description, v.id, v.thumbnail, rv.coalesce
+		cur.execute("""SELECT count(s.podcastid), v.title, v.author, v.description, v.id, v.thumbnail, rv.rating
 	     			FROM   searchvector v
 	     			FULL OUTER JOIN Subscriptions s ON s.podcastId = v.id
 		                LEFT JOIN ratingsview rv ON v.id = rv.id
 	     			WHERE  v.vector @@ plainto_tsquery(%s)
-	     			GROUP BY  (s.podcastid, v.title, v.author, v.description, v.id, v.vector, v.thumbnail, rv.coalesce)
+	     			GROUP BY  (s.podcastid, v.title, v.author, v.description, v.id, v.vector, v.thumbnail, rv.rating)
 				ORDER BY  ts_rank(v.vector, plainto_tsquery(%s)) desc;
 				""",
 				(search,search))
 		podcasts = cur.fetchall()
-		cur.execute("""SELECT DISTINCT p.id, p.title, p.author, p.description, ps.count, p.thumbnail, rv.coalesce
+		cur.execute("""SELECT DISTINCT p.id, p.title, p.author, p.description, ps.count, p.thumbnail, rv.rating
 		               FROM   podcasts p
 		               LEFT JOIN podcastcategories t
 		                      ON t.podcastid = p.id
