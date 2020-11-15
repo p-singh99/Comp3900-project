@@ -21,21 +21,21 @@ CORS(app)
 
 #CHANGE SECRET KEY
 app.config['SECRET_KEY'] = 'secret_key'
-# remote
-conn_pool = SemaThreadPool(1, 50,\
-	 dbname="ultracast", user="brojogan", password="GbB8j6Op", host="polybius.bowdens.me", port=5432)
-# local
-#conn_pool = SemaThreadPool(1, 50,\
-#	 dbname="ultracast")
+# # remote
+# conn_pool = SemaThreadPool(1, 50,\
+# 	 dbname="ultracast", user="brojogan", password="GbB8j6Op", host="polybius.bowdens.me", port=5432)
+# # local
+# #conn_pool = SemaThreadPool(1, 50,\
+# #	 dbname="ultracast")
 
-def get_conn():
-	conn = conn_pool.getconn()
-	cur = conn.cursor()
-	return conn, cur
+# def get_conn():
+# 	conn = conn_pool.getconn()
+# 	cur = conn.cursor()
+# 	return conn, cur
 
-def close_conn(conn, cur):
-	cur.close()
-	conn_pool.putconn(conn)
+# def close_conn(conn, cur):
+# 	cur.close()
+# 	conn_pool.putconn(conn)
 
 def create_token(username):
 	# implement some kind of token refreshing scheme
@@ -408,8 +408,7 @@ class Listens(Resource):
 		user_id = get_user_id(cur)
 		episodeGuid = request.json.get("episodeGuid")
 		if episodeGuid is None:
-			cur.close()
-			conn_pool.putconn()
+			df.close_conn(conn, cur)
 			return {"error": "episodeGuid not included"}, 400
 
 		cur.execute("""
@@ -490,9 +489,9 @@ class Recommendations(Resource):
 		conn, cur = df.get_conn()
 		user_id = get_user_id(cur)
 		recs = []
-		cur.execute("select distinct * from recommendations(%s)", (user_id))
+		cur.execute("select distinct * from recommendations(%s)", (user_id,))
 		results = cur.fetchall()
-		[recs.append({"title": i[0], "id": i[1], "subs": i[2], "eps": i[3]}) for i in results]
+		[recs.append({"title": i[0], "thumbnail": i[1], "id": i[2] "subs": i[3], "eps": i[4], "rating": i[5]}) for i in results]
 		df.close_conn(conn,cur)
 		return {"recommendations" : recs}
 

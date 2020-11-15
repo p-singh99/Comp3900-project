@@ -14,7 +14,7 @@ $$ language plpgsql;
 
 
 create or replace function recommendations(_userid integer)
-returns table(title text, id integer, subscribers integer, eps text [])
+returns table(title text, thumbnail text, id integer, subscribers integer, eps text [], rating decimal)
 as $$
 declare
  i record;
@@ -25,15 +25,17 @@ create temp table rejected (podcastid integer);
 insert into subs select podcastid from subscriptions where userid=_userid;
 insert into rejected select podcastid from rejectedrecommendations where userid=_userid;
 for i in
-    select p.title, p.id
-	from podcasts p join listens l on p.id=l.podcastid
+    select p.title, p.id, p.thumbnail, r.coalesce
+	from podcasts p join listens l on p.id=l.podcastid join ratingsview r on p.id=r.id
 	where l.userid=_userid and p.id not in (select * from subs) and p.id not in (select * from rejected)
 	order by l.listendate limit 20
 loop
         title = i.title;
+        thumbnail = i.thumbnail;
         id:= i.id;
         select count(*) into subscribers from subscriptions where podcastid=i.id;
         eps := array(select e.title from episodes e where podcastid=i.id limit 30);
+        rating = i.coalesce;
         return next;
 end loop;
 
@@ -44,38 +46,43 @@ for query in
     order by searchdate desc limit 10
 loop
     for i in
-        select sq.subscribers, sq.podcastid, p.title from search(query) sq, podcasts p
-        where sq.podcastid = p.id
+        select sq.subscribers, sq.podcastid, p.title,p.thumbnail, r.coalesce from search(query) sq, podcasts p, ratingsview r
+        where r.id=sq.podcastid and sq.podcastid = p.id
         and sq.podcastid not in (select * from subs)
         and sq.podcastid not in (select * from rejected)
         limit 20
     loop
         title = i.title;
+        thumbnail = i.thumbnail;
         id:= i.podcastid;
         subscribers:= i.subscribers;
         eps := array(select e.title from episodes e where podcastid=i.podcastid limit 30);
+        rating = i.coalesce;
         return next;
     end loop;
 end loop;
 
 -- podcast categories
 for i in
-	select p.title, p.id, count(p.id)
-	from podcasts p, podcastcategories pc, categories c
+	select p.title, p.thumbnail, p.id, count(p.id), r.coalesce
+	from podcasts p, podcastcategories pc, categories c, ratingsview r
 	where  p.id=pc.podcastid
 	and pc.categoryid=c.id
+    and r.id = p.id
 	and c.id in
 		(select distinct c.id
 		from subs s, categories c, podcastcategories pc
 		where s.podcastid=pc.podcastid and pc.categoryid=c.id)
 	and p.id not in (select * from subs)
     and p.id not in (select * from rejected)
-	group by p.title, p.id, p.xml order by count(p.id) desc limit 20
+	group by p.title, p.id, p.xml, r.coalesce order by count(p.id) desc limit 20
 loop
     title = i.title;
+    thumbnail = i.thumbnail;
 	id:= i.id;
 	select count(*) into subscribers from subscriptions where podcastid=i.id;
     eps := array(select e.title from episodes e where podcastid=i.id limit 30);
+    rating = i.coalesce;
 	return next;
 end loop;
 drop table subs;
