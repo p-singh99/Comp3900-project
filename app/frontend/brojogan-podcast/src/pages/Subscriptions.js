@@ -9,7 +9,7 @@ function Subscriptions() {
 
   useEffect(() => {
     setPodcasts();
-    fetchAPI(`/subscriptions`,'get',null)
+    fetchAPI(`/self/subscriptions`,'get',null)
       .then(podcasts => {
           setPodcasts(podcasts);
         }

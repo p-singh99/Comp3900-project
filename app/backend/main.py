@@ -65,9 +65,9 @@ def get_user_id(cur):
 		return cur.fetchone()[0]
 	return None
 
-class Unprotected(Resource):
-	def get(self):
-		return {'message': 'anyone'}, 200
+# class Unprotected(Resource):
+# 	def get(self):
+# 		return {'message': 'anyone'}, 200
 
 class Protected(Resource):
 	@token_required
@@ -322,7 +322,8 @@ class Podcast(Resource):
 		
 		res = cur.fetchone()
 		if res:
-			rating = int(round(res[0],1))
+			# rating = int(round(res[0],1))
+			rating = f"{res[0]:.1f}"
 		print(rating)
 		close_conn(conn,cur)
 		return {"xml": xml, "id": id, "subscription": flag, "subscribers": subscribers, "rating": rating}, 200
@@ -345,7 +346,8 @@ class Subscriptions(Resource):
 			description = p[2]
 			pID = p[3]
 			#rating = p[4]
-			rating = int(round(p[4],1))
+			# rating = int(round(p[4],1))
+			rating = f"{p[4]:.1f}"
 			results.append({"subscribers" : subscribers, "title" : title, "author" : author, "description" : description, "pid" : pID, "rating": rating})
 		close_conn(conn, cur)
 		return results, 200
@@ -553,21 +555,26 @@ class BestPodcasts(Resource):
 		close_conn(conn,cur)
 		return {"topSubbed": top_subbed, "topRated": top_rated}, 200
 
-api.add_resource(Unprotected, "/unprotected")
+# api.add_resource(Unprotected, "/unprotected")
+# auth
 api.add_resource(Protected, "/protected")
-api.add_resource(SubscriptionPanel, "/self/subscription-panel")
 api.add_resource(Login, "/login")
 api.add_resource(Users, "/users")
-api.add_resource(Settings, "/self/settings")
+
+# public
 api.add_resource(Podcasts, "/podcasts")
 api.add_resource(Podcast, "/podcasts/<int:id>")
+api.add_resource(BestPodcasts, "/top-podcasts")
+
+# user-specific
+api.add_resource(Settings, "/self/settings")
 api.add_resource(Recommendations, "/self/recommendations")
-api.add_resource(Subscriptions, "/subscriptions")
+api.add_resource(Subscriptions, "/self/subscriptions")
+api.add_resource(SubscriptionPanel, "/self/subscription-panel")
 api.add_resource(History, "/self/history/<int:id>")
 api.add_resource(Listens, "/self/podcasts/<int:podcastId>/episodes/time")
 api.add_resource(ManyListens, "/self/podcasts/<int:podcastId>/time")
 api.add_resource(Ratings, "/self/ratings/<int:id>")
-api.add_resource(BestPodcasts, "/top-podcasts")
 
 if __name__ == '__main__':
 	app.run(debug=True, threaded=True)
