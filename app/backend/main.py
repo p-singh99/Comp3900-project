@@ -492,7 +492,7 @@ class Recommendations(Resource):
 		recs = []
 		cur.execute("select distinct * from recommendations(%s)", (user_id,))
 		results = cur.fetchall()
-		[recs.append({"title": i[0], "thumbnail": i[1], "id": i[2] "subs": i[3], "eps": i[4], "rating": i[5]}) for i in results]
+		[recs.append({"title": i[0], "thumbnail": i[1], "id": i[2], "subs": i[3], "eps": i[4], "rating": i[5]}) for i in results]
 		df.close_conn(conn,cur)
 		return {"recommendations" : recs}
 
