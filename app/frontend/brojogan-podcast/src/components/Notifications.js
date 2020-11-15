@@ -42,20 +42,25 @@ function Notification({notification, dismissNotification}) {
 
 function Notifications ({visibility}) {
     const [state, setState] = useState([]);
+
+    useEffect(() => {
+      window.setInterval(() => {
+        if (isLoggedIn()) {
+            console.log("fetching notifications");
+            fetchAPI('/self/notifications', 'get', null)
+            .then(newNotifications => {
+                console.log("Setting notifications:");
+                console.log(newNotifications);
+                setState(newNotifications);
+            })
+        }
+      }, 60000);
+    }, []);
+
     if (!intervalSet) {
         intervalSet = true;
         console.log("setting interval");
-        window.setInterval(() => {
-            if (isLoggedIn()) {
-                console.log("fetching notifications");
-                fetchAPI('/self/notifications', 'get', null)
-                .then(newNotifications => {
-                    console.log("Setting notifications:");
-                    console.log(newNotifications);
-                    setState(newNotifications);
-                })
-            }
-        }, 60000);
+        
         console.log("fetching notifications");
         if (isLoggedIn()) {
             fetchAPI('/self/notifications', 'get', null)
