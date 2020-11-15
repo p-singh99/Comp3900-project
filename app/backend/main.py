@@ -509,7 +509,7 @@ class Notifications(Resource):
 	def get(self):
 		conn, cur = df.get_conn()
 		user_id = get_user_id(cur)
-		cur.execute("select * from notifications where user='%s'", (user_id))
+		cur.execute("select * from notifications where user=%s", (user_id))
 		df.close_conn(conn, cur)
 		return {"notifications": cur.fetchall()}
 
