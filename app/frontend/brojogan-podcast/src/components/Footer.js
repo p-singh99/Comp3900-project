@@ -32,12 +32,12 @@ export default class Footer extends React.Component {
     this.pingServer = this.pingServer.bind(this);
   }
 
-  pingServer(progress) {
+  pingServer(progress, duration) {
     if (isLoggedIn()) {
-      console.log("pinging " + progress + " to server episodeguid = " + this.state.guid + ", podcastid = " + this.state.podcastID);
-      let uri = '/self/podcasts/'+ this.state.podcastID+'/episodes/time';
-      console.log("sending to " + uri);
-      fetchAPI(uri, 'put', {'time': progress, 'episodeGuid': this.state.guid}).then(() => console.log("updated"))
+      console.log("pinging " + progress + "/" + duration + " to server episodeguid = " + this.state.guid + ", podcastid = " + this.state.podcastID);
+      let uri = '/users/self/podcasts/'+this.state.podcastID+'/episodes/time';
+      let body = {'time': progress, 'episodeGuid': this.state.guid, 'duration': duration};
+      fetchAPI(uri, 'put', body).then(() => console.log("updated"))
     } else {
       console.log("not logged in");
     }
@@ -73,15 +73,17 @@ export default class Footer extends React.Component {
               src={this.state.src}
               currentTime={this.state.progress}
               listenInterval="30000" /*trigger onListen every 30 seconds*/
-              onPause={e=>this.pingServer(Math.floor(Number(e.target.currentTime)))}
-              onListen={e=>this.pingServer(Math.floor(Number(e.target.currentTime)))}
-              onSeeked={e=>this.pingServer(Math.floor(Number(e.target.currentTime)))}
+              onPause={e=>this.pingServer(Math.floor(Number(e.target.currentTime)), e.target.duration)}
+              onListen={e=>this.pingServer(Math.floor(Number(e.target.currentTime)), e.target.duration)}
+              onSeeked={e=>this.pingServer(Math.floor(Number(e.target.currentTime)), e.target.duration)}
               onCanPlay={e=>{
                 if (! setPlayed) {
                   setPlayed = true;
                   console.log("can play!");
                   e.target.currentTime=this.state.progress
-                }}}
+                }
+                this.pingServer(Math.floor(Number(e.target.currentTime)), e.target.duration)
+                }}
             />
           </div>
         </div>

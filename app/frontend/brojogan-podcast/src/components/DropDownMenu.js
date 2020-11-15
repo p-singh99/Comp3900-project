@@ -2,11 +2,12 @@ import React, {useState, useEffect, useRef} from 'react';
 import {Link} from 'react-router-dom';
 import './../css/DropDownMenu.css';
 
-function DropDownMenu(props) {
+function DropDownMenu({items, visibility}) {
 
   let menuRef = useRef();
-  let [visible, setVisible] = useState(false);
+  //let [visible, setVisible] = useState(false);
 
+  /*
   useEffect(() => {
     let handler = (event) => {
       if (!menuRef.current.contains(event.target)) {
@@ -26,12 +27,20 @@ function DropDownMenu(props) {
       document.removeEventListener("mousedown", handler);
     }
   }, [props]);
+  */
+
+  useEffect(() => {
+    console.log("setting settings visibility to " + visibility);
+    document.getElementById("dropDown-div").style.visibility = visibility;
+  }, [visibility])
 
   return (
     <React.Fragment>
-      <div id='dropDown-div' ref={menuRef}>
-        {props.items.options.map(item => {
-            return <p onClick={item.onClick} style={{cursor: 'pointer'}}>{item.text}</p>          
+      <div id='dropDown-div' style={{visibility: visibility ? "visible": "hidden"}} >
+        {items.options.map(item => {
+            return <React.Fragment key={item.key}>
+              <p onClick={item.onClick} style={{cursor: 'pointer'}}>{item.text}</p>          
+            </React.Fragment>
         })}
       </div>
     </React.Fragment>
