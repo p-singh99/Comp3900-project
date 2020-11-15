@@ -79,5 +79,5 @@ create or replace view searchvector as
 
 
 -- ratings view
-create or replace view ratingsview as
-    select id, COALESCE(AVG(rating), 0) FROM podcasts left outer join podcastratings on (podcastid = id) group by id;
+create or replace view ratingsview as 
+    select id, coalesce(AVG(rating), 0) FROM podcasts left outer join podcastratings on (podcastid = id) group by id;

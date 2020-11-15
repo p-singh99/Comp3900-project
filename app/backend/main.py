@@ -59,7 +59,7 @@ def get_user_id(cur):
 	if token:
 		try:
 			data = jwt.decode(token, app.config['SECRET_KEY'])
-			cur.execute("SELECT id FROM users WHERE username ='%s' or email = '%s'" % (data['user'], data['user']))
+			cur.execute("SELECT id FROM users WHERE username ='%s' or email = '%s'", (data['user'], data['user']))
 		except:
 			return None
 		return cur.fetchone()[0]
@@ -95,7 +95,7 @@ class SubscriptionPanel(Resource):
 			print(search)
 			if search:
 				guid = search.group(1)
-				cur.execute("SELECT complete FROM Listens where episodeGuid = '%s' AND userId = %s;" % (guid, uid))
+				cur.execute("SELECT complete FROM Listens where episodeGuid = '%s' AND userId = %s;", (guid, uid))
 			# bool = cur.fetchone()[0]
 			if cur.fetchone() == None:
 				continue
@@ -113,7 +113,7 @@ class Login(Resource):
 		# Check if username or email
 		conn, cur = get_conn()
 		# Check if username exists
-		cur.execute("SELECT username, hashedpassword FROM users WHERE username='%s' OR email='%s'" % (username, username))
+		cur.execute("SELECT username, hashedpassword FROM users WHERE username='%s' OR email='%s'", (username, username))
 		res = cur.fetchone()
 		close_conn(conn, cur)
 		if res:
@@ -162,23 +162,23 @@ class Users(Resource):
 		parser = reqparse.RequestParser(bundle_errors=True)
 		parser.add_argument('password', type=str, required=True, help="Need old password", location="json")
 		args = parser.parse_args()
-		cur.execute("SELECT hashedpassword FROM users WHERE id='%s'" % user_id)
+		cur.execute("SELECT hashedpassword FROM users WHERE id='%s'", (user_id,))
 		old_pw = cur.fetchone()[0].strip()
 		if bcrypt.checkpw(args["password"].encode('UTF-8'), old_pw.encode('utf-8')):
 			# delete from users
-			cur.execute("DELETE FROM users WHERE id=%s" % user_id)
+			cur.execute("DELETE FROM users WHERE id=%s", (user_id,))
 			# delete all subscriptions
-			cur.execute("DELETE FROM subscriptions WHERE userId=%s" % user_id)
+			cur.execute("DELETE FROM subscriptions WHERE userId=%s", (user_id,))
 			# delete podcast account
-			cur.execute("DELETE FROM podcastratings WHERE userId=%s" % user_id)
+			cur.execute("DELETE FROM podcastratings WHERE userId=%s", (user_id,))
 			# delete episode ratings
-			cur.execute("DELETE FROM episoderatings WHERE userId=%s" % user_id)
+			cur.execute("DELETE FROM episoderatings WHERE userId=%s", (user_id,))
 			# delete listens
-			cur.execute("DELETE FROM listens WHERE userId=%s" % user_id)
+			cur.execute("DELETE FROM listens WHERE userId=%s", (user_id,))
 			# delete seach queries
-			cur.execute("DELETE FROM searchqueries WHERE userId=%s" % user_id)
+			cur.execute("DELETE FROM searchqueries WHERE userId=%s", (user_id,))
 			# delete rejected recommendations
-			cur.execute("DELETE FROM rejectedrecommendations WHERE userId=%s" % user_id)
+			cur.execute("DELETE FROM rejectedrecommendations WHERE userId=%s", (user_id,))
 			conn.commit()
 			close_conn(conn,cur)
 			return {"data" : "account deleted"}, 200
@@ -198,8 +198,7 @@ class Podcasts(Resource):
 		# add search query to db
 		user_id = get_user_id(cur)
 		if user_id:
-			cur.execute("insert into searchqueries (userid, query, searchdate) values (%s, '%s', '%s')" \
-				% (user_id, search, datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")))
+			cur.execute("insert into searchqueries (userid, query, searchdate) values (%s, '%s', '%s')",(user_id, search, datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")))
 		conn.commit()
 		startNum = request.args.get('offset')
 		limitNum = request.args.get('limit')
@@ -221,9 +220,9 @@ class Podcasts(Resource):
 		                      ON t.categoryid = c.id
 		               LEFT JOIN podcastsubscribers ps
 		                      ON ps.id = p.id
-		               WHERE     to_tsvector(c.name) @@ plainto_tsquery(%s);
+		               WHERE     to_tsvector(c.name) @@ plainto_tsquery(%s) and p.id not in (select podcastid from search(%s));
 		            """,
-		            (search,))
+		            (search,search))
 		categories = cur.fetchall()
 		results = []
 		for p in podcasts:
@@ -234,14 +233,14 @@ class Podcasts(Resource):
 			pID = p[4]
 			results.append({"subscribers" : subscribers, "title" : title, "author" : author, "description" : description, "pid" : pID})
 		for c in categories:
-			flag = False
-			for r in results:
-				if int(r['pid']) == int(c[0]):
-					flag = True
-					break
-			if flag == False:
-			#if not any(str(c[0]) in sublist for sublist in results):
-				results.append({"subscribers" : c[4], "title" : c[1], "author" : c[2], "description" : c[3], "pid" : c[0]})
+			# flag = False
+			# for r in results:
+			# 	if int(r['pid']) == int(c[0]):
+			# 		flag = True
+			# 		break
+			# if flag == False:
+			# #if not any(str(c[0]) in sublist for sublist in results):
+			results.append({"subscribers" : c[4], "title" : c[1], "author" : c[2], "description" : c[3], "pid" : c[0]})
 		close_conn(conn, cur)
 		return results, 200
 
@@ -253,7 +252,7 @@ class Settings(Resource):
 		conn, cur = get_conn()
 		data = jwt.decode(request.headers['token'], app.config['SECRET_KEY'])
 		username = data['user']
-		cur.execute("SELECT email FROM users WHERE username='%s'" % username)
+		cur.execute("SELECT email FROM users WHERE username='%s'", (username,))
 		email = cur.fetchone()[0]
 		close_conn(conn, cur)
 		return {"email" : email}
@@ -270,7 +269,7 @@ class Settings(Resource):
 		args = parser.parse_args()
 		hashedpassword = ""
 		# check current password
-		cur.execute("SELECT hashedpassword FROM users WHERE username='%s'" % username)
+		cur.execute("SELECT hashedpassword FROM users WHERE username='%s'", (username))
 		old_pw = cur.fetchone()[0].strip()
 		if bcrypt.checkpw(args["oldpassword"].encode('UTF-8'), old_pw.encode('utf-8')):
 			if args["newpassword"]:
@@ -281,16 +280,16 @@ class Settings(Resource):
 					hashedpassword = bcrypt.hashpw(password, bcrypt.gensalt())
 			if args['newemail']:
 				# change email
-				cur.execute("SELECT email FROM users where email='%s'" % (args['newemail']))
+				cur.execute("SELECT email FROM users where email='%s'", (args['newemail']))
 				if cur.fetchone():
-					cur.execute("SELECT email FROM users where email='%s' and username='%s'" % (args['newemail'], data['user']))
+					cur.execute("SELECT email FROM users where email='%s' and username='%s'", (args['newemail'], data['user']))
 					if not cur.fetchone():
 						close_conn(conn, cur)
 						return {"error": "Email already exists"}, 400
 
-				cur.execute("UPDATE users SET email='%s' WHERE username='%s' OR email='%s'" % (args['newemail'], username, username))
+				cur.execute("UPDATE users SET email='%s' WHERE username='%s' OR email='%s'", (args['newemail'], username, username))
 			if hashedpassword:
-				cur.execute("UPDATE users SET hashedpassword='%s' WHERE username='%s' OR email = '%s'" % (hashedpassword.decode('UTF-8'), username, username))
+				cur.execute("UPDATE users SET hashedpassword='%s' WHERE username='%s' OR email = '%s'", (hashedpassword.decode('UTF-8'), username, username))
 			conn.commit()
 			close_conn(conn, cur)
 			return {"data" : "success"}, 200
@@ -318,7 +317,7 @@ class Podcast(Resource):
 		subscribers = 0
 		if res is not None:
 			subscribers = res[0]
-		cur.execute("SELECT coalesce from ratingsview where id=%s" % id)
+		cur.execute("SELECT coalesce from ratingsview where id=%s", (id,))
 		
 		res = cur.fetchone()
 		if res:
@@ -358,7 +357,7 @@ class Subscriptions(Resource):
 		parser.add_argument('podcastid', type=str, location="json")
 		args = parser.parse_args()
 		podcastID = args["podcastid"]
-		cur.execute("INSERT INTO subscriptions(userid, podcastid) VALUES (%s,%s);",(userID, podcastID))
+		cur.execute("INSERT INTO subscriptions(userid, podcastid) VALUES (%s,%s);", (userID, podcastID))
 		conn.commit()
 		close_conn(conn, cur)
 		return {'data' : "subscription successful"}, 200
@@ -393,11 +392,11 @@ class History(Resource):
 		user_id = get_user_id(cur)
 		if id == 1:
 			cur.execute("SELECT p.id, p.xml, l.episodeguid, l.listenDate, l.timestamp FROM listens l, podcasts p where l.userid=%s and \
-			p.id = l.podcastid ORDER BY l.listenDate DESC" % (user_id))
+			p.id = l.podcastid ORDER BY l.listenDate DESC",(user_id,))
 			total_pages = math.ceil( cur.rowcount / limit )
 		else:
 			cur.execute("SELECT p.id, p.xml, l.episodeguid, l.listenDate, l.timestamp FROM listens l, podcasts p where l.userid=%s and \
-				p.id = l.podcastid ORDER BY l.listenDate DESC LIMIT %s OFFSET %s " % (user_id, limit, offset))
+				p.id = l.podcastid ORDER BY l.listenDate DESC LIMIT %s OFFSET %s", (user_id, limit, offset))
 		eps = cur.fetchmany(limit)
 		print(eps)
 		# change to episodes
@@ -494,7 +493,7 @@ class Recommendations(Resource):
 		conn, cur = get_conn()
 		user_id = get_user_id(cur)
 		recs = []
-		cur.execute("select distinct * from recommendations(%s)" % user_id)
+		cur.execute("select distinct * from recommendations(%s)", (user_id))
 		results = cur.fetchall()
 		[recs.append({"title": i[0], "id": i[1], "subs": i[2], "eps": i[3]}) for i in results]
 		close_conn(conn,cur)
@@ -505,7 +504,7 @@ class RejectRecommendations(Resource):
 	def put(self, id):
 		conn, cur = get_conn()
 		user_id = get_user_id(cur)
-		cur.execute("INSERT INTO rejectedrecommendations (userid, podcastid) VALUES (%s, %s)" % (user_id, id))
+		cur.execute("INSERT INTO rejectedrecommendations (userid, podcastid) VALUES (%s, %s)", (user_id, id))
 		conn.commit()
 		close_conn(conn,cur)
 		
@@ -513,7 +512,7 @@ class Notifications(Resource):
 	def get(self):
 		conn, cur = get_conn()
 		user_id = get_user_id(cur)
-		cur.execute("select * from notifications where user='%s'" % user_id)
+		cur.execute("select * from notifications where user='%s'", (user_id))
 		close_conn(conn, cur)
 		return {"notifications": cur.fetchall()}
 
@@ -521,7 +520,7 @@ class Ratings(Resource):
 	def get(self, id):
 		conn, cur = get_conn()
 		user_id = get_user_id(cur)
-		cur.execute("SELECT rating FROM podcastratings WHERE podcastid=%s and userid=%s" % (id, user_id))
+		cur.execute("SELECT rating FROM podcastratings WHERE podcastid=%s and userid=%s", (id, user_id))
 		# rating = cur.fetchone()[0] if cur.fetchone() else None
 		res = cur.fetchone()
 		rating = res[0] if res else None
@@ -535,11 +534,11 @@ class Ratings(Resource):
 		parser.add_argument('rating', type=int, required=True, choices=(1,2,3,4,5), help="Rating not valid", location="json")
 		args = parser.parse_args()
 		#check if already rated
-		cur.execute("SELECT rating FROM podcastratings where userid=%s and podcastid=%s" % (user_id, id))
+		cur.execute("SELECT rating FROM podcastratings where userid=%s and podcastid=%s", (user_id, id))
 		if cur.fetchone():
-			cur.execute("UPDATE podcastratings SET rating=%s WHERE userid=%s and podcastid=%s" % (args["rating"], user_id, id))
+			cur.execute("UPDATE podcastratings SET rating=%s WHERE userid=%s and podcastid=%s", (args["rating"], user_id, id))
 		else:
-			cur.execute("INSERT INTO podcastratings (userid, podcastid, rating) VALUES (%s, %s, %s)" % (user_id, id, args["rating"]))
+			cur.execute("INSERT INTO podcastratings (userid, podcastid, rating) VALUES (%s, %s, %s)", (user_id, id, args["rating"]))
 		conn.commit()
 		return {"success": "added"}
 	
@@ -562,7 +561,7 @@ api.add_resource(Settings, "/self/settings")
 api.add_resource(Podcasts, "/podcasts")
 api.add_resource(Podcast, "/podcasts/<int:id>")
 api.add_resource(Recommendations, "/self/recommendations")
-api.add_resource(Subscriptions, "/subscriptions")
+api.add_resource(Subscriptions, "/self/subscriptions")
 api.add_resource(History, "/self/history/<int:id>")
 api.add_resource(Listens, "/self/podcasts/<int:podcastId>/episodes/time")
 api.add_resource(ManyListens, "/self/podcasts/<int:podcastId>/time")
