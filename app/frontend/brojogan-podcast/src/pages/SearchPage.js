@@ -6,12 +6,17 @@ import { fetchAPI } from './../authFunctions';
 
 import './../css/SearchPage.css';
 
+// for Search, the backend returns a list of results of form {todo}
+// And this component uses PodcastCards and passes it the list of podcasts
+// Each card then fetches the details for the podcast with the id it is given, and displays the details
+// when a link to a podcast description page is clicked, if the podcast details have finished loading, then they will be passed to the Description page
+// so they don't have to be fetched again
 export default function Search() {
   const [podcasts, setPodcasts] = useState();
   const [titleQuery, setTitleQuery] = useState("");
   // const [error, setError] = useState();
 
-  // on page load, get query from url and get then display query results
+  // on page load, get query from url. then get and display query results
   useEffect(() => {
     // setError();
 
@@ -30,7 +35,7 @@ export default function Search() {
       })
       .catch(err => {
         // do something
-        // can't just display an error, because this will also be called on request aborting
+        // can't just display an error, because this will also be called on request aborting as well as actual error
         console.log(err);
         // setError("Network or other error");
       });
