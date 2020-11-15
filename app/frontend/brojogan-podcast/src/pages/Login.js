@@ -1,11 +1,14 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import './../css/Login.css';
-import logo from './../images/logo.png';
-import { API_URL } from './../constants';
-import { saveToken } from './../authFunctions';
 import { useHistory } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
+
+import { API_URL } from './../constants';
+import { saveToken } from './../authFunctions';
+
+import './../css/Login.css';
+import logo from './../images/logo.png';
+
 
 function displayLoginError(msg) {
   document.getElementById("login-error").textContent = msg;
@@ -13,18 +16,17 @@ function displayLoginError(msg) {
 }
 
 function Login() {
-  // let link = '';
   const history = useHistory();
 
   function loginHandler(event) {
     event.preventDefault();
-    // const form = document.forms['login-form'];
     const form = event.target;
     const username = form.elements.username.value;
     const password = form.elements.password.value;
     // check for maximum length? check that they don't violate some constraints?
     if (username && password) {
       let formData = new FormData(form);
+      displayLoginError("...");
       fetch(`${API_URL}/login`, { method: 'post', body: formData })
         .then(resp => {
           resp.json().then(data => {
@@ -49,7 +51,7 @@ function Login() {
         <title>Brojogan Podcasts - Login</title>
       </Helmet>
 
-      <div id='login-div'>
+      <div id='login-logo-div'>
         <div id="logo-text">
           <img
             id="login-logo"
@@ -62,7 +64,7 @@ function Login() {
             BroJogan <br /> Podcast
           </p>
         </div>
-        <div id="login-div-2">
+        <div id="login-main-div">
           <h1>Log In</h1>
           <form id="login-form" onSubmit={loginHandler}>
             <p id="username-text">Username</p>
