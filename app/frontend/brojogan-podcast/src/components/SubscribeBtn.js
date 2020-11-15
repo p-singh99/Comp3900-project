@@ -11,7 +11,7 @@ function SubscribeBtn({ defaultState, podcastID }) {
         let body = {};
         body.podcastid = podcastID;
         setSubscribeBtn("...");
-        fetchAPI(`/podcasts/${podcastID}`, 'post', body)
+        fetchAPI(`/subscriptions/${podcastID}`, 'post', body)
             .then(data => {
                 setSubscribeBtn("Unsubscribe");
             })
@@ -24,7 +24,7 @@ function SubscribeBtn({ defaultState, podcastID }) {
         let body = {};
         body.podcastid = podcastID;
         setSubscribeBtn("...");
-        fetchAPI(`/podcasts/${podcastID}`, 'delete', body)
+        fetchAPI(`/subscriptions/${podcastID}`, 'delete', body)
             .then(data => {
                 setSubscribeBtn("Subscribe");
             })
