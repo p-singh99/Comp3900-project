@@ -14,7 +14,7 @@ $$ language plpgsql;
 
 
 create or replace function recommendations(_userid integer)
-returns table(xml text, id integer, subscribers integer)
+returns table(title text, id integer, subscribers integer, eps text [])
 as $$
 declare
  i record;
@@ -25,14 +25,15 @@ create temp table rejected (podcastid integer);
 insert into subs select podcastid from subscriptions where userid=_userid;
 insert into rejected select podcastid from rejectedrecommendations where userid=_userid;
 for i in
-        select p.xml, p.id
+    select p.title, p.id
 	from podcasts p join listens l on p.id=l.podcastid
 	where l.userid=_userid and p.id not in (select * from subs) and p.id not in (select * from rejected)
-	order by l.listendate limit 5
+	order by l.listendate limit 20
 loop
-        xml:= i.xml;
+        title = i.title;
         id:= i.id;
         select count(*) into subscribers from subscriptions where podcastid=i.id;
+        eps := array(select e.title from episodes e where podcastid=i.id limit 30);
         return next;
 end loop;
 
@@ -40,38 +41,41 @@ end loop;
 for query in
     select searchqueries.query from searchqueries
     where userid=_userid
-    order by searchdate desc limit 3
+    order by searchdate desc limit 10
 loop
     for i in
-        select sq.subscribers, sq.podcastid, sq.xml from search(query) sq
-        where sq.podcastid not in (select * from subs)
+        select sq.subscribers, sq.podcastid, p.title from search(query) sq, podcasts p
+        where sq.podcastid = p.id
+        and sq.podcastid not in (select * from subs)
         and sq.podcastid not in (select * from rejected)
-        limit 2
+        limit 20
     loop
-        xml:= i.xml;
+        title = i.title;
         id:= i.podcastid;
         subscribers:= i.subscribers;
+        eps := array(select e.title from episodes e where podcastid=i.podcastid limit 30);
         return next;
     end loop;
 end loop;
 
 -- podcast categories
 for i in
-	select p.title, p.id, count(p.id), p.xml
+	select p.title, p.id, count(p.id)
 	from podcasts p, podcastcategories pc, categories c
-	where p.id=pc.podcastid
+	where  p.id=pc.podcastid
 	and pc.categoryid=c.id
 	and c.id in
 		(select distinct c.id
-		from categories c, subscriptions s, podcastcategories pc
-		where s.userId=_userid and s.podcastid=pc.podcastid and pc.categoryid=c.id)
+		from subs s, categories c, podcastcategories pc
+		where s.podcastid=pc.podcastid and pc.categoryid=c.id)
 	and p.id not in (select * from subs)
     and p.id not in (select * from rejected)
-	group by p.title, p.id, p.xml order by count(p.id) desc limit 5
+	group by p.title, p.id, p.xml order by count(p.id) desc limit 20
 loop
-	xml:= i.xml;
+    title = i.title;
 	id:= i.id;
 	select count(*) into subscribers from subscriptions where podcastid=i.id;
+    eps := array(select e.title from episodes e where podcastid=i.id limit 30);
 	return next;
 end loop;
 drop table subs;

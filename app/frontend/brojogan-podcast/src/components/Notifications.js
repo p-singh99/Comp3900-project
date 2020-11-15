@@ -1,6 +1,6 @@
 import React, {useState, useEffect, useRef}  from 'react';
 import {Link} from 'react-router-dom';
-import { fetchAPI, isLoggedIn } from '../auth-functions';
+import { fetchAPI, isLoggedIn } from './../authFunctions';
 import './../css/Notifications.css';
 
 let intervalSet = false;

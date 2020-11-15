@@ -1,24 +1,21 @@
 import React, {useEffect, useState} from 'react';
-import './../css/SignUp.css';
-import logo from './../images/logo.png';
-import { API_URL } from './../constants';
-import {saveToken} from './../auth-functions'
 import {useHistory} from 'react-router-dom';
 import { Helmet } from 'react-helmet';
-import { checkPassword, checkPasswordsMatch, checkField } from './../validation-functions';
 
+import { API_URL } from './../constants';
+import {saveToken} from './../authFunctions'
+import { checkPassword, checkPasswordsMatch, checkField } from './../validationFunctions';
 
-// General error eg network error
-// function displayError(error) {
-//   alert(error);
-// }
+import './../css/SignUp.css';
+import logo from './../images/logo.png';
+
 
 function displaySignupError(msg) {
   let errorElem = document.getElementById("signup-error");
   errorElem.textContent = msg;
   errorElem.style.visibility = 'visible'
 }
-const placeholder = '3-64 characters including "-" and "_" with lowercase letters and numbers'
+// const placeholder = '3-64 characters including "-" and "_" with lowercase letters and numbers'
 // sign up fail eg email already exists
 // takes a list
 function displaySignupErrors(errors) {
@@ -58,17 +55,23 @@ function displaySignupErrors(errors) {
 function SignUp() {
   const history = useHistory();
 
-  let [usernameHelpStatus, setUsernameStatus] = useState(false);
-  let [passwordHelpStatus, setPasswordStatus] = useState(false);
+  const [usernameHelpStatus, setUsernameStatus] = useState(false);
+  const [passwordHelpStatus, setPasswordStatus] = useState(false);
+  const [pendingRequest, setPendingRequest] = useState(false); // used to prevent multiple in-air requests when button is repeatedly clicked.
 
+  // handler for signup button - check inputs, send signup request and redirect to homepage
   function signupHandler(event) {
     event.preventDefault();
+    if (pendingRequest) {
+      console.log("Pending request, not sending signup");
+      return;
+    }
     const form = document.forms['signUp-form'];
     const username = form.elements.username;
     const email = form.elements.email;
     const password1 = form.elements.password1;
     const password2 = form.elements.password2;
-  
+    
     if (!username.value || !password1.value || !password2.value || !email.value
         || ! username.validity.valid || ! password1.validity.valid || ! email.validity.valid
         || password1.value !== password2.value) {
@@ -78,6 +81,7 @@ function SignUp() {
       formData.append("username", username.value);
       formData.append("password", password1.value);
       formData.append("email", email.value);
+      setPendingRequest(true);
       fetch(`${API_URL}/users`, { method: 'post', body: formData })
         .then(resp => {
           resp.json().then(data => {
@@ -85,19 +89,23 @@ function SignUp() {
               saveToken(data);
               // window.sessionStorage.setItem("newuser", true); // maybe - user stays as a new user for their entire first session
               history.push("/", {newUser: true});
+              console.log("resp status 201");
             } else {
+              console.log("resp status not 201");
               displaySignupErrors(data.error);
             }
+            setPendingRequest(false);
           })
         })
         .catch(error => { // will this catch error from resp.json()?
           displaySignupError('Network or other error');
+          setPendingRequest(false);
         });
     }
   }
 
+  // display/hide username help and password help displays
   useEffect(() => {
-    
     // Check if user clicked help for password field
     if (usernameHelpStatus == false) {
       document.getElementById('help-text-username').style.visibility = "hidden";
@@ -120,7 +128,7 @@ function SignUp() {
         <title>Brojogan Podcasts - Signup</title>
       </Helmet>
       
-      <div id='signUp-div'>
+      <div id='signUp-logo-div'>
         <div id='logo-text'>
           <img
             id="singUp-logo"
@@ -133,13 +141,16 @@ function SignUp() {
             BroJogan <br /> Podcast
           </p>
         </div>
-        <div id='signUp-div-2'>
+
+        <div id='signUp-form-div'>
           <h1>Sign Up</h1>
           <form id="signUp-form">
+            
             <div id="username-div">
               <p id="username-text">
                 Username
-                <button 
+                {/* Username help toggle button */}
+                <button
                   className="signup-help-btn" 
                   type="button"
                   onClick = {() => {
@@ -157,14 +168,17 @@ function SignUp() {
               <input type="text"  id="username-input" name="username" onChange={checkField} minLength="3" maxLength="64" pattern="[a-zA-z0-9_-]{3,64}" title="3-64 characters. May contain uppercase and lowercase letters, numbers, - and _"/>
               { <p id="username-error" className="error">Invalid username</p> }
             </div>
+
             <div>
               <p id="email-text">Email</p>
               <input type="email" id="email-input" name="email" onChange={checkField} pattern="[a-zA-Z0-9%+_.-]+@[a-zA-Z0-9.-]+\.[A-Za-z0-9]+" maxLength="100"/>
               { <p id="username-error" className="error">Invalid email address</p> }
             </div>
+
             <div>
               <p className="password-text">
                 Password
+                {/* Password help toggle button */}
                 <button 
                   className="signup-help-btn"
                   type="button" 
@@ -187,6 +201,7 @@ function SignUp() {
 
               { <p id="password-error" className="error">Placeholder</p> }
             </div>
+            
             {<pre id="signup-error" className="error">Placeholder</pre> }{ /* pre so that can add new line in textContent */}
             <button id="signUp-btn-2" type="submit" onClick={signupHandler}>Sign Up</button>
           </form>

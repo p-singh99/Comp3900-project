@@ -9,7 +9,7 @@ from threading import BoundedSemaphore, Lock
 # spend no more than 10 seconds trying to fetch an rss feed
 socket.setdefaulttimeout(10)
 
-sem = BoundedSemaphore(value=10)
+sem = BoundedSemaphore(value=5)
 # using a dict of locks we can have only 1 thread 
 # updating each podcast at a time, so future podcasts
 # will fail
@@ -41,6 +41,7 @@ def update_rss(url, pool):
     dictLock.release()
 
     sem.acquire()
+    print("sem's value is {}".format(sem._value))
     try:
         print("entering update rss for {}".format(url))
         

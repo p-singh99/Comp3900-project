@@ -10,8 +10,10 @@ export const logoutHandler = () => {
 // token has expired, or user edited it. Don't want to just suddenly refresh and disrupt what they're doing
 // should set up token refresh scheme to avoid this.
 export const authFailed = () => {
-    alert('Your session has expired');
-    logoutHandler(); // does this work
+    if (isLoggedIn()) { // lazy way to deal with this being called twice - only run it the first time
+      alert('Your session has expired');
+      logoutHandler();
+    }
 }
 
 export const saveToken = (data) => {
@@ -36,6 +38,13 @@ export const getToken = () => {
   return window.localStorage.getItem("token");
 }
 
+export function checkLogin() {
+  console.log("Checking login");
+  if (isLoggedIn()) {
+    fetchAPI("/protected");
+  }
+}
+
 // failAuth = true means that if response is 401, it will assume the token has expired and force re-login
 // if failAuth = false, it will just return that authentication failed
 // returns resp.json() or an error
@@ -43,6 +52,7 @@ export const getToken = () => {
 // sends json. provide body as js object
 // signal: const controller = new AbortController(); fetchAPI(..., controller.signal); controller.abort()
 export async function fetchAPI(endpoint, method='get', body=null, signal=null) {
+  console.log("fetchAPI:", endpoint);
   let resp, data;
   let args = {method: method, headers: {'token': getToken()}};
   if (body) {
@@ -53,6 +63,7 @@ export async function fetchAPI(endpoint, method='get', body=null, signal=null) {
     args.signal = signal;
   }
   console.log(args);
+  
   try {
     resp = await fetch(`${API_URL}${endpoint}`, args);
     data = await resp.json();

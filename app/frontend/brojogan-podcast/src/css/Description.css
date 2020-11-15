@@ -3,47 +3,49 @@
   /* padding-left: 20px; */
   /* padding-bottom: 200px; */
 }
-h1.podcast-heading{
-margin-bottom: 0px;
-padding-bottom: 0px;
+
+h1.podcast-heading {
+  margin-bottom: 0px;
+  padding-bottom: 0px;
 }
 
 #podcast-author {
-color: /*#81C1CE*/ #06C170;
-padding-top: 0px;
-margin-top: 0px;
+  color: /*#81C1CE*/
+  #06C170;
+  padding-top: 0px;
+  margin-top: 0px;
 }
 
 #podcast-description {
-font-size: 15px;
+  font-size: 15px;
 }
-  
-#podcast #episodes > ul {
+
+#podcast #episodes>ul {
   list-style-type: none;
   padding: 0;
 }
 
 #podcast li.episode {
   background-color: #2E2B3F;
-  
   margin: 20px 0 0 20px;
   /* padding: 10px 0px 0px 0px; */
   cursor: pointer;
 }
 
 #podcast .title {
-font-weight: bold;
-color:  #06C170;
-padding-bottom: 10px;
+  font-weight: bold;
+  color: #06C170;
+  padding-bottom: 10px;
 }
 
 .date {
-float: right;
-/* margin-right: 50px; */
+  float: right;
+  /* margin-right: 50px; */
 }
 
 #podcast .head {
-  padding: 10px 20px 0 10px; /* padding-top moved from somewhere so it goes after the progress bar*/
+  padding: 10px 20px 0 10px;
+  /* padding-top moved from somewhere so it goes after the progress bar*/
 }
 
 #podcast .play-div, #podcast .description {
@@ -51,16 +53,16 @@ float: right;
 }
 
 .play-div {
-margin-top: 10px;
-display: flex;
-flex-direction: row;
-height: 20px;
-width: 100%;
+  margin-top: 10px;
+  display: flex;
+  flex-direction: row;
+  height: 20px;
+  width: 100%;
 }
 
-
-#subscribe-btn {
-z-index: 1;
+.subscribe-btn {
+  z-index: 1;
+  margin: 5px 0 10px 0;
 }
 
 #podcast .description {
@@ -68,26 +70,25 @@ z-index: 1;
   font-size: 0.9em;
 }
 
-#subscribe-btn, .download, .play {
-background-color: #6E59D6;
-border: none;
+.subscribe-btn, .download, .play {
+  background-color: #6E59D6;
+  border: none;
 }
 
 .download, .play {
-margin-left: 10px;
-font-size: 13px;
-border: #9860db;
-background-color: #47ada3;
-border-radius: 20px;
-/* width: 75px; */
-/* text-align: left; */
+  margin-left: 10px;
+  font-size: 13px;
+  border: #9860db;
+  background-color: #47ada3;
+  border-radius: 20px;
+  /* width: 75px; */
+  /* text-align: left; */
 }
 
 .download {
-margin-left: auto;
-background-color: none;
+  margin-left: auto;
+  background-color: none;
 }
-
 
 #podcast .description.collapsed {
   max-height: 50px;
@@ -97,18 +98,21 @@ background-color: none;
   /* background: linear-gradient(180deg, rgba(170,170,170,1) 50%, rgba(255, 255, 255, 0.9) 100%); */
   /* background: linear-gradient(180deg, rgba(170,170,170,1) 30px, rgba(255, 255, 255, 0.9) 100%); */
 }
+
 #podcast .description.expanded {
   height: 100%;
 }
 
 #podcast .description.collapsed:before {
-  content:'';
-  width:100%;
-  height:100%;    
-  position:absolute;
-  left:0;
-  top:0;
-  background:linear-gradient(transparent 30px, /*#221F2E*/ rgba(113, 193, 206, 0.2) /*rgba(255, 255, 255, 0.1)*/);
+  content: '';
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  left: 0;
+  top: 0;
+  background: linear-gradient(transparent 30px, /*#221F2E*/
+  rgba(113, 193, 206, 0.2)/*rgba(255, 255, 255, 0.1)*/
+  );
 }
 
 #podcast #podcast-info {
@@ -118,10 +122,12 @@ background-color: none;
 }
 
 #podcast #podcast-img {
-background-color: red;
-margin-left: 20px;
-margin-right: 20px;
-margin-top: 20px;
+  background-color: red;
+  margin-left: 20px;
+  margin-right: 20px;
+  margin-top: 10px;
+  height: 300px;
+  width: 300px;
 }
 
 #podcast #episodes .pagination {
@@ -133,13 +139,15 @@ margin-top: 20px;
 }
 
 .episode .progress {
-  height: 10px; /* 1 rem */
+  height: 10px;
+  /* 1 rem */
   margin-left: 10px;
   flex: 1;
 }
 
 .episode .progress-bar {
-  background-color: #47ada3; /* what colour? */
+  background-color: #47ada3;
+  /* what colour? */
 }
 
 .episode.finished {
@@ -150,4 +158,37 @@ margin-top: 20px;
   margin-left: 10px;
   display: flex;
   /* width: 100%; */
+}
+
+/* .rating css comes from Card.css */
+
+/* #rating {
+  display: flex;
+  align-items: center;
+} */
+
+/* gap: 10px; */
+
+/* #rating #current-rating-num {
+  margin-left: 8px;
+  font-size: 20px;
+  font-weight: bold;
+} */
+
+/* #rating #current-rating-after {
+  padding-top: 8px;
+  margin-left: 3px;
+  font-size: 14px;
+} */
+
+/* #rating #no-rating {
+  margin-left: 5px;
+} */
+
+.rating .choose-rating {
+  padding-left: 40px;
+}
+
+.rating .choose-rating:focus {
+  outline: none;
 }

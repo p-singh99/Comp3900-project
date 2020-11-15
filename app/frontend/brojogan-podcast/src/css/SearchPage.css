@@ -21,8 +21,8 @@
   padding: 0.5rem 1.25rem;
 }
 
-.card-header .search-page-link,
-.card-header .subs-count {
+.card-header .search-page-link {
+/* .card-header .subs-count { */
   padding: 0.25rem 0.25rem;
 }
 
@@ -52,12 +52,6 @@
   display: flex;
   flex-direction: row;
   width: 100%;
-}
-
-.subs-count {
-  margin-left: auto;
-  color: white;
-  font-weight: normal;
 }
 
 .card-body {

@@ -10,12 +10,14 @@ function isDigits(str) {
 // to be able to scroll to the item, the Item component will need to accept an id prop
 // and set this id as the id of the element. The only id used will be 'scroll-item'.
 // maybe should use #id thing?
-function PagesFetch({ Item, fetchItems, numPages, context }) {
+function PagesFetch({ Item, fetchItems, context }) {
   const [pageState, setPageState] = useState();
-  // const [pageJSX, setPageJSX] = useState();
+  const [error, setError] = useState();
   // const scrollItemRef = useRef(null);
   const startRef = useRef(null);
   let controller = new AbortController(); // not sure if okay to initialise here
+
+  // todo: prefetch the next page
 
   async function getPage(pgNum) {
     console.log("getPage pageState:", pageState);
@@ -28,36 +30,37 @@ function PagesFetch({ Item, fetchItems, numPages, context }) {
         console.log(page);
         let pages = [...pageState.pages];
         pages[pgNum] = page;
-        setPageState({ ...pageState, pages: pages, pageNum: pgNum });
+        setPageState({ ...pageState, pages: pages, pageNum: pgNum, pageChanging: false });
+        setError(null);
       } catch (err) {
-        throw err;
+        setError(err.toString());
+        // throw err; // todo
       }
     }
   }
 
-  async function getPage0() {
-    // get page 0, whose response includes the number of pages
-    try {
-      // const { items: page, numPages } = await fetchItems(1);
-      const { items: page, numPages } = await fetchItems(1);
-      console.log(page, numPages);
-      let pages = [];
-      for (let i = 0; i < numPages; i++) {
-        pages.push(null);
-      }
-      pages[1] = page;
-      console.log(pages, numPages, 1);
-      setPageState({ pages: pages, lastPage: numPages, pageNum: 1 });
-    } catch (err) {
-      throw err;
-    }
-  }
-
-  // run once on page load.
   useEffect(() => {
-    // getPage(0);
-    getPage0();
-  }, []);
+    async function getPage1() {
+      // get page 1, whose response includes the number of pages
+      try {
+        const { items: page, numPages } = await fetchItems(1);
+        console.log(page, numPages);
+        let pages = [];
+        for (let i = 0; i < numPages; i++) {
+          pages.push(null);
+        }
+        pages[1] = page;
+        console.log(pages, numPages, 1);
+        setPageState({ pages: pages, lastPage: numPages, pageNum: 1, pageChanging: false });
+        setError(null);
+      } catch (err) {
+        setError(err.toString());
+        // throw err; // todo
+      }
+    }
+
+    getPage1();
+  }, [fetchItems]);
 
   function pageChanged(event) {
     console.log(event.target);
@@ -73,6 +76,7 @@ function PagesFetch({ Item, fetchItems, numPages, context }) {
       pageNum = parseInt(event.target.text, 10);
     }
     if (pageNum) {
+      setPageState({ ...pageState, pageChanging: true })
       getPage(pageNum);
       startRef.current.scrollIntoView({ behavior: 'smooth' });
       // this only works sometimes in Firefox...
@@ -119,40 +123,23 @@ function PagesFetch({ Item, fetchItems, numPages, context }) {
     )
   }
 
-  // runs on page change. update displayed pages and page numbers.
-  // useEffect(() => {
-  //   console.log('pageState useeffect');
-  //   console.log(pageState);
-  //   if (!pageState) {
-  //     return;
-  //   }
-
-  //   const { page, lastPage, pageNum } = pageState;
-  //   console.log(page);
-  //   console.log(pageNum);
-
-  //   // there needs to be a way to make big jumps to the middle when there are a lot of pages
-  //   setPageJSX(
-  //     <div ref={startRef} className="pages">
-  //       {page.map(item => {
-  //         <Item details={item} />
-  //       })}
-  //       {pagination(pageNum, lastPage, pageChanged)}
-  //     </div>
-  //   );
-  // }, [pageState]);
-
   return (
     <React.Fragment>
-      <div ref={startRef} className="pages">
-      </div>
-      {pageState
+      <div ref={startRef} className="pages"></div>
+      {error
+        ? <h1>{error}</h1>
+        : null
+      }
+
+      {pageState && !pageState.pageChanging && pageState.lastPage > 0
         ? pageState.pages[pageState.pageNum].map(item => {
           return <Item details={item} context={context} />
         })
-        : <h1>Loading...</h1>}
+        : (pageState && !pageState.pageChanging && pageState.lastPage === 0
+          ? <h1>You have no history</h1>
+          : <h1>Loading...</h1>)}
 
-      {pageState
+      {pageState && pageState.lastPage > 0
         ? pagination(pageState.pageNum, pageState.lastPage, pageChanged)
         : null}
     </React.Fragment>

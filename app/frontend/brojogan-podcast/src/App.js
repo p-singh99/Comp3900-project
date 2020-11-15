@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState, createRef, useEffect} from 'react';
 import { Redirect, BrowserRouter as Router, Route, Switch } from 'react-router-dom';
 import './App.css';
 import Header from './components/Header';
@@ -14,12 +14,13 @@ import Recommended from './pages/Recommended';
 import Subscriptions from './pages/Subscriptions';
 import About from './pages/About';
 import Settings from './pages/Settings'
-import { fetchAPI, isLoggedIn } from './auth-functions';
+import { isLoggedIn, checkLogin } from './authFunctions';
+
 
 function App() {
   // on app load, check if token valid using useeffect?
-
-  const [playing, setPlaying] = useState({
+  const ref = createRef();
+  let playing = {
     title: "No Podcast Playing",
     podcastTitle: "",
     src: "",
@@ -27,13 +28,14 @@ function App() {
     guid: "",
     podcastID: "",
     progress: 0.0
-  });
+  };
+
   function changePlaying(state) {
-    console.log("new state is");
-    console.log(state);
-    setPlaying(state);
+    playing = state;
+    ref.current.updateState(state);
   }
 
+  useEffect(checkLogin, []);
 
   const defaultComponents = () => (
 
@@ -43,21 +45,23 @@ function App() {
         <div id='middle'>
           <NavBar />
           {/* Routes for all users */}
-          <Route path="/" component={Home} exact />
-          <Route path="/podcast/:id" exact render={(props) => (<Description {...props} setPlaying={changePlaying} />)}/>
-          {/* <Route path="/recommended" component={Recommended} exact /> */}
-          <Route path="/about" component={About} exact />
-          <Route path="/search" component={Search} />
+          <div id="content-div-main">
+            <Route path="/" component={Home} exact />
+            <Route path="/podcast/:id" exact render={(props) => (<Description {...props} setPlaying={changePlaying} />)}/>
+            {/* <Route path="/recommended" component={Recommended} exact /> */}
+            <Route path="/about" component={About} exact />
+            <Route path="/search" component={Search} />
 
-          {/* Routes for logged in users only */}
-          <Route path="/recommended" exact>{isLoggedIn() ? <Recommended /> : <Redirect to="/" />}</Route>
-          <Route path="/history" exact>{isLoggedIn() ? <History /> : <Redirect to="/" />}</Route>
-          <Route path="/subscriptions" exact >{isLoggedIn() ? <Subscriptions /> : <Redirect to="/" />}</Route>
-          <Route path="/settings" exact>{isLoggedIn() ? <Settings /> : <Redirect to="/" />}</Route>
+            {/* Routes for logged in users only */}
+            <Route path="/recommended" exact>{isLoggedIn() ? <Recommended /> : <Redirect to="/" />}</Route>
+            <Route path="/history" exact>{isLoggedIn() ? <History /> : <Redirect to="/" />}</Route>
+            <Route path="/subscriptions" exact >{isLoggedIn() ? <Subscriptions /> : <Redirect to="/" />}</Route>
+            <Route path="/settings" exact>{isLoggedIn() ? <Settings /> : <Redirect to="/" />}</Route>
+          </div>
         </div>
       </div>
       <footer>
-        <Footer state={playing} setState={changePlaying} />
+        <Footer ref={ref} />
       </footer>
       {/* move <footer></footer> into Footer component? It breaks it for some reason, makes it overlap with content */}
     </body>
