@@ -220,11 +220,7 @@ class Podcasts(Resource):
 		                      ON t.categoryid = c.id
 		               LEFT JOIN podcastsubscribers ps
 		                      ON ps.id = p.id
-<<<<<<< HEAD
-		               WHERE     to_tsvector(c.name) @@ plainto_tsquery(%s) and p.id not in (select podcastid from search(%s));
-=======
 		               WHERE  to_tsvector(c.name) @@ plainto_tsquery(%s) and p.id not in (select podcastid from search(%s));
->>>>>>> 1c5e463f54a92fd9969cd9bc049d0d3b21c10d06
 		            """,
 		            (search,search))
 		categories = cur.fetchall()
@@ -237,7 +233,6 @@ class Podcasts(Resource):
 			pID = p[4]
 			results.append({"subscribers" : subscribers, "title" : title, "author" : author, "description" : description, "pid" : pID})
 		for c in categories:
-<<<<<<< HEAD
 			# flag = False
 			# for r in results:
 			# 	if int(r['pid']) == int(c[0]):
@@ -245,15 +240,6 @@ class Podcasts(Resource):
 			# 		break
 			# if flag == False:
 			# #if not any(str(c[0]) in sublist for sublist in results):
-=======
-			#flag = False
-			#for r in results:
-				#if int(r['pid']) == int(c[0]):
-					#flag = True
-					#break
-			#if flag == False:
-			#if not any(str(c[0]) in sublist for sublist in results):
->>>>>>> 1c5e463f54a92fd9969cd9bc049d0d3b21c10d06
 			results.append({"subscribers" : c[4], "title" : c[1], "author" : c[2], "description" : c[3], "pid" : c[0]})
 		close_conn(conn, cur)
 		return results, 200
@@ -583,10 +569,7 @@ api.add_resource(BestPodcasts, "/top-podcasts")
 api.add_resource(Settings, "/self/settings")
 api.add_resource(Recommendations, "/self/recommendations")
 api.add_resource(Subscriptions, "/self/subscriptions")
-<<<<<<< HEAD
-=======
 api.add_resource(SubscriptionPanel, "/self/subscription-panel")
->>>>>>> 1c5e463f54a92fd9969cd9bc049d0d3b21c10d06
 api.add_resource(History, "/self/history/<int:id>")
 api.add_resource(Listens, "/self/podcasts/<int:podcastId>/episodes/time")
 api.add_resource(ManyListens, "/self/podcasts/<int:podcastId>/time")
