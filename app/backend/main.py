@@ -83,9 +83,6 @@ class SubscriptionPanel(Resource):
 			if search:
 				guid = search.group(1)
 				cur.execute("SELECT complete FROM Listens where episodeGuid =%s AND userId = %s;", (guid, uid))
-			# bool = cur.fetchone()[0]
-			if cur.fetchone() == None:
-				continue
 			title = p[0]
 			xml = p[1]
 			pid = p[2]
@@ -159,16 +156,17 @@ class Podcasts(Resource):
 		startNum = request.args.get('offset')
 		limitNum = request.args.get('limit')
 
-		cur.execute("""SELECT count(s.podcastid), v.title, v.author, v.description, v.id
+		cur.execute("""SELECT count(s.podcastid), v.title, v.author, v.description, v.id, v.thumbnail, rv.coalesce
 	     			FROM   searchvector v
 	     			FULL OUTER JOIN Subscriptions s ON s.podcastId = v.id
+		                LEFT JOIN ratingsview rv ON vid = rv.id
 	     			WHERE  v.vector @@ plainto_tsquery(%s)
-	     			GROUP BY  (s.podcastid, v.title, v.author, v.description, v.id, v.vector)
+	     			GROUP BY  (s.podcastid, v.title, v.author, v.description, v.id, v.vector, v.thumbnail, rv.coalesce)
 				ORDER BY  ts_rank(v.vector, plainto_tsquery(%s)) desc;
 				""",
 				(search,search))
 		podcasts = cur.fetchall()
-		cur.execute("""SELECT DISTINCT p.id, p.title, p.author, p.description, ps.count
+		cur.execute("""SELECT DISTINCT p.id, p.title, p.author, p.description, ps.count, p.thumbnail, vr.coalesce
 		               FROM   podcasts p
 		               LEFT JOIN podcastcategories t
 		                      ON t.podcastid = p.id
@@ -176,6 +174,8 @@ class Podcasts(Resource):
 		                      ON t.categoryid = c.id
 		               LEFT JOIN podcastsubscribers ps
 		                      ON ps.id = p.id
+		               LEFT JOIN ratingsview
+		                      ON p.id = vr.id
 		               WHERE  to_tsvector(c.name) @@ plainto_tsquery(%s) and p.id not in (select podcastid from search(%s));
 		            """,
 		            (search,search))
@@ -187,9 +187,11 @@ class Podcasts(Resource):
 			author = p[2]
 			description = p[3]
 			pID = p[4]
-			results.append({"subscribers" : subscribers, "title" : title, "author" : author, "description" : description, "pid" : pID})
+			thumbnail = p[5]
+			rating = p[6]
+			results.append({"subscribers" : subscribers, "title" : title, "author" : author, "description" : description, "pid" : pID, "thumbnail" : thumbnail, "rating" : rating})
 		for c in categories:
-			results.append({"subscribers" : c[4], "title" : c[1], "author" : c[2], "description" : c[3], "pid" : c[0]})
+			results.append({"subscribers" : c[4], "title" : c[1], "author" : c[2], "description" : c[3], "pid" : c[0], "thumbnail" : c[5], "rating" : c[6]})
 		df.close_conn(conn, cur)
 		return results, 200
 
@@ -487,7 +489,7 @@ class Recommendations(Resource):
 		recs = []
 		cur.execute("select distinct * from recommendations(%s)", (user_id,))
 		results = cur.fetchall()
-		[recs.append({"title": i[0], "thumbnail": i[1], "id": i[2], "subs": i[3], "eps": i[4], "rating":  f"{i[5]:.1f}"}) for i in results]
+		recs = [{"title": i[0], "thumbnail": i[1], "id": i[2], "subs": i[3], "eps": i[4], "rating": f"{i[5]:.1f}"} for i in results]
 		df.close_conn(conn,cur)
 		return {"recommendations" : recs}
 
@@ -627,10 +629,10 @@ class Ratings(Resource):
 class BestPodcasts(Resource):
 	def get(self):
 		conn, cur = df.get_conn()
-		cur.execute("SELECT * FROM podcastsubscribers ORDER BY count DESC Limit 10")
-		top_subbed = cur.fetchall()
-		cur.execute("SELECT * FROM ratingsview ORDER BY rating DESC Limit 10")
-		top_rated = cur.fetchall()
+		cur.execute("SELECT p.id, p.xml, p.count, t.thumbnail, r.coalesce FROM podcastsubscribers p, podcasts t, ratingsview r ORDER BY p.count DESC Limit 10")
+		top_subbed = [{"id": i[0], "xml": i[1], "subs": i[2], "thumbnail": i[3], "rating": i[4]} for i in cur.fetchall()]
+		cur.execute("SELECT p.id, p.xml, p.count, t.thumbnail, r.coalesce FROM podcastsubscribers p, podcasts t, ratingsview r ORDER BY p.count DESC Limit 10")
+		top_rated = [{"id": i[0], "xml": i[1], "subs": i[2], "thumbnail": i[3], "rating": i[4]} for i in cur.fetchall()]
 		df.close_conn(conn,cur)
 		return {"topSubbed": top_subbed, "topRated": top_rated}, 200
 

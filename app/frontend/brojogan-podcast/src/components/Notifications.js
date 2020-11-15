@@ -31,7 +31,6 @@ function Notification({notification, dismissNotification}) {
                 {notification.episodeTitle} | {notification.podcastTitle} 
             </Link> 
             <span className="dismiss-notification" onClick={ e => {
-                alert("dismiss!");
                 dismissNotification(notification);
                 e.stopPropagation();
             }}>×</span>
