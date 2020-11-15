@@ -31,10 +31,10 @@ function SubCard({ details: podcast, context }) {
         const data = await fetchAPI(`/podcasts/${podcast.pid}`, 'get', null, controller.signal);
         console.log(data);
         if (!data.xml) {
-          setPodcastObj({ podcast: null, subscription: data.subscription });
+          setPodcastObj({ podcast: null, subscription: data.subscription, rating: data.rating});
         } else {
           const pod = getPodcastFromXML(data.xml);
-          setPodcastObj({ podcast: pod, subscription: data.subscription });
+          setPodcastObj({ podcast: pod, subscription: data.subscription, rating: data.rating });
           console.log(`Episodes for ${podcast.pid}`);
         }
       } catch (error) {

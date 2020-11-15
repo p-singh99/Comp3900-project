@@ -42,6 +42,7 @@ function Description(props) {
   const [podcast, setPodcast] = useState(null);
   const [subscribeBtn, setSubscribeBtn] = useState("Subscribe");
   const [userRating, setUserRating] = useState(undefined);
+  const [rating, setRating] = useState(null);
   // const [pendingRating, setPendingRating] = useState(false);
 
   const setPlaying = props.setPlaying;
@@ -57,12 +58,14 @@ function Description(props) {
     const episodeNum = queryParams.get("episode");
     console.log("episodeNum:", episodeNum);
 
-    function updatePodcastDetails(podcast, subscription) {
+    function updatePodcastDetails(podcast, subscription, rating) {
       setPodcast(podcast);
       console.log(`Subscribed: ${subscription}`);
       if (subscription) {
         setSubscribeBtn('Unsubscribe');
       }
+      console.log("updatePodcastDetails Rating:", rating);
+      setRating(rating);
       // } else {
       //   setSubscribeBtn('Subscribe');
       // }
@@ -75,10 +78,9 @@ function Description(props) {
         // TODO: need to figure out how to check for 401s etc, here.
         let promises = [];
         if (prefetchedPodcast) {
-          updatePodcastDetails((prefetchedPodcast.podcast ? prefetchedPodcast.podcast : { error: "Error loading podcast" }), prefetchedPodcast.subscription);
+          updatePodcastDetails((prefetchedPodcast.podcast ? prefetchedPodcast.podcast : { error: "Error loading podcast" }), prefetchedPodcast.subscription, prefetchedPodcast.rating);
         } else {
           const xmlPromise = getRSS(id);
-
           promises.push(xmlPromise);
         }
 
@@ -109,12 +111,13 @@ function Description(props) {
               console.log(podcastDetails);
               if (podcastDetails.xml) {
                 podcast = getPodcastFromXML(podcastDetails.xml);
-                podcast.rating = podcastDetails.rating;
+                // podcast.rating = podcastDetails.rating;
+
                 console.log("Parsed podcast:", podcast);
               } else {
                 podcast = { error: "Error loading podcast" };
               }
-              updatePodcastDetails(podcast, podcastDetails.subscription);
+              updatePodcastDetails(podcast, podcastDetails.subscription, podcastDetails.rating);
 
               times = second;
               rating = third;
@@ -227,10 +230,11 @@ function Description(props) {
                   edit={false}
                   value={1}
                 />
-                {podcast.rating
+                {console.log("Rating in return:", rating)}
+                {rating
                   ?
                   <React.Fragment>
-                    <div className="current-rating-num">{podcast.rating}</div>
+                    <div className="current-rating-num">{rating}</div>
                     {/* <div className="current-rating-num">{podcast.rating.toFixed(1)</div> */}
                     <div className="current-rating-after">/5</div>
                   </React.Fragment>
@@ -422,7 +426,6 @@ function sanitiseDescription(description) {
   // this is double parsing, should be able to the <a> attributes while sanitising with the right library
   const dom = (new DOMParser()).parseFromString(description, "text/html");
   for (const node of dom.querySelectorAll("body *")) {
-    console.log(node);
     let nodeName = node.nodeName.toLowerCase();
     if (nodeName === "a") {
       node.setAttribute("target", "_blank");
