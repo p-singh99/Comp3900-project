@@ -484,7 +484,7 @@ class Recommendations(Resource):
 		recs = []
 		cur.execute("select distinct * from recommendations(%s)", (user_id,))
 		results = cur.fetchall()
-		[recs.append({"title": i[0], "thumbnail": i[1], "id": i[2], "subs": i[3], "eps": i[4], "rating":  f"{i[5]:.1f}"}) for i in results]
+		recs = [{"title": i[0], "thumbnail": i[1], "id": i[2], "subs": i[3], "eps": i[4], "rating": f"{i[5]:.1f}"} for i in results]
 		df.close_conn(conn,cur)
 		return {"recommendations" : recs}
 
@@ -626,8 +626,8 @@ class BestPodcasts(Resource):
 		conn, cur = df.get_conn()
 		cur.execute("SELECT p.id, p.xml, p.count, t.thumbnail, r.coalesce FROM podcastsubscribers p, podcasts t, ratingsview r ORDER BY p.count DESC Limit 10")
 		top_subbed = [{"id": i[0], "xml": i[1], "subs": i[2], "thumbnail": i[3], "rating": i[4]} for i in cur.fetchall()]
-		cur.execute("SELECT * FROM ratingsview ORDER BY rating DESC Limit 10")
-		top_rated = cur.fetchall()
+		cur.execute("SELECT p.id, p.xml, p.count, t.thumbnail, r.coalesce FROM podcastsubscribers p, podcasts t, ratingsview r ORDER BY p.count DESC Limit 10")
+		top_rated = [{"id": i[0], "xml": i[1], "subs": i[2], "thumbnail": i[3], "rating": i[4]} for i in cur.fetchall()]
 		df.close_conn(conn,cur)
 		return {"topSubbed": top_subbed, "topRated": top_rated}, 200
 
