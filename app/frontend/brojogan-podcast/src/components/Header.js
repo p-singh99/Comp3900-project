@@ -7,26 +7,23 @@ import DropDownMenu from './../components/DropDownMenu';
 // import Search from './../components/SearchPage.js';
 import notifications from './../images/notifications.png';
 import settings from './../images/settings.png';
-import {logoutHandler, authFailed, isLoggedIn, getUsername} from './../authFunctions';
+import {logoutHandler, isLoggedIn, getUsername} from './../authFunctions';
 import { useHistory } from 'react-router-dom';
 import {API_URL} from './../constants';
+import Notifications from './../components/Notifications';
 
 function displayError(error) {
   alert(error);
 }
+
+let mouseDownEvent = false;
+let intervalSet = false;
 
 
 const Icons = {
   NOTIFICATION: 'notification',
   SETTINGS: 'settings'
 }
-
-const notificationOptions = [
-  {text: 'Notification 1', onClick: () => alert('notification')},
-  {text: 'Notification 2', onClick: () => alert('notification')},
-  {text: 'Notification 3', onClick: () => alert('notification')},
-  {text: 'Notification 4', onClick: () => alert('notification')}
-]
 
 function Header() {
   const history = useHistory();
@@ -42,13 +39,6 @@ function Header() {
     {text: 'Signup', onClick: () => history.push("/signup")}
   ];
 
-  let [isStart, setStart] = useState(true);
-  let [options, setOptions] = useState({options: notificationOptions, visibility: 'hidden'})
-  let [notificationClicked, setNotificationClicked] = useState(false);
-  let [settingsClicked, setSettingsClicked] = useState(false);
-  let [selectedIcon, setSelectedIcon] = useState('');
-  const dropDownRef = useRef(DropDownMenu);
-
   const imgStyle = {
     float: "left",
     margin: '0px 10px 0px 0px'
@@ -57,62 +47,6 @@ function Header() {
     margin: '0px 0px 0px 0px',
     fontSize: '16px',
     color: '#64CFEB'
-  }
-
-  let start = true;
-
-  useEffect(() => {
-    //console.log('called');
-    if (!isStart) {
-      if (selectedIcon == Icons.NOTIFICATION) {
-        checkNotificationsClicked();
-      } else if (selectedIcon == Icons.SETTINGS) {
-        checkSettingsClicked();
-      }
-    }
-    setStart(false);
-  }, [notificationClicked, settingsClicked, setOptions]);
-
-  function checkNotificationsClicked() {
-    if (notificationClicked) {
-      document.getElementById('notification-button').setAttribute('id', 'notification-button-clicked');
-      if (settingsClicked) {
-        setSettingsClicked(false);
-        setSelectedIcon(Icons.SETTINGS);
-      }
-      setOptions({options: notificationOptions, visibility: 'visible'});
-    } else {
-      document.getElementById('notification-button-clicked').setAttribute('id', 'notification-button');
-      if (settingsClicked) {
-        setOptions({options: settingsOptions, visibility: 'visible'});
-      } else {
-        setOptions({options: notificationOptions, visibility: 'hidden'});
-      }
-    }
-  }
-
-  function checkSettingsClicked() {
-    // console.log('called');
-    if (settingsClicked) {
-      document.getElementById('settings-button').setAttribute('id', 'settings-button-clicked');
-      if (notificationClicked) {
-        setNotificationClicked(false);
-        setSelectedIcon(Icons.NOTIFICATION);
-      }
-      setOptions({options: settingsOptions, visibility: 'visible'});
-    } else {
-      document.getElementById('settings-button-clicked').setAttribute('id', 'settings-button');
-      if (notificationClicked) {
-        setOptions({options: notificationOptions, visibility: 'visible'});
-      } else {
-        setOptions({options: settingsOptions, visibility: 'hidden'});
-      }
-    }
-  }
-
-  function clickedOutside() {
-    setSettingsClicked(false);
-    setNotificationClicked(false);
   }
 
   function searchHandler(event) {
@@ -150,7 +84,31 @@ function Header() {
     }
   }
 
+  // notifications state
+  const [notifications, setNotifications] = useState([]);
+  const [notificationsVisibility, setNotificationsVisibility] = useState(false);
+  const [settingsVisibility, setSettingsVisibility] = useState(false);
 
+  
+  // code for closing drop downs on a mouse click outside of the dropdowns
+  // doesn't work right now
+/*
+  if (!mouseDownEvent) {
+    mouseDownEvent = true;
+    document.addEventListener("mousedown", e => {
+      let notificationsDiv = document.getElementById("notifications-div");
+      let settingsDiv = document.getElementById("dropDown-div");
+      if (!notificationsDiv.contains(e.target)) {
+        console.log("target not in notifications -> falsing visibility");
+        setNotificationsVisibility(false);
+      }
+      if (!settingsDiv.contains(e.target)) {
+        console.log("target not in settings -> falsing visibility");
+        setSettingsVisibility(false);
+      }
+    });
+  }
+*/
   return (
     <div id="header-wrapper">
       <div id="header-div">
@@ -176,17 +134,20 @@ function Header() {
         <div id="icons-div" style={{margin: '15px 25px 0px 0px'}}>
         <div id="username">{getUsername()}</div>
           <button id="notification-button" onClick={() => {
-            setNotificationClicked(!notificationClicked);
-            setSelectedIcon(Icons.NOTIFICATION);
+            setNotificationsVisibility(!notificationsVisibility);
+            setSettingsVisibility(false);
           }}/>
           <button id="settings-button" onClick={() => {
-            setSettingsClicked(!settingsClicked);
-            setSelectedIcon(Icons.SETTINGS);
+            setSettingsVisibility(!settingsVisibility);
+            setNotificationsVisibility(false);
           }}/>
         </div>
       </div>
+      <div id="notificationsDiv">
+        <Notifications /*state={notifications} setState={setNotifications}*/ visibility={notificationsVisibility} />
+      </div>
       <div id="dropDownDiv">
-        <DropDownMenu ref={dropDownRef} items={options} clickedOutside={clickedOutside}/>
+        <DropDownMenu items={{options: settingsOptions}} visibility={settingsVisibility} />
       </div>
     </div>
   )
