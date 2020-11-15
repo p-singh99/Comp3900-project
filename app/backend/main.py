@@ -318,7 +318,7 @@ class Podcast(Resource):
 		subscribers = 0
 		if res is not None:
 			subscribers = res[0]
-		cur.execute("SELECT rating from ratingsview where id=%s" % id)
+		cur.execute("SELECT avg from ratingsview where id=%s" % id)
 		rating = int(round(cur.fetchone[0],1)) if cur.fetchone()[0] else None
 		close_conn(conn,cur)
 		return {"xml": xml, "id": id, "subscription": flag, "subscribers": subscribers, "rating": rating}, 200
