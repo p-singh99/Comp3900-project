@@ -319,10 +319,33 @@ class Podcast(Resource):
 		if res is not None:
 			subscribers = res[0]
 		cur.execute("SELECT rating from ratingsview where id=%s" % id)
-		rating = cur.fetchone()[0] if cur.fetchone() else None
+		rating = int(round(cur.fetchone[0],1)) if cur.fetchone()[0] else None
 		close_conn(conn,cur)
 		return {"xml": xml, "id": id, "subscription": flag, "subscribers": subscribers, "rating": rating}, 200
 
+
+class Subscriptions(Resource):
+	@token_required
+	def get(self):
+		conn, cur = get_conn()
+		uid = get_user_id(cur)
+		cur.execute("SELECT p.title, p.author, p.description, p.id, r.avg FROM podcasts p, ratingsview r, subscriptions s \
+			WHERE s.podcastId = p.id and s.userID = %s and r.id = p.id;", (uid,))
+		podcasts = cur.fetchall()
+		results = []
+		for p in podcasts:
+			cur.execute("select count(podcastId) FROM subscriptions where podcastId = %s GROUP BY podcastId;", (p[3],))
+			subscribers = cur.fetchone()
+			title = p[0]
+			author = p[1]
+			description = p[2]
+			pID = p[3]
+			rating = p[4]
+			if rating:
+				rating = int(round(p[4],1))
+			results.append({"subscribers" : subscribers, "title" : title, "author" : author, "description" : description, "pid" : pID, "rating": rating})
+		close_conn(conn, cur)
+		return results, 200
 
 	@token_required
 	def post(self, id):
@@ -350,36 +373,12 @@ class Podcast(Resource):
 		close_conn(conn,cur)
 		return {"data" : "subscription deleted"}, 200
 
-class Subscriptions(Resource):
-	@token_required
-	def get(self):
-		conn, cur = get_conn()
-		uid = get_user_id(cur)
-		cur.execute("SELECT p.title, p.author, p.description, p.id, r.avg FROM podcasts p, ratingsview r, subscriptions s \
-			WHERE s.podcastId = p.id and s.userID = %s and r.id = p.id;", (uid,))
-		podcasts = cur.fetchall()
-		results = []
-		for p in podcasts:
-			cur.execute("select count(podcastId) FROM subscriptions where podcastId = %s GROUP BY podcastId;", (p[3],))
-			subscribers = cur.fetchone()
-			title = p[0]
-			author = p[1]
-			description = p[2]
-			pID = p[3]
-			rating = p[4]
-			if rating:
-				rating = int(round(p[4],1))
-			results.append({"subscribers" : subscribers, "title" : title, "author" : author, "description" : description, "pid" : pID, "rating": rating})
-		close_conn(conn, cur)
-		return results, 200
 
-# allow passing the page size or doing offset limit thing?
 class History(Resource):
 	@token_required
 	def get(self, id):
 		# id is pageNum
 		parser = reqparse.RequestParser()
-		#parser.add_argument('offset', type=int, required=False, location="args")
 		parser.add_argument('limit', type=int, required=False, location="args")
 		args = parser.parse_args()
 		limit = args['limit'] if args['limit'] is not None else 12
@@ -493,71 +492,10 @@ class Recommendations(Resource):
 		user_id = get_user_id(cur)
 		recs = []
 		cur.execute("select distinct * from recommendations(%s)" % user_id)
-		[recs.append({"xml": i[0], "id": i[1], "subs": i[2]}) for i in cur.fetchall()]
+		results = cur.fetchall()
+		[recs.append({"title": i[0], "id": i[1], "subs": i[2], "eps": i[3]}) for i in results]
 		close_conn(conn,cur)
 		return {"recommendations" : recs}
-
-	# def get(self):
-	# 	recs = []
-	# 	temp = []
-	# 	limit = 10
-	# 	conn, cur = get_conn()
-	# 	user_id = get_user_id(cur)
-
-	# 	# cur.execute("select * from podcasts left join podcastsubscribers on podcasts.id=podcastsubscribers.id")
-	# 	# print(f"total = {cur.rowcount}")
-	# 	# 	print(str(i[1]) + " " + str(i[2]))
-
-	# 	# Finds the most recently listened to podcasts that are not subscribed to
-	# 	cur.execute("select p.xml, p.id, p.count, l.listendate from podcastsubscribers p join listens l on (l.podcastid=p.id) where l.userid=%s and \
-	# 		p.id not in (select p.id from podcasts p, subscriptions s where s.userid=%s and s.podcastid=p.id) \
-	# 			 order by l.listendate DESC Limit %s;" % (user_id, user_id, limit))
-	# 	results = cur.fetchall()
-	# 	for i in results:
-	# 		print(i[1])
-	# 		if limit == 0:
-	# 			close_conn(conn, cur)
-	# 			[recs.append({"xml": i[0], "id": i[1], "subs": i[2]}) for i in temp]
-	# 			return {"recommendations" : recs}
-	# 		if not (any(i[1] in j for j in temp)):
-	# 			temp.append((i[0], i[1], i[2]))
-	# 			limit -= 1
-	# 		#recs.append({"xml": i[0], "id": i[1], "subs": 1})
-	# 	[recs.append({"xml": i[0], "id": i[1], "subs": i[2]}) for i in temp]
-	# 	cur.execute("select query from searchqueries where userid=%s order by searchdate DESC limit 10" % user_id)
-	# 	queries = cur.fetchall()
-	# 	for query in queries:
-	# 		cur.execute("select p.xml, p.id, p.count, count(p.id) from podcastsubscribers p, podcastcategories pc, categories c where p.id in (SELECT v.id\
-	# 			FROM   searchvector v\
-	# 			FULL OUTER JOIN Subscriptions s ON s.podcastId = v.id\
-	# 			WHERE  v.vector @@ plainto_tsquery(%s)\
-	# 			GROUP BY  (s.userid, v.title, v.author, v.description, v.id, v.vector)\
-	# 		ORDER BY  ts_rank(v.vector, plainto_tsquery(%s)) desc LIMIT 10) and\
-	# 			p.id = pc.podcastid and pc.categoryid=c.id and c.id in (select distinct c.id from categories c, subscriptions s, podcastcategories pc \
-	# 				where s.userId=%s and s.podcastid = pc.podcastid and pc.categoryid = c.id) and \
-	# 					p.id not in (select p.id from podcasts p, subscriptions s where p.id = s.podcastid and \
-	# 						s.userid=%s) group by p.xml, p.id, p.count order by count(p.id) DESC LIMIT %s", (query[0],query[0], user_id, user_id, limit))
-	# 		results = cur.fetchall()
-	# 		for i in results:
-	# 			print(i[1])
-	# 			if limit == 0:
-	# 				close_conn(conn, cur)
-	# 				return {"recommendations" : recs}
-	# 			recs.append({"xml": i[0], "id": i[1], "subs": i[2]})
-	# 			limit -= 1
-	# 	cur.execute("select p.xml, p.id, count(p.id) from podcasts p, podcastcategories pc, categories c \
-	# 		where p.id=pc.podcastid and pc.categoryid=c.id and c.id in (select distinct c.id from categories c, subscriptions s, podcastcategories pc \
-	# 			where s.userId=%s and s.podcastid = pc.podcastid and pc.categoryid = c.id) and \
-	# 				p.title not in (select p.title from podcasts p, subscriptions s where p.id = s.podcastid and \
-	# 					s.userid=%s) group by p.xml, p.id order by count(p.id) DESC LIMIT %s;" % (user_id, user_id, limit))
-
-	# 	results = cur.fetchall()
-	# 	for i in results:
-	# 		recs.append({"xml": i[0], "id": i[1], "subs": 1})
-	# 	[recs.append({"xml": i[0], "id": i[1], "subs": i[2]}) for i in temp]
-	# 	#recs = recs[:10]
-	# 	close_conn(conn, cur)
-	# 	return {"recommendations" : recs}
 
 class RejectRecommendations(Resource):
 	@token_required
@@ -624,7 +562,7 @@ api.add_resource(History, "/self/history/<int:id>")
 api.add_resource(Listens, "/self/podcasts/<int:podcastId>/episodes/time")
 api.add_resource(ManyListens, "/self/podcasts/<int:podcastId>/time")
 api.add_resource(Ratings, "/self/ratings/<int:id>")
-api.add_resource(BestPodcasts, "/toppodcasts")
+api.add_resource(BestPodcasts, "/top-podcasts")
 
 if __name__ == '__main__':
 	app.run(debug=True, threaded=True)
