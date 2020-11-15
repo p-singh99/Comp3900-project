@@ -125,7 +125,7 @@ function SubCard({ details: podcast, context }) {
             {/* <img src={(podcastObj && podcastObj.podcast) ? podcastObj.podcast.image : 'https://i.pinimg.com/originals/92/63/04/926304843ea8e8b9bc22c52c755ec34f.gif'} alt={`${podcast.title} icon`} /> */}
             {/* Random loading gif from google, totally dodge */}
             {/* <img src={podcast.image} alt={`${podcast.title} icon`} /> */} { /* the alt is too log, wraps to next line and screws up the whole component */}
-            <img src={podcast.image} />
+            <img src={podcast.thumbnail} />
             <Link className={'search-page-link'} to={{ pathname: `/podcast/${podcast.pid}`, state: { podcastObj: podcastObj } }}>
               {podcast.title}
             </Link>
