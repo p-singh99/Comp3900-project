@@ -630,9 +630,9 @@ class BestPodcasts(Resource):
 	def get(self):
 		conn, cur = df.get_conn()
 		cur.execute("SELECT p.id, p.xml, p.count, t.thumbnail, r.rating FROM podcastsubscribers p, podcasts t, ratingsview r ORDER BY p.count DESC Limit 10")
-		top_subbed = [{"id": i[0], "xml": i[1], "subs": i[2], "thumbnail": i[3], "rating": i[4]} for i in cur.fetchall()]
+		top_subbed = [{"id": i[0], "xml": i[1], "subs": i[2], "thumbnail": i[3], "rating": f"{i[4]:.1f}"} for i in cur.fetchall()]
 		cur.execute("SELECT p.id, p.xml, p.count, t.thumbnail, r.rating FROM podcastsubscribers p, podcasts t, ratingsview r ORDER BY p.count DESC Limit 10")
-		top_rated = [{"id": i[0], "xml": i[1], "subs": i[2], "thumbnail": i[3], "rating": i[4]} for i in cur.fetchall()]
+		top_rated = [{"id": i[0], "xml": i[1], "subs": i[2], "thumbnail": i[3], "rating": f"{i[4]:.1f}"} for i in cur.fetchall()]
 		df.close_conn(conn,cur)
 		return {"topSubbed": top_subbed, "topRated": top_rated}, 200
 
