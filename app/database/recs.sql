@@ -82,3 +82,27 @@ drop table subs;
 drop table rejected;
 end
 $$ language plpgsql;
+
+
+create or replace function search(_query text)
+returns table (subscribers bigint, title text, author text, description text, podcastid integer)
+as $$
+begin
+    return query
+    select count(s.podcastid), v.title, v.author, v.description, v.id
+    from searchvector v
+    full outer join subscriptions s on s.podcastid=v.id
+    where v.vector @@ plainto_tsquery(_query)
+    group by (s.podcastid, v.title, v.author, v.description,v.xml, v.id, v.vector)
+    order by ts_rank(v.vector, plainto_tsquery(_query)) desc;
+
+    SELECT p.id, p.title, p.author, p.description, ps.count
+    FROM   podcasts p
+	LEFT JOIN podcastcategories t ON t.podcastid = p.id
+	LEFT JOIN categories c
+	    ON t.categoryid = c.id
+	LEFT JOIN podcastsubscribers ps
+		ON ps.id = p.id
+	WHERE to_tsvector(c.name) @@ plainto_tsquery(_query)
+end
+$$ language plpgsql;
