@@ -83,9 +83,6 @@ class SubscriptionPanel(Resource):
 			if search:
 				guid = search.group(1)
 				cur.execute("SELECT complete FROM Listens where episodeGuid =%s AND userId = %s;", (guid, uid))
-			# bool = cur.fetchone()[0]
-			if cur.fetchone() == None:
-				continue
 			title = p[0]
 			xml = p[1]
 			pid = p[2]
@@ -487,7 +484,11 @@ class Recommendations(Resource):
 		recs = []
 		cur.execute("select distinct * from recommendations(%s)", (user_id,))
 		results = cur.fetchall()
+<<<<<<< HEAD
+		recs = [{"title": i[0], "thumbnail": i[1], "id": i[2], "subs": i[3], "eps": i[4], "rating": f"{i[5]:.1f}"} for i in results]
+=======
 		[recs.append({"title": i[0], "thumbnail": i[1], "id": i[2], "subs": i[3], "eps": i[4], "rating":  f"{i[5]:.1f}"}) for i in results]
+>>>>>>> 2416e318246d7535ab2ee198eb941115256a22b2
 		df.close_conn(conn,cur)
 		return {"recommendations" : recs}
 
@@ -627,8 +628,8 @@ class Ratings(Resource):
 class BestPodcasts(Resource):
 	def get(self):
 		conn, cur = df.get_conn()
-		cur.execute("SELECT * FROM podcastsubscribers ORDER BY count DESC Limit 10")
-		top_subbed = cur.fetchall()
+		cur.execute("SELECT p.id, p.xml, p.count, t.thumbnail, r.coalesce FROM podcastsubscribers p, podcasts t, ratingsview r ORDER BY p.count DESC Limit 10")
+		top_subbed = [{"id": i[0], "xml": i[1], "subs": i[2], "thumbnail": i[3], "rating": i[4]} for i in cur.fetchall()]
 		cur.execute("SELECT * FROM ratingsview ORDER BY rating DESC Limit 10")
 		top_rated = cur.fetchall()
 		df.close_conn(conn,cur)
