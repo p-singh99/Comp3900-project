@@ -65,9 +65,9 @@ def get_user_id(cur):
 		return cur.fetchone()[0]
 	return None
 
-class Unprotected(Resource):
-	def get(self):
-		return {'message': 'anyone'}, 200
+# class Unprotected(Resource):
+# 	def get(self):
+# 		return {'message': 'anyone'}, 200
 
 class Protected(Resource):
 	@token_required
@@ -212,7 +212,7 @@ class Podcasts(Resource):
 				""",
 				(search,search))
 		podcasts = cur.fetchall()
-		cur.execute("""SELECT p.id, p.title, p.author, p.description, ps.count
+		cur.execute("""SELECT DISTINCT p.id, p.title, p.author, p.description, ps.count
 		               FROM   podcasts p
 		               LEFT JOIN podcastcategories t
 		                      ON t.podcastid = p.id
@@ -220,7 +220,11 @@ class Podcasts(Resource):
 		                      ON t.categoryid = c.id
 		               LEFT JOIN podcastsubscribers ps
 		                      ON ps.id = p.id
+<<<<<<< HEAD
 		               WHERE     to_tsvector(c.name) @@ plainto_tsquery(%s) and p.id not in (select podcastid from search(%s));
+=======
+		               WHERE  to_tsvector(c.name) @@ plainto_tsquery(%s) and p.id not in (select podcastid from search(%s));
+>>>>>>> 1c5e463f54a92fd9969cd9bc049d0d3b21c10d06
 		            """,
 		            (search,search))
 		categories = cur.fetchall()
@@ -233,6 +237,7 @@ class Podcasts(Resource):
 			pID = p[4]
 			results.append({"subscribers" : subscribers, "title" : title, "author" : author, "description" : description, "pid" : pID})
 		for c in categories:
+<<<<<<< HEAD
 			# flag = False
 			# for r in results:
 			# 	if int(r['pid']) == int(c[0]):
@@ -240,6 +245,15 @@ class Podcasts(Resource):
 			# 		break
 			# if flag == False:
 			# #if not any(str(c[0]) in sublist for sublist in results):
+=======
+			#flag = False
+			#for r in results:
+				#if int(r['pid']) == int(c[0]):
+					#flag = True
+					#break
+			#if flag == False:
+			#if not any(str(c[0]) in sublist for sublist in results):
+>>>>>>> 1c5e463f54a92fd9969cd9bc049d0d3b21c10d06
 			results.append({"subscribers" : c[4], "title" : c[1], "author" : c[2], "description" : c[3], "pid" : c[0]})
 		close_conn(conn, cur)
 		return results, 200
@@ -321,7 +335,8 @@ class Podcast(Resource):
 		
 		res = cur.fetchone()
 		if res:
-			rating = int(round(res[0],1))
+			# rating = int(round(res[0],1))
+			rating = f"{res[0]:.1f}"
 		print(rating)
 		close_conn(conn,cur)
 		return {"xml": xml, "id": id, "subscription": flag, "subscribers": subscribers, "rating": rating}, 200
@@ -344,7 +359,8 @@ class Subscriptions(Resource):
 			description = p[2]
 			pID = p[3]
 			#rating = p[4]
-			rating = int(round(p[4],1))
+			# rating = int(round(p[4],1))
+			rating = f"{p[4]:.1f}"
 			results.append({"subscribers" : subscribers, "title" : title, "author" : author, "description" : description, "pid" : pID, "rating": rating})
 		close_conn(conn, cur)
 		return results, 200
@@ -552,21 +568,29 @@ class BestPodcasts(Resource):
 		close_conn(conn,cur)
 		return {"topSubbed": top_subbed, "topRated": top_rated}, 200
 
-api.add_resource(Unprotected, "/unprotected")
+# api.add_resource(Unprotected, "/unprotected")
+# auth
 api.add_resource(Protected, "/protected")
-api.add_resource(SubscriptionPanel, "/self/subscription-panel")
 api.add_resource(Login, "/login")
 api.add_resource(Users, "/users")
-api.add_resource(Settings, "/self/settings")
+
+# public
 api.add_resource(Podcasts, "/podcasts")
 api.add_resource(Podcast, "/podcasts/<int:id>")
+api.add_resource(BestPodcasts, "/top-podcasts")
+
+# user-specific
+api.add_resource(Settings, "/self/settings")
 api.add_resource(Recommendations, "/self/recommendations")
 api.add_resource(Subscriptions, "/self/subscriptions")
+<<<<<<< HEAD
+=======
+api.add_resource(SubscriptionPanel, "/self/subscription-panel")
+>>>>>>> 1c5e463f54a92fd9969cd9bc049d0d3b21c10d06
 api.add_resource(History, "/self/history/<int:id>")
 api.add_resource(Listens, "/self/podcasts/<int:podcastId>/episodes/time")
 api.add_resource(ManyListens, "/self/podcasts/<int:podcastId>/time")
 api.add_resource(Ratings, "/self/ratings/<int:id>")
-api.add_resource(BestPodcasts, "/top-podcasts")
 
 if __name__ == '__main__':
 	app.run(debug=True, threaded=True)

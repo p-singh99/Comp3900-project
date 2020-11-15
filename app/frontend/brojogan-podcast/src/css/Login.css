@@ -5,7 +5,7 @@
   align-items: center;
 }
 
-#login-div {
+#login-logo-div {
   margin-left: -170px;
   margin-top: -60px;
   border-radius: 50px;
@@ -28,7 +28,7 @@
   font-size: 35px;
 }
 
-#login-div-2 {
+#login-main-div {
   border-left: 3px solid  #221F2E;
   padding: 20px 0px 20px 0px;
   display: flex;
