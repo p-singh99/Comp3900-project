@@ -3,6 +3,9 @@ import Accordion from 'react-bootstrap/Accordion';
 import SubCard from './Card';
 import Pages from './Pages';
 
+// Uses Pages
+// props: podcasts is a list of details, one element is one podcast and one card
+// options is given to SubCard as context
 function PodcastCards(props) {
 
   console.log(`Props: ${props.podcasts.pid}`);

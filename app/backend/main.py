@@ -60,7 +60,7 @@ def get_user_id(cur):
 	if token:
 		try:
 			data = jwt.decode(token, app.config['SECRET_KEY'])
-			cur.execute("SELECT id FROM users WHERE username ='%s' or email = '%s'", (data['user'], data['user']))
+			cur.execute("SELECT id FROM users WHERE username =%s or email = %s", (data['user'], data['user']))
 		except:
 			return None
 		return cur.fetchone()[0]
@@ -96,7 +96,7 @@ class SubscriptionPanel(Resource):
 			print(search)
 			if search:
 				guid = search.group(1)
-				cur.execute("SELECT complete FROM Listens where episodeGuid = '%s' AND userId = %s;", (guid, uid))
+				cur.execute("SELECT complete FROM Listens where episodeGuid =%s AND userId = %s;", (guid, uid))
 			# bool = cur.fetchone()[0]
 			if cur.fetchone() == None:
 				continue
@@ -114,7 +114,7 @@ class Login(Resource):
 		# Check if username or email
 		conn, cur = df.get_conn()
 		# Check if username exists
-		cur.execute("SELECT username, hashedpassword FROM users WHERE username='%s' OR email='%s'", (username, username))
+		cur.execute("SELECT username, hashedpassword FROM users WHERE username=%s OR email=%s", (username, username))
 		res = cur.fetchone()
 		df.close_conn(conn, cur)
 		if res:
@@ -163,7 +163,7 @@ class Users(Resource):
 		parser = reqparse.RequestParser(bundle_errors=True)
 		parser.add_argument('password', type=str, required=True, help="Need old password", location="json")
 		args = parser.parse_args()
-		cur.execute("SELECT hashedpassword FROM users WHERE id='%s'", (user_id,))
+		cur.execute("SELECT hashedpassword FROM users WHERE id=%s", (user_id,))
 		old_pw = cur.fetchone()[0].strip()
 		if bcrypt.checkpw(args["password"].encode('UTF-8'), old_pw.encode('utf-8')):
 			# delete from users
@@ -199,7 +199,7 @@ class Podcasts(Resource):
 		# add search query to db
 		user_id = get_user_id(cur)
 		if user_id:
-			cur.execute("insert into searchqueries (userid, query, searchdate) values (%s, '%s', '%s')",(user_id, search, datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")))
+			cur.execute("insert into searchqueries (userid, query, searchdate) values (%s, %s, %s)",(user_id, search, datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")))
 		conn.commit()
 		startNum = request.args.get('offset')
 		limitNum = request.args.get('limit')
@@ -246,7 +246,7 @@ class Settings(Resource):
 		conn, cur = df.get_conn()
 		data = jwt.decode(request.headers['token'], app.config['SECRET_KEY'])
 		username = data['user']
-		cur.execute("SELECT email FROM users WHERE username='%s'", (username,))
+		cur.execute("SELECT email FROM users WHERE username=%s", (username,))
 		email = cur.fetchone()[0]
 		df.close_conn(conn, cur)
 		return {"email" : email}
@@ -281,9 +281,9 @@ class Settings(Resource):
 						df.close_conn(conn, cur)
 						return {"error": "Email already exists"}, 400
 
-				cur.execute("UPDATE users SET email='%s' WHERE username=%s OR email=%s", (args['newemail'], username, username))
+				cur.execute("UPDATE users SET email=%s WHERE username=%s OR email=%s", (args['newemail'], username, username))
 			if hashedpassword:
-				cur.execute("UPDATE users SET hashedpassword='%s' WHERE username='%s' OR email = '%s'", (hashedpassword.decode('UTF-8'), username, username))
+				cur.execute("UPDATE users SET hashedpassword=%s WHERE username=%s OR email = %s", (hashedpassword.decode('UTF-8'), username, username))
 			conn.commit()
 			df.close_conn(conn, cur)
 			return {"data" : "success"}, 200
@@ -546,7 +546,7 @@ class BestPodcasts(Resource):
 		top_subbed = cur.fetchall()
 		cur.execute("SELECT * FROM ratingsview ORDER BY rating DESC Limit 10")
 		top_rated = cur.fetchall()
-		df.df.close_conn(conn,cur)
+		df.close_conn(conn,cur)
 		return {"topSubbed": top_subbed, "topRated": top_rated}, 200
 
 # api.add_resource(Unprotected, "/unprotected")
