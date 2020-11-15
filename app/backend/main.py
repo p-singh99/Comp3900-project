@@ -188,7 +188,7 @@ class Podcasts(Resource):
 			description = p[3]
 			pID = p[4]
 			thumbnail = p[5]
-			rating = p[6]
+			rating = f"{p[6]:.1f}"
 			results.append({"subscribers" : subscribers, "title" : title, "author" : author, "description" : description, "pid" : pID, "thumbnail" : thumbnail, "rating" : rating})
 		for c in categories:
 			results.append({"subscribers" : c[4], "title" : c[1], "author" : c[2], "description" : c[3], "pid" : c[0], "thumbnail" : c[5], "rating" : c[6]})
@@ -630,9 +630,11 @@ class BestPodcasts(Resource):
 	def get(self):
 		conn, cur = df.get_conn()
 		cur.execute("SELECT p.id, p.xml, p.count, t.thumbnail, r.rating FROM podcastsubscribers p, podcasts t, ratingsview r ORDER BY p.count DESC Limit 10")
-		top_subbed = [{"id": i[0], "xml": i[1], "subs": i[2], "thumbnail": i[3], "rating": f"{i[4]:.1f}"} for i in cur.fetchall()]
+		if cur.rowcount > 0:
+			top_subbed = [{"id": i[0], "xml": i[1], "subs": i[2], "thumbnail": i[3], "rating": f"{i[4]:.1f}"} for i in cur.fetchall()]
 		cur.execute("SELECT p.id, p.xml, p.count, t.thumbnail, r.rating FROM podcastsubscribers p, podcasts t, ratingsview r ORDER BY p.count DESC Limit 10")
-		top_rated = [{"id": i[0], "xml": i[1], "subs": i[2], "thumbnail": i[3], "rating": f"{i[4]:.1f}"} for i in cur.fetchall()]
+		if cur.rowcount > 0:
+			top_rated = [{"id": i[0], "xml": i[1], "subs": i[2], "thumbnail": i[3], "rating": f"{i[4]:.1f}"} for i in cur.fetchall()]
 		df.close_conn(conn,cur)
 		return {"topSubbed": top_subbed, "topRated": top_rated}, 200
 
