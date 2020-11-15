@@ -351,7 +351,7 @@ class Subscriptions(Resource):
 		return results, 200
 
 	@token_required
-	def post(self, id):
+	def post(self):
 		conn, cur = get_conn()
 		userID = get_user_id(cur)
 		parser = reqparse.RequestParser(bundle_errors=True)
@@ -364,7 +364,7 @@ class Subscriptions(Resource):
 		return {'data' : "subscription successful"}, 200
 
 	@token_required
-	def delete(self,id):
+	def delete(self):
 		conn, cur = get_conn()
 		userID = get_user_id(cur)
 		parser = reqparse.RequestParser(bundle_errors=True)
