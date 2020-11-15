@@ -4,70 +4,16 @@ import './../css/Footer.css';
 import AudioPlayer from 'react-h5-audio-player';
 import 'react-h5-audio-player/lib/styles.css';
 import { fetchAPI, isLoggedIn } from './../authFunctions';
+import './../css/footer.scss';
 
-// function storeTime() {
-//   // get playtime, save in localstorage so can resume if refresh
-// }
-
-// function Footer({ state, setState }) {
-//   const [playing, setPlaying] = useState(state);
-//   function updatState(state) {
-//     setPlaying(state);
-//     console.log(`State changed!!!!!!!!!`);
-//   }
-//   // useEffect(
-//   //  () => {
-//   //   console.log(`State from footer: ${JSON.stringify(state)}`);
-//   //  }, [state]
-//   // );
-//   function pingServer(progress) {
-//     if (isLoggedIn()) {
-//       console.log("pinging " + progress + " to server episodeguid = " + state.guid + ", podcastid = " + state.podcastID);
-//       let uri = '/users/self/podcasts/'+state.podcastID+'/episodes/time';
-//       console.log("sending to " + uri);
-//       fetchAPI(uri, 'put', {'time': progress, 'episodeGuid': state.guid}).then(() => console.log("updated"))
-//     } else {
-//       console.log("not logged in");
-//     }
-//   }
-//   let setPlayed=false;
-//   return (
-//     <div id='footer-div'>
-//       <div id='player'>
-//         <table className="player-table">
-//           <tr>
-//             <td className="image-col" rowSpan="2">
-//               <Link to={`/podcast/${state.podcastID}`}><img src={state.thumb} className="thumbnail"></img></Link>
-//             </td>
-//             <td>{state.title}</td>
-//           </tr>
-//           <tr>
-//             <td>{state.podcastTitle}</td>
-//           </tr>
-
-
-//         </table>
-//         <AudioPlayer
-//           autoPlay
-//           src={state.src}
-//           currentTime={state.progress}
-//           listenInterval="30000" /*trigger onListen every 30 seconds*/
-//           onPause={e=>pingServer(Math.floor(Number(e.target.currentTime)))}
-//           onListen={e=>pingServer(Math.floor(Number(e.target.currentTime)))}
-//           onSeeked={e=>pingServer(Math.floor(Number(e.target.currentTime)))}
-//           onCanPlay={e=>{
-//             if (! setPlayed) {
-//               setPlayed = true;
-//               console.log("can play!");
-//               e.target.currentTime=state.progress
-//             }}}
-//         />
-//       </div>
-//     </div>
-//   )
-// }
-
-// export default Footer;
+const audioPlayerStyle = {
+  width: '60%',
+  backgroundColor: 'rgba(255, 255, 255, 0.7)',
+  border: '3px solid #6E59D6',
+  borderRadius: '20px',
+  paddingTop: '1px',
+  paddingBottom: '1px',
+};
 
 export default class Footer extends React.Component {
   constructor (props) {
@@ -109,18 +55,20 @@ export default class Footer extends React.Component {
     return (
       <div id='footer-div'>
          <div id='player'>
-           <table className="player-table">
-             <tr>
-               <td className="image-col" rowSpan="2">
-                 <Link to={`/podcast/${this.state.podcastID}`}><img src={this.state.thumb} className="thumbnail"></img></Link>
-               </td>
-               <td>{this.state.title}</td>
-             </tr>
-             <tr>
-               <td>{this.state.podcastTitle}</td>
-             </tr>
-           </table>
-           <AudioPlayer
+            <div id="podcast-playing-details">
+              <Link to={`/podcast/${this.state.podcastID}`}><img src={this.state.thumb} className="thumbnail"></img></Link>
+              <div id="podcast-playing-info">
+                <p id="podcast-episode-title">
+                  {this.state.title}  
+                </p>
+                <p id="podcast-playing-title">
+                  {this.state.podcastTitle}
+                </p>
+              </div>
+            </div>
+            <AudioPlayer
+              style={audioPlayerStyle}
+              layout="horizontal"
               autoPlay
               src={this.state.src}
               currentTime={this.state.progress}

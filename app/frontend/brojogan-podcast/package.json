@@ -16,7 +16,8 @@
     "react-rating-stars-component": "^2.2.0",
     "react-router-dom": "5.2.0",
     "react-scripts": "^3.4.4",
-    "react-select": "3.1.0"
+    "react-select": "3.1.0",
+    "node-sass": "^4.10"
   },
   "scripts": {
     "start": "set PORT=8000 && react-scripts start",

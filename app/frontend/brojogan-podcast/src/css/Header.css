@@ -17,7 +17,7 @@
   left: 0;
   top: 0;
   z-index: 1;
-  border-bottom: 2px solid white;
+  border-bottom: 1px solid white;
 }
 
 #dropDownDiv {
@@ -29,7 +29,7 @@
 #search-div {
   width: 100%;
   padding-left: 15%;
-  padding-right: 10%;
+  padding-right: 0%;
 }
 
 #icons-div {
