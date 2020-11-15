@@ -318,8 +318,14 @@ class Podcast(Resource):
 		subscribers = 0
 		if res is not None:
 			subscribers = res[0]
-		cur.execute("SELECT rating from ratingsview where id=%s" % id)
-		rating = cur.fetchone()[0] if cur.fetchone() else None
+		# cur.execute("SELECT rating from ratingsview where id=%s" % id)
+		cur.execute("SELECT avg from ratingsview where id=%s" % id)
+		# change view to select avg as rating?
+		# rating = cur.fetchone()[0] if cur.fetchone() else None
+		res = cur.fetchone()
+		print(res)
+		# rating = f"{res[0]:.1f}" if res else None
+		rating = int(round(res[0],1)) if res else None
 		close_conn(conn,cur)
 		return {"xml": xml, "id": id, "subscription": flag, "subscribers": subscribers, "rating": rating}, 200
 
@@ -581,7 +587,9 @@ class Ratings(Resource):
 		conn, cur = get_conn()
 		user_id = get_user_id(cur)
 		cur.execute("SELECT rating FROM podcastratings WHERE podcastid=%s and userid=%s" % (id, user_id))
-		rating = cur.fetchone()[0] if cur.fetchone() else None
+		# rating = cur.fetchone()[0] if cur.fetchone() else None
+		res = cur.fetchone()
+		rating = res[0] if res else None
 		close_conn(conn, cur)
 		return {"rating": rating}, 200
 

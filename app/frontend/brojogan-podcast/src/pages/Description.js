@@ -230,7 +230,8 @@ function Description(props) {
                 {podcast.rating
                   ?
                   <React.Fragment>
-                    <div className="current-rating-num">{podcast.rating.toFixed(1)}</div>
+                    <div className="current-rating-num">{podcast.rating}</div>
+                    {/* <div className="current-rating-num">{podcast.rating.toFixed(1)</div> */}
                     <div className="current-rating-after">/5</div>
                   </React.Fragment>
                   : <div className="no-ratings">No ratings</div>
