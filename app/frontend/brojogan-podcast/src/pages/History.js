@@ -3,9 +3,10 @@ import { Helmet } from 'react-helmet';
 import { Link } from 'react-router-dom';
 import ProgressBar from 'react-bootstrap/ProgressBar';
 
-import { fetchAPI } from './../auth-functions';
+import { fetchAPI } from './../authFunctions';
 import PagesFetch from './../components/PagesFetch';
 import { getPodcastFromXML } from './../rss';
+
 import { API_URL } from './../constants';
 import './../css/History.css';
 
@@ -30,13 +31,18 @@ import './../css/History.css';
 
 function History() {
   async function fetchItems(pgNum, signal) {
-    const data = await fetchAPI(`/self/history/${pgNum}`, 'get', null, signal);
+    const pageSize = 12;
+    const data = await fetchAPI(`/self/history/${pgNum}?limit=${pageSize}`, 'get', null, signal);
     console.log("History data:", data);
+    console.log(data.numPages);
     if (pgNum === 1) {
       return { items: data.history, numPages: data.numPages };
     } else {
       return { items: data.history };
     }
+
+    // const offset = (pgNum-1)*pageSize;
+    // const data = await fetchAPI(`/self/history?offset=${offset}&limit=${pageSize}`, 'get', null, signal);
     // try {
 
     // } catch (err) {
@@ -80,7 +86,6 @@ function HistoryCard({ details }) {
 
     const setCard = async () => {
       try {
-        // const xml = await getRSS(details.pid, controller.signal);
         const podcast = getPodcastFromXML(details.xml);
         const episode = podcast.episodes.find(episode => episode.guid === details.episodeguid);
         setState({ podcast, episode });
@@ -102,7 +107,7 @@ function HistoryCard({ details }) {
             :
             <React.Fragment>
               <Link to={`/podcast/${details.pid}`}><p>{state.podcast.title}</p></Link>
-              <Link to={`/podcast/${details.pid}`}><img src={state.episode.image ? state.episode.image : state.podcast.image} /></Link>
+              <Link to={`/podcast/${details.pid}`}><img src={state.episode.image ? state.episode.image : state.podcast.image} alt={`${state.podcast.title}: ${state.episode.title} icon`} /></Link>
               <p>{state.episode.title}</p>
               <p>Listen Date: {getDate(details.listenDate * 1000)}</p>
               <p>Progress: {details.timestamp} (for testing)</p>
@@ -118,16 +123,20 @@ function HistoryCard({ details }) {
 
       {state
         ?
-        <div className="history-card2" style={{
-          backgroundImage: `linear-gradient(#111111, transparent 30px), url(${state.podcast.image})`,
-          backgroundSize: 'contain',
-          backgroundRepeat: 'no-repeat',
-          // color: 'dodgerblue',
-          height: '300px',
-          width: '150px'
-        }}>
-          {state.podcast.title}
-        </div>
+        (state.error
+          ? <p>{state.error}</p>
+          :
+          <div className="history-card2" style={{
+            backgroundImage: `linear-gradient(#111111, transparent 30px), url(${state.podcast.image})`,
+            backgroundSize: 'contain',
+            backgroundRepeat: 'no-repeat',
+            // color: 'dodgerblue',
+            height: '300px',
+            width: '150px'
+          }}>
+            {state.podcast.title}
+          </div>
+        )
         : null}
     </React.Fragment>
   );

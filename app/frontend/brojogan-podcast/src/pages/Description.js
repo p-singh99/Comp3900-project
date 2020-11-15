@@ -2,12 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet';
 // import { useParams } from 'react-router-dom';
 import ProgressBar from 'react-bootstrap/ProgressBar';
+import ReactStars from 'react-rating-stars-component';
 
 import { getPodcastFromXML } from '../rss';
-import { API_URL } from '../constants';
 import Pages from './../components/Pages';
 import './../css/Description.css';
-import { isLoggedIn, fetchAPI } from '../auth-functions';
+import { isLoggedIn, fetchAPI } from '../authFunctions';
+import SubscribeBtn from '../components/SubscribeBtn';
 // import GetAppIcon from '@material-ui/icons/GetApp';
 // import {Icon} from '@material-ui/icons';
 
@@ -16,7 +17,6 @@ import { isLoggedIn, fetchAPI } from '../auth-functions';
 
 // CORS bypass
 async function getRSS(id) {
-  // return fetch(`${API_URL}/podcasts/${id}`).then(resp => resp.json());
   return fetchAPI(`/podcasts/${id}`, 'get', null);
 
   /*
@@ -36,53 +36,16 @@ async function getRSS(id) {
   }*/
 }
 
-// function Description({ setPlaying }) {
+
 function Description(props) {
   const [episodes, setEpisodes] = useState(); // []
   const [podcast, setPodcast] = useState(null);
-  // const [podcastTitle, setPodcastTitle] = useState(""); // overlaps with above
   const [subscribeBtn, setSubscribeBtn] = useState("Subscribe");
-  // const [episodes, setEpisodes] = useState([]);
-  // const [showEpisodeNum, setShowEpisodeNum] = useState();
+  const [userRating, setUserRating] = useState(undefined);
+  const [rating, setRating] = useState(null);
+  // const [pendingRating, setPendingRating] = useState(false);
 
   const setPlaying = props.setPlaying;
-
-  function subscribeHandler() {
-    console.log("entered into subhandler");
-    var podcastID = window.location.pathname.substring(9);
-    console.log(podcastID);
-    let body = {};
-    body.podcastid = podcastID;
-    fetchAPI(`/podcasts/${podcastID}`, 'post', body)
-      .then(data => {
-
-      })
-  }
-
-  // unsubscription button
-  function unSubscribeHandler() {
-    console.log("entered into Unsubhandler");
-    var podcastID = window.location.pathname.substring(9);
-    console.log(podcastID);
-    let body = {};
-    body.podcastid = podcastID;
-    fetchAPI(`/podcasts/${podcastID}`, 'delete', body)
-      .then(data => {
-        setSubscribeBtn("Subscribe");
-      })
-  }
-
-  const handleClickRequest = (event) => {
-    if (subscribeBtn == 'Unsubscribe') {
-      /** User clicked to unsubscribe */
-      unSubscribeHandler();
-      setSubscribeBtn("Subscribe");
-    } else {
-      /** User clicked to Subscribe */
-      subscribeHandler();
-      setSubscribeBtn("Unsubscribe");
-    }
-  }
 
   // on page load:
   // const { id } = useParams(); 
@@ -92,15 +55,25 @@ function Description(props) {
     const id = window.location.pathname.split("/").pop();
     console.log('Start useeffect: ' + Date.now());
     const queryParams = new URLSearchParams(window.location.search);
-    const episodeNum = queryParams.get("episode");
+    let episodeNum = parseInt(queryParams.get("episode"), 10); // NaN if episode isn't set
+    let episodeNumReversed = false;
     console.log("episodeNum:", episodeNum);
+    if (!episodeNum) {
+      episodeNum = parseInt(queryParams.get("episodeRecent"), 10); // NaN if episode isn't set
+      episodeNumReversed = true;
+    }
 
-    function updatePodcastDetails(podcast, subscription) {
+    function updatePodcastDetails(podcast, subscription, rating) {
       setPodcast(podcast);
       console.log(`Subscribed: ${subscription}`);
       if (subscription) {
         setSubscribeBtn('Unsubscribe');
       }
+      console.log("updatePodcastDetails Rating:", rating);
+      setRating(rating);
+      // } else {
+      //   setSubscribeBtn('Subscribe');
+      // }
     }
 
     const fetchPodcast = async (prefetchedPodcast) => {
@@ -110,82 +83,81 @@ function Description(props) {
         // TODO: need to figure out how to check for 401s etc, here.
         let promises = [];
         if (prefetchedPodcast) {
-          updatePodcastDetails((prefetchedPodcast.podcast ? prefetchedPodcast.podcast : {}), prefetchedPodcast.subscription);
-          // setPodcastInfo(prefetchedPodcast.podcast);
-          // if (prefetchedPodcast.subscription) {
-          //   setSubscribeBtn('Unsubscribe');
-          // }
+          updatePodcastDetails((prefetchedPodcast.podcast ? prefetchedPodcast.podcast : { error: "Error loading podcast" }), prefetchedPodcast.subscription, prefetchedPodcast.rating);
         } else {
           const xmlPromise = getRSS(id);
-          // const xmlPromise = getRSS(id)//.then(data => {console.log(`Subs: ${data.subscription}`)});
-
-          // bool isn't used, I don't know what it's for so I might have merged it to the wrong place
-          // let bool;
-          // xmlPromise.then(data => { bool = data.subscription });
-
           promises.push(xmlPromise);
         }
 
         // if we're logged in we'll get the listened data for this podcast
         if (isLoggedIn()) {
-          let timesPromise = fetchAPI('/users/self/podcasts/' + id + '/time', 'get');
+          let timesPromise = fetchAPI('/self/podcasts/' + id + '/time', 'get');
           promises.push(timesPromise);
+          let ratingPromise = fetchAPI(`/self/ratings/${id}`);
+          promises.push(ratingPromise);
         }
 
         console.log(promises);
         // have both promises running until we can resolve both
-        Promise.all(promises).then(([first, second]) => {
-          // this [xml, times] thing won't work now that both are optional
-          // will fail if times is used but xml isn't, because times will get assigned as xml
-          // hence the below bad code
-          console.log("Promises all");
-          let times;
-          let podcast;
-          if (prefetchedPodcast) {
-            podcast = prefetchedPodcast.podcast;
-            times = first;
-          } else {
-            const xml = first;
-            // console.log('Received RSS :' + Date.now());
-            console.log(xml);
-            if (xml.xml) {
-              podcast = getPodcastFromXML(xml.xml);
-              console.log(podcast);
+        Promise.all(promises)
+          .then(([first, second, third]) => {
+            // this [xml, times] thing won't work now that both are optional
+            // will fail if times is used but xml isn't, because times will get assigned as xml
+            // hence the below bad code
+            console.log("Promises all");
+            let times, rating;
+            let podcast;
+            if (prefetchedPodcast) {
+              podcast = prefetchedPodcast.podcast;
+              times = first;
+              rating = second;
             } else {
-              podcast = {};
-            }
-            // console.log('parsed XML: ' + Date.now());
-            // if (xml.subscription) {
-            //   setSubscribeBtn('Unsubscribe');
-            // }
-            updatePodcastDetails(podcast, xml.subscription);
+              const podcastDetails = first;
+              console.log(podcastDetails);
+              if (podcastDetails.xml) {
+                podcast = getPodcastFromXML(podcastDetails.xml);
+                // podcast.rating = podcastDetails.rating;
 
-            // console.log("in start of use effect podcast is:");
-            // console.log(podcast);
-
-            // setPodcastInfo(podcast);
-            times = second;
-          }
-
-          // we might not have times since its only if we're logged in
-          if (times) {
-            console.log("times are: ");
-            console.log(times);
-            for (let time of times) {
-              let episode = podcast.episodes.find(e => e.guid === time.episodeGuid);
-              if (episode !== undefined) {
-                episode.progress = time.timestamp;
-                episode.listenDate = time.listenDate;
+                console.log("Parsed podcast:", podcast);
               } else {
-                console.error("episode with guid " + time.episodeGuid + " did not have a match in the fetched feed");
+                podcast = { error: "Error loading podcast" };
               }
-            }
-          }
+              updatePodcastDetails(podcast, podcastDetails.subscription, podcastDetails.rating);
 
-          console.log("podcast:", podcast);
-          setEpisodes({ episodes: (podcast ? podcast.episodes : null), showEpisode: episodeNum });
-          console.log(episodes);
-        });
+              times = second;
+              rating = third;
+            }
+
+            // we might not have times since its only if we're logged in
+            if (isLoggedIn()) {
+              // user's current time position in each episode
+              console.log("times are: ");
+              console.log(times);
+              for (let time of times) {
+                let episode = podcast.episodes.find(e => e.guid === time.episodeGuid);
+                if (episode !== undefined) {
+                  episode.progress = time.timestamp;
+                  episode.listenDate = time.listenDate;
+                  episode.complete = time.complete;
+                } else {
+                  console.error("episode with guid " + time.episodeGuid + " did not have a match in the fetched feed");
+                }
+              }
+
+              // user's current rating of the podcast
+              setUserRating(rating.rating);
+              console.log("rating.rating:", rating.rating);
+              // user rating: undefined means not yet set
+              // null means the rating has been received and the answer is that the user hasn't set one
+              // number means the number is the rating
+            }
+
+            console.log("podcast:", podcast);
+            setEpisodes({ episodes: (podcast ? podcast.episodes : null), showEpisode: episodeNum, showEpisodeReversed: episodeNumReversed });
+          })
+          .catch(error => {
+            displayError(error);
+          });
       } catch (error) {
         displayError(error);
       }
@@ -198,24 +170,45 @@ function Description(props) {
     } catch {
       podcastObj = null;
     }
+    // if podcastObj is provided, it must contain {podcast, subscribed, rating}
     fetchPodcast(podcastObj);
 
-  }, [window.location]);
+  }, [window.location, props]);
 
   function displayError(msg) {
-    setPodcast(<h1>{msg.toString()}</h1>);
+    // setPodcast(<h1>{msg.toString()}</h1>);
+    setPodcast({ error: msg.toString() });
   }
 
-  // function setPodcastInfo(podcast) {
-  //   // css grid for this? need to add rating and subscribe button
-  //   setPodcast(podcast)
+  // function isEmptyObj(obj) {
+  //   for (const i in obj) {
+  //     return false;
+  //   }
+  //   return true;
   // }
 
-  function isEmptyObj(obj) {
-    for (const i in obj) {
-      return false;
+  async function ratingChanged(newRating) {
+    const podcastID = window.location.pathname.split("/").pop();
+    console.log("Rating changed:", newRating);
+    try {
+      await fetchAPI(`/self/ratings/${podcastID}`, 'put', { rating: newRating });
+    } catch (err) {
+      // show some kind of error
+      console.log(err);
     }
-    return true;
+    // could cancel old requests when a new one is made but probably not woth it
+  }
+
+  // if numReversed, the the number is from most recent episode, in order with the episodes list
+  // if not, then it is in opposite order to the episodes list
+  function getEpisodeIndex(episodeNum, numReversed, episodes) {
+    if (numReversed) {
+      return episodeNum - 1; // NaN (falsy) if episodeReversed wasn't set
+    } else if (episodeNum) {
+      return episodes.length - episodeNum;
+    } else {
+      return null;
+    }
   }
 
   function getPodcastDescription(podcast) {
@@ -233,29 +226,63 @@ function Description(props) {
       return (
         <h1>Loading...</h1>
       )
-    } else if (isEmptyObj(podcast)) {
+    } else if (podcast.error) {
       return (
-        <h1>Error loading podcast</h1>
+        <h1>{podcast.error}</h1>
       )
     } else {
       return (
         <div>
           <div id="podcast-info">
-            {podcast.image && <img id="podcast-img" src={podcast.image} alt="Podcast icon" style={{ height: '300px', width: '300px' }}></img>}
+            {podcast.image && <img id="podcast-img" src={podcast.image} alt="Podcast icon" />}
             <div id="podcast-name-author">
               <h1 id="podcast-name">{podcast.title}</h1>
               <h3 id="podcast-author">{podcast.author}</h3>
+              <div className="rating">
+                <ReactStars
+                  // This is literally just a picture of a star
+                  count={1}
+                  size={24}
+                  activeColor="#ffd700"
+                  isHalf={false}
+                  edit={false}
+                  value={1}
+                />
+                {console.log("Rating in return:", rating)}
+                {rating && parseFloat(rating) >= 1 // when there are no ratings for a podcast, the backend returns 0.0 as the rating. Rating can't be < 1 so we know this means no ratings.
+                  ?
+                  <React.Fragment>
+                    <div className="current-rating-num">{rating}</div>
+                    {/* <div className="current-rating-num">{podcast.rating.toFixed(1)</div> */}
+                    <div className="current-rating-after">/5</div>
+                  </React.Fragment>
+                  : <div className="no-ratings">No ratings</div>
+                }
+                {/* {console.log("!pendingRating:", !pendingRating)} */}
+                {userRating || userRating === null // don't render until user's rating has been retrieved, so don't have to force re-render later
+                  ?
+                  <ReactStars classNames="choose-rating"
+                    count={5}
+                    onChange={ratingChanged}
+                    size={24}
+                    activeColor="#ffd700"
+                    isHalf={false}
+                    value={userRating}
+                  // key={userRating} // force re-render once the current user rating has been fetched
+                  />
+                  : null}
+              </div>
               {isLoggedIn()
                 ?
-                <form id="subscribe-form" onClick={() => handleClickRequest()}>
-                  <div id="subscribe-btns">
-                    <button id="subscribe-btn" type="button">{subscribeBtn}</button>
-                  </div>
-                </form>
+                <SubscribeBtn defaultState={subscribeBtn} podcastID={window.location.pathname.split("/").pop()} />
+                // <form id="subscribe-form" onClick={() => handleClickRequest()}>
+                //   <div id="subscribe-btns">
+                //     <button id="subscribe-btn" type="button">{subscribeBtn}</button>
+                //   </div>
+                // </form>
                 : null}
-              {/* <p id="podcast-description" dangerouslySetInnerHTML={{ __html: sanitiseDescription(podcast.description) }}></p> */}
               {getPodcastDescription(podcast)}
-              {podcast.link && <h6><a href={podcast.link} target="_blank" rel="nofollow">Podcast website</a></h6>}
+              {podcast.link && <h6><a href={podcast.link} target="_blank" rel="nofollow noopener noreferrer">Podcast website</a></h6>}
             </div>
           </div>
         </div>
@@ -270,11 +297,12 @@ function Description(props) {
       </Helmet>
 
       {getPodcastHTML(podcast)}
+      {/* It seems like JSX returned gets updated based on state that is in the JSX that is returned? */}
 
       <div id="episodes">
         <ul>
           {episodes && episodes.episodes && episodes.episodes.length > 0
-            ? <Pages itemDetails={episodes.episodes} context={{ podcast: podcast, setPlaying: setPlaying, podcastId: window.location.pathname.split("/").pop() }} itemsPerPage={10} Item={EpisodeDescription} showItemIndex={episodes.showEpisode} />
+            ? <Pages itemDetails={episodes.episodes} context={{ podcast: podcast, setPlaying: setPlaying, podcastId: window.location.pathname.split("/").pop() }} itemsPerPage={10} Item={EpisodeDescription} showItemIndex={getEpisodeIndex(episodes.showEpisode, episodes.showEpisodeReversed, episodes.episodes)} />
             : null}
         </ul>
       </div>
@@ -320,9 +348,9 @@ function EpisodeDescription({ details: episode, context: { podcast, setPlaying, 
   let description;
   // in case the sanitiser fails, don't use innerHTML
   try {
-    description = <div className="description collapsed"> <p dangerouslySetInnerHTML={{ __html: sanitiseDescription(episode.description) }}></p><p><a href={episode.link} rel="nofollow" target="_blank">Episode website</a></p></div>;
+    description = <div className="description collapsed"> <p dangerouslySetInnerHTML={{ __html: sanitiseDescription(episode.description) }}></p><p><a href={episode.link} rel="nofollow noopener noreferrer" target="_blank">Episode website</a></p></div>;
   } catch {
-    description = <div className="description collapsed"><p>{unTagDescription(episode.description)}</p><p><a href={episode.link} rel="nofollow" target="_blank">Episode website</a></p></div>;
+    description = <div className="description collapsed"><p>{unTagDescription(episode.description)}</p><p><a href={episode.link} rel="nofollow noopener noreferrer" target="_blank">Episode website</a></p></div>;
   }
 
   // weird react bug that descriptions stay expanded after changing the page,
@@ -330,12 +358,12 @@ function EpisodeDescription({ details: episode, context: { podcast, setPlaying, 
   // I think it must be reacts Virtual DOM diff, it doesn't necessarily change classes I guess
   return (
     // durationSeconds-5 because sometimes episode durations in the feed are too long
-    <li className={episode.progress >= episode.durationSeconds - 5 ? "episode finished" : "episode"} id={id} onClick={toggleDescription}>
-      {/* <li className={episode.complete ? "episode finished" : "episode"} id={id} onClick={toggleDescription}> */}
+    // <li className={episode.progress >= episode.durationSeconds - 5 ? "episode finished" : "episode"} id={id} onClick={toggleDescription}>
+    <li className={episode.complete ? "episode finished" : "episode"} id={id} onClick={toggleDescription}>
       {/* make this flexbox or grid? */}
-      {episode.progress > 0 &&
+      {episode.durationSeconds && episode.progress > 0 &&
         <div className="progress-div">
-          <p>Played: {episode.complete ? "Complete" : secondstoTime(episode.progress)}</p>
+          <div>Played: {episode.complete ? "Complete" : secondstoTime(episode.progress)}</div>
           <ProgressBar max={episode.durationSeconds} now={episode.progress /*|| 0*/} />
         </div>
       }
@@ -345,7 +373,6 @@ function EpisodeDescription({ details: episode, context: { podcast, setPlaying, 
       </div>
       <div className="play-div">
         <span className="duration">{episode.duration}</span>
-        {/* <button className="play" eid={episode.guid} onClick={(event) => playEpisode(event, setPlaying, episodes)}>Play</button> */}
         <button className="play" eid={episode.guid} onClick={(event) => {
           console.log("podcast is");
           console.log(podcast);
@@ -370,12 +397,15 @@ function EpisodeDescription({ details: episode, context: { podcast, setPlaying, 
   )
 }
 
+// https://mathiasbynens.github.io/rel-noopener/
+// https://css-tricks.com/use-target_blank/
 // maybe use DOMPurify instead, and should try to add rel="nofollow" to links
 // also should set target = _blank on all links
 // could also do that in js - get all links and loop through setting the attributes
 // or could set base target = _blank, and then change it on the ones we control
 // this doesn't really feel secure, this third party script could get bugs or be altered
 // should put the script in local folder
+// !!!!! need to add noopener noreffer to all links, this is a legit current vulnerability
 function sanitiseDescription(description) {
   // https://www.npmjs.com/package/xss
   // https://jsxss.com/en/options.
@@ -387,14 +417,14 @@ function sanitiseDescription(description) {
     // no return, it does default
   }
 
-  const onIgnoreTagAttr = (tag, name, value, isWhiteAttr) => {
-    if (tag === 'a' && name === 'rel') {
-      return 'rel=nofollow'; // why does this work? Shouldn't I just return nofollow?
-    } else if (tag === 'a' && name === 'target') {
-      return 'target=_blank;'
-    }
-    // no return, it does default ie remove attibute
-  }
+  // const onIgnoreTagAttr = (tag, name, value, isWhiteAttr) => {
+  //   if (tag === 'a' && name === 'rel') {
+  //     return 'rel=nofollow'; // why does this work? Shouldn't I just return nofollow?
+  //   } else if (tag === 'a' && name === 'target') {
+  //     return 'target=_blank;'
+  //   }
+  //   // no return, it does default ie remove attibute
+  // }
 
   let options = {
     whiteList: {
@@ -404,10 +434,35 @@ function sanitiseDescription(description) {
     },
     stripIgnoreTag: true,
     onTag: onTag,
-    onIgnoreTagAttr: onIgnoreTagAttr
+    // onIgnoreTagAttr: onIgnoreTagAttr
   };
   description = window.filterXSS(description, options);
-  return description;
+
+  // use DOMParser on description, loop through nodes, if there are any that aren't <a> or <br>, throw error and don't use innerHTML
+  // and add target and rel to each <a>
+  // todo: and if there is an error in parsing, throw error and don't use innerHTML
+  // this is double parsing, should be able to the <a> attributes while sanitising with the right library
+  const dom = (new DOMParser()).parseFromString(description, "text/html");
+  for (const node of dom.querySelectorAll("body *")) {
+    let nodeName = node.nodeName.toLowerCase();
+    if (nodeName === "a") {
+      node.setAttribute("target", "_blank");
+      node.setAttribute("rel", "nofollow noopener noreferrer");
+    } else if (nodeName !== "br") {
+      console.log("Blocked node:", node);
+      throw Error("Sanitisation failed");
+    }
+    // if (!["a", "br"].includes(node.nodeName.toLowerCase())) {
+    //   console.log("Blocked node:", node);
+    //   throw Error("Failed sanitisation");
+    // }
+  }
+  // for (const node of dom.querySelectorAll("a")) {
+  //   node.setAttribute("target", "_blank");
+  //   node.setAttribute("rel", "nofollow noopener noreferrer");
+  // }
+  return dom.querySelector("body").innerHTML;
+  // return description;
 }
 
 // https://stackoverflow.com/questions/1912501/unescape-html-entities-in-javascript

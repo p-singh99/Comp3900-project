@@ -17,6 +17,7 @@ function Pages({ itemDetails, context, itemsPerPage, Item, showItemIndex }) {
   const startRef = useRef(null);
 
   // run once on page load. Create pages array and if showItemIndex is set, set the starting page number and position
+  // showItemIndex must be the index of the item you want to show in itemDetails
   useEffect(() => {
     console.log(itemDetails);
     console.log(itemsPerPage);
@@ -26,10 +27,11 @@ function Pages({ itemDetails, context, itemsPerPage, Item, showItemIndex }) {
       return;
     }
 
-    showItemIndex = parseInt(showItemIndex, 10);
-    if (showItemIndex) {
-      showItemIndex = itemDetails.length - showItemIndex; // it's reversed to the indexes of the array so that eg episode=1 takes you to the first episodes instead of the most recent
-    }
+    // moved to Description page
+    // showItemIndex = parseInt(showItemIndex, 10);
+    // if (showItemIndex) {
+    //   showItemIndex = itemDetails.length - showItemIndex; // it's reversed to the indexes of the array so that eg episode=1 takes you to the first episodes instead of the most recent
+    // }
 
     let pages = [];
     const numPages = Math.ceil(itemDetails.length / itemsPerPage);

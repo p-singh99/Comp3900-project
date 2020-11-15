@@ -1,88 +1,69 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useHistory } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Accordion } from 'react-bootstrap';
 import Card from 'react-bootstrap/Card';
-import { API_URL } from '../constants';
+import ReactStars from 'react-rating-stars-component';
+
+import SubscribeBtn from './SubscribeBtn';
 import { getPodcastFromXML } from './../rss';
-import { fetchAPI } from './../auth-functions';
+import { fetchAPI } from './../authFunctions';
 import './../css/Card.css';
 
-
+// props: details is the object containing the details to display on this particular card
+// context is options and other information given to all cards
+// context.chunkedEpisodes=true means that some of the most recent episodes have been provided in details.episodes, 
+// but not all of the episodes. So episode numbering when moving to the Description page should be done differently
+// this frontend code has become such a mess with dependencies and weird variations everywhere
 function SubCard({ details: podcast, context }) {
-  const [podcastObj, setPodcastObj] = useState();
-  const [subscribeBtn, setSubscribeBtn] = useState("Unsubscribe");
+  const [podcastObj, setPodcastObj] = useState(); // the entire parsed XML object, for passing to the Description page
+  const [episodes, setEpisodes] = useState(); // episodes for displaying in this card
+  console.log("Podcast:", podcast);
+  // podcast object must contain title, pid, rating, image, subscribers
 
-  // should like track if a subscribe/unscubscribe request is already in the air before sending another
-  // copied from description.js, extract to another file
-  function subscribeHandler(podcastID) {
-    console.log("entered into subhandler");
-    console.log(podcastID);
-    let body = {};
-    body.podcastid = podcastID;
-    setSubscribeBtn("...");
-    fetchAPI(`/podcasts/${podcastID}`, 'post', body)
-      .then(data => {
-        setSubscribeBtn("Unsubscribe");
-      })
-  }
-
-  // unsubscription button
-  function unSubscribeHandler(podcastID) {
-    console.log("entered into Unsubhandler");
-    console.log(podcastID);
-    let body = {};
-    body.podcastid = podcastID;
-    setSubscribeBtn("...");
-    fetchAPI(`/podcasts/${podcastID}`, 'delete', body)
-      .then(data => {
-        setSubscribeBtn("Subscribe");
-      })
-  }
-
-  const handleClickRequest = (event, podcastID) => {
-    // event.preventDefault();
-    event.stopPropagation();
-    if (subscribeBtn == 'Unsubscribe') {
-      /** User clicked to unsubscribe */
-      unSubscribeHandler(podcastID);
-    } else {
-      /** User clicked to Subscribe */
-      subscribeHandler(podcastID);
-    }
-  }
-
-  // note to self: when you do something like <Item props={state} />, when the state changes,
+  // when you do something like <Item props={state} />, when the state changes,
   // it doesn't make a new Item, it just changes the props
   // so you have to add a useEffect trigger on the props and setState to null while it's loading
-  useEffect(() => {
-    setPodcastObj(null);
 
+  // on component load: fetch episodes if they weren't provided to the component
+  useEffect(() => {
+    // todo: so subscription endpoint returns title, author, description etc, we should use that?
+
+    setEpisodes(null);
     const controller = new AbortController();
-    const setCard = async () => {
-      try {
-        console.log(context && context.subscribeButton);
-        // need to make this a cancellable promise so when page changes to podB while podA is still fetching, 
-        // podcastObj doesn't get to set to null and then set to podA when the response returns
-        const data = await fetchAPI(`/podcasts/${podcast.pid}`, 'get', null, controller.signal);
-        console.log(data);
-        if (!data.xml) {
-          setPodcastObj({ podcast: null, subscription: data.subscription });
-        } else {
-          const pod = getPodcastFromXML(data.xml);
-          setPodcastObj({ podcast: pod, subscription: data.subscription });
-          console.log(`Episodes for ${podcast.pid}`);
-        }
-      } catch (error) {
-        console.log(`Error is ${error}`);
-        displayError(error);
-      }
-    };
-    if (!podcast.episodes || podcast.episodes.length == 0) {
-      setCard();
-    } else { // the xml has already been parsed and episodes are available
-      console.log("podcast:", podcast);
-      setPodcastObj({ podcast: podcast });
+    
+    if (context && context.chunkedEpisodes) { // for Recommendations - the x most recent episodes have been provided (and only their titles), no need to get and parse XML
+      // we don't have the full XML object, so don't set podcastObj
+      setEpisodes(podcast.episodes);
+      console.log("Chunked Episodes podcast:", podcast);
+    } else {
+      // if (!podcast.episodes || podcast.episodes.length === 0) {
+
+      // request is cancellable so when page changes to podB while podA is still fetching, 
+      // podcastObj doesn't get to set to null and then set to podA when the response returns
+      // get xml
+      fetchAPI(`/podcasts/${podcast.pid}`, 'get', null, controller.signal)
+        .then(data => {
+          console.log(data);
+          if (!data.xml) {
+            setEpisodes(null);
+            setPodcastObj({podcast: null, subscription: data.subscription, rating: data.rating});
+          } else {
+            const pod = getPodcastFromXML(data.xml);
+            setEpisodes(pod.episodes);
+            setPodcastObj({podcast: pod, subscription: data.subscription, rating: data.rating});
+            // change subscription to subscribed. subscribed: true/false
+          }
+        })
+        .catch(error => {
+          console.log(`Error is ${error}`);
+          displayError(error);
+        })
     }
+    // this was being used for recommendations
+    /*else { // the xml has already been parsed and episodes are available
+      console.log("podcast PREPARSED:", podcast);
+      setPodcastObj({ podcast: podcast });
+    }*/
 
     return function cleanup() {
       controller.abort();
@@ -91,14 +72,49 @@ function SubCard({ details: podcast, context }) {
 
     // fetch for aborting 
     // https://medium.com/javascript-in-plain-english/an-absolute-guide-to-javascript-http-requests-44c685edfa51
-  }, [podcast]);
+  
+    // const fetchEpisodes = async () => {
+    //   try {
+    //     console.log(context && context.subscribeButton);
+    //     // request is cancellable so when page changes to podB while podA is still fetching, 
+    //     // podcastObj doesn't get to set to null and then set to podA when the response returns
+    //     // get xml
+    //     const data = await fetchAPI(`/podcasts/${podcast.pid}`, 'get', null, controller.signal);
+    //     console.log(data);
+    //     if (!data.xml) {
+    //       // setPodcastObj({ podcast: null, subscription: data.subscription, rating: data.rating});
+    //       setEpisodes(null);
+    //     } else {
+    //       const pod = getPodcastFromXML(data.xml);
+    //       setEpisodes(pod.episodes);
+    //       // setPodcastObj({ podcast: pod, subscription: data.subscription, rating: data.rating });
+    //       // podcastObj.subscription was being set but I don't know why, it's not used
+    //       // console.log(`Episodes for ${podcast.pid}`);
+    //     }
+    //   } catch (error) {
+    //     console.log(`Error is ${error}`);
+    //     displayError(error);
+    //   }
+    // };
+  
+  }, [podcast, context]);
 
   function displayError(msg) {
     console.log('Error loading episodes');
   }
 
-  function getEpisodeNumber(index) {
-    return podcastObj.podcast.episodes.length - index;
+  // function getEpisodeNumber(index) {
+  //   return podcastObj.podcast.episodes.length - index;
+  // }
+  
+  function getEpisodeAppendage(index, chunkedEpisodes) {
+    if (chunkedEpisodes) {
+      const episodeNum = index+1;
+      return `episodeRecent=${episodeNum}`;
+    } else {
+      const episodeNum = episodes.length - index;
+      return `episode=${episodeNum}`;
+    }
   }
 
   return (
@@ -106,19 +122,36 @@ function SubCard({ details: podcast, context }) {
       <Card.Header className="card-header">
         <Accordion.Toggle className={'accordion-toggle'} as={Card.Header} variant="link" eventKey={podcast.pid}>
           <div className='card-header-div'>
-            <img src={(podcastObj && podcastObj.podcast) ? podcastObj.podcast.image : 'https://i.pinimg.com/originals/92/63/04/926304843ea8e8b9bc22c52c755ec34f.gif'} />
+            {/* <img src={(podcastObj && podcastObj.podcast) ? podcastObj.podcast.image : 'https://i.pinimg.com/originals/92/63/04/926304843ea8e8b9bc22c52c755ec34f.gif'} alt={`${podcast.title} icon`} /> */}
             {/* Random loading gif from google, totally dodge */}
-            {/* change to use image returned with search results */}
-            {/* <a className={'search-page-link'} href={"/podcast/" + podcast.pid}>
-              {podcast.title}
-            </a> */}
+            {/* <img src={podcast.image} alt={`${podcast.title} icon`} /> */} { /* the alt is too log, wraps to next line and screws up the whole component */}
+            <img src={podcast.image} />
             <Link className={'search-page-link'} to={{ pathname: `/podcast/${podcast.pid}`, state: { podcastObj: podcastObj } }}>
               {podcast.title}
             </Link>
+            <div className="rating">
+              <ReactStars
+                // This is literally just a picture of a star
+                count={1}
+                size={24}
+                activeColor="#ffd700"
+                isHalf={false}
+                edit={false}
+                value={1}
+              />
+              {podcast.rating && parseFloat(podcast.rating) >= 1
+                ?
+                <React.Fragment>
+                  <div className="current-rating-num">{podcast.rating}</div>
+                  <div className="current-rating-after">/5</div>
+                </React.Fragment>
+                : <div className="no-ratings">No ratings</div>
+              }
+            </div>
             <p className='subs-count'>
               Subscribers:- {podcast.subscribers}
             </p>
-            {context && context.subscribeButton && <button className="subscribe-btn" onClick={(event) => handleClickRequest(event, podcast.pid)}>{subscribeBtn}</button>}
+            {context && context.subscribeButton && <SubscribeBtn defaultState="Unsubscribe" podcastID={podcast.pid} />}
           </div>
         </Accordion.Toggle>
       </Card.Header>
@@ -127,16 +160,13 @@ function SubCard({ details: podcast, context }) {
           <div>
             {/* It's extremely laggy showing all the episodes for massive (1000+ episode) podcasts*/}
             {(() => {
-              if (podcastObj && podcastObj.podcast) {
-                console.log("recommended JSX:", podcastObj.podcast.episodes.slice(0,50));
+              if (episodes) {
+                console.log("recommended JSX:", episodes.slice(0, 30));
                 return (
-                  podcastObj.podcast.episodes.slice(0, 30).map((episode, index) =>
+                  episodes.slice(0, 30).map((episode, index) =>
                     <div>
                       <p id="episode-list-card">
-                        {/* <a id="episode-list-link" className={'search-page-link'} href={`/podcast/${podcast.pid}?episode=${episodes.length-index}`}> */}
-                        {/* {episode.title} */}
-                        {/* </a> */}
-                        <Link to={{ pathname: `/podcast/${podcast.pid}?episode=${getEpisodeNumber(index)}`, state: { podcastObj: podcastObj } }} id="episode-list-link" className={'search-page-link'}>
+                        <Link to={{ pathname: `/podcast/${podcast.pid}?${getEpisodeAppendage(index, context && context.chunkedEpisodes)}`, state: { podcastObj: podcastObj } }} id="episode-list-link" className="search-page-link">
                           {/* <b>{getEpisodeNumber(index) + '. '}</b> */}
                           {episode.title}
                         </Link>
@@ -158,105 +188,3 @@ function SubCard({ details: podcast, context }) {
 }
 
 export default SubCard;
-
-
-// async function getRSS(id) {
-//   let resp, data;
-//   try {
-//     resp = await fetch(`${API_URL}/podcasts/${id}`);
-//     data = await resp.json();
-//   } catch {
-//     throw Error("Network error");
-//   }
-//   if (resp.status === 200) {
-//     // console.log(data.xml);
-//     return data.xml;
-//   } else if (resp.status === 404) {
-//     throw Error("Podcast does not exist");
-//   } else {
-//     throw Error("Error in retrieving podcast");
-//   }
-// }
-
-// async function getPodcastObj(id) {
-//   const xml = await getRSS(id);
-//   return getPodcastFromXML(xml);
-
-// I wanted to try to pass the pending promise to the Description page so it didn't have to
-// start the request from scratch
-// but it seems that isn't possible - error pass promise in props because can't clone promise
-
-// goes with:
-// const promise = getPodcastObj(podcast.pid);
-// setPodcastPromise(promise);
-// const pod = await Promise.resolve(promise);
-// }
-
-
-// useEffect(() => {
-  //   setEpisodes(props.episodes);
-  //   console.log(`Episodes for ${props.pid}: ${episodes}`);
-  // }, [props.episodes]);
-
-  // const episodeListTemp = [];
-  // const fetchPodcast = async () => {
-  //   try {
-  //     const xml = await getRSS(props.pid);
-  //     console.log('Received RSS :' + Date.now());
-  //     const pod = getPodcastFromXML(xml);
-  //     // episodeListTemp = pod.episodes;
-  //     console.log('parsed XML: ' + Date.now());
-  //     console.log(`Episodes for ${props.pid}: ${pod.episodes}`);
-  //     console.log(`Episodes 1 for ${props.pid}: ${JSON.stringify(pod.episodes[0])}`);
-  //   } catch (error) {
-  //     console.log(`Error is ${error}`);
-  //     displayError(error);
-  //   }
-  // }
-
-
-  // const setCard = () => {
-  //   try {
-  //     // need to make this a cancellable promise so when page changes to podB while podA is still fetching, 
-  //     // podcastObj doesn't get to set to null and then set to podA when the response returns
-  //     const xml = await getRSS(podcast.pid);
-  //     // console.log('Received RSS :' + Date.now());
-  //     const pod = getPodcastFromXML(xml);
-  //     // episodeListTemp = pod.episodes;
-  //     // setEpisodes(pod.episodes);
-  //     setPodcastObj(pod);
-  //     // setImage(pod.image);
-  //     // console.log('parsed XML: ' + Date.now());
-  //     // console.log(`Episodes for ${podcast.pid}: ${pod.episodes}`);
-  //     console.log(`Episodes for ${podcast.pid}`);
-  //     // console.log(`Episodes 1 for ${podcast.pid}: ${JSON.stringify(pod.episodes[0])}`);
-  //     // console.log(podcast.image);
-  //   } catch (error) {
-  //     console.log(`Error is ${error}`);
-  //     displayError(error);
-  //   }
-  // };
-  // setCard();
-
-    // let xhr = new XMLHttpRequest();
-    // xhr.open("GET", `${API_URL}/podcasts/${podcast.pid}`);
-    // xhr.responseType = 'json';
-    // xhr.send();
-    // xhr.onload = () => {
-    //   console.log(xhr);
-    //   if (xhr.status === 200) {
-    //     const pod = getPodcastFromXML(xhr.response.xml);
-    //     console.log(`Episodes for ${podcast.pid}`);
-    //     console.log(pod);
-    //     setPodcastObj({ podcast: pod, subscription: xhr.response.subscription });
-    //   } else if (xhr.status === 404) {
-    //     displayError("Podcast does not exist");
-    //   } else {
-    //     displayError("Error in retrieving podcast");
-    //   }
-    // }
-    // xhr.onerror = () => {
-    //   console.log("xhr error");
-    //   console.log(xhr);
-    //   displayError("Network or other error");
-    // }

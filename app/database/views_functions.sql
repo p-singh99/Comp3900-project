@@ -76,3 +76,8 @@ create or replace view searchvector as
         setweight(to_tsvector(coalesce(description)), 'C') as vector,
     podcasts.*
     from podcasts;
+
+
+-- ratings view
+create or replace view ratingsview as 
+    select id, coalesce(AVG(rating), 0) FROM podcasts left outer join podcastratings on (podcastid = id) group by id;

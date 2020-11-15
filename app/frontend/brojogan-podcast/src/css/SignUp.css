@@ -5,7 +5,7 @@
   align-items: center;
 }
 
-#signUp-div {
+#signUp-logo-div {
   margin-left: 0px;
   border-radius: 50px;
   background-image: linear-gradient(to right, #6E59D6, #E3D9D9);
@@ -22,7 +22,7 @@
   float: left;
 }
 
-#signUp-div-2 {
+#signUp-form-div {
   border-left: 3px solid  #221F2E;
   padding: 20px 0px 20px 0px;
   display: flex;
