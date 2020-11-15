@@ -20,7 +20,8 @@ function handleDelete(event) {
   }
 
   let body = { "password": password };
-  fetchAPI('/self/settings', 'delete', body)
+  document.getElementById("delete-error").textContent = "...";
+  fetchAPI('/self', 'delete', body)
     .then(() => {
       alert("Success. Account deleted.");
       logoutHandler();
