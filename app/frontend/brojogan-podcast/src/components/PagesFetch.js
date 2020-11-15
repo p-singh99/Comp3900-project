@@ -28,10 +28,13 @@ function PagesFetch({ Item, fetchItems, context }) {
   // }
 
   function prefetchPage(pgNum) {
+    console.log("prefetch pageState:", pageState);
     if (typeof (pageState.pages[pgNum]) === 'function') {
       console.log("Prefetching pg", pgNum);
       let pages = [...pageState.pages];
-      pages[pgNum] = pages[pgNum].then(x => x); // pages[pgNum] is now a promise
+      console.log(pages);
+      console.log(typeof(pages));
+      pages[pgNum] = pages[pgNum]().then(x => x); // pages[pgNum] is now a promise
       setPageState({ ...pageState, pages: pages });
     } else {
       console.log("Not prefetching pg", pgNum);
@@ -51,7 +54,7 @@ function PagesFetch({ Item, fetchItems, context }) {
       // resolve promise and get page
       try {
         page = await pageState.pages[pgNum]();
-        pages[pgNum] = page;
+        // pages[pgNum] = page;
       } catch (err) {
         setError(err.toString());
         // todo
@@ -59,11 +62,13 @@ function PagesFetch({ Item, fetchItems, context }) {
       }
     } else {
       // promise has been started or possibly already resolved
+      console.log("page is promise");
       page = await Promise.resolve(page);
     }
+    pages[pgNum] = page;
     console.log("Gotten page:", page);
     setPageState({ ...pageState, pages: pages, pageNum: pgNum, pageChanging: false });
-    prefetchPage(pgNum + 1);
+    // prefetchPage(pgNum + 1);
     setError(null);
   }
 
@@ -101,16 +106,16 @@ function PagesFetch({ Item, fetchItems, context }) {
       // get page 1, whose response includes the number of pages
       try {
         const { items: page, numPages } = await fetchItems(1);
-        console.log(page, numPages);
+        console.log("getPage1:", page, numPages);
         let pages = [];
-        for (let i = 0; i < numPages; i++) {
+        for (let i = 0; i <= numPages; i++) { // page numbers start at 1
           pages.push(() => fetchItems(i).then(({ items }) => items));
         }
         pages[1] = page;
         console.log("pages:", pages);
         console.log(pages, numPages, 1);
-        setPageState({ pages: pages, lastPage: numPages, pageNum: 1, pageChanging: false });
-        prefetchPage(1);
+        setPageState({ pages: pages, lastPage: numPages, pageNum: 1, pageChanging: false }, () => console.log("callback"));
+        // prefetchPage(1);
         setError(null);
       } catch (err) {
         setError(err.toString());
@@ -118,9 +123,17 @@ function PagesFetch({ Item, fetchItems, context }) {
       }
     }
 
-    console.log("useeffect");
+    console.log("pagesFetch useeffect");
     getPage1();
   }, [fetchItems]);
+
+  // when page state has finished changing, prefetch the next page
+  useEffect(() => {
+    if (pageState && pageState.pageNum < pageState.lastPage) {
+      console.log("pageState useeffect");
+      prefetchPage(pageState.pageNum + 1);
+    }
+  }, [pageState])
 
   // useEffect(() => {
   //   async function getPage1() {
@@ -214,6 +227,7 @@ function PagesFetch({ Item, fetchItems, context }) {
         : null
       }
 
+      {pageState && !pageState.pageChanging && pageState.lastPage > 0 && console.log("pageState.pages[pageState.pageNum]:", pageState.pages[pageState.pageNum])}
       {pageState && !pageState.pageChanging && pageState.lastPage > 0
         ? pageState.pages[pageState.pageNum].map(item => {
           return <Item details={item} context={context} />
