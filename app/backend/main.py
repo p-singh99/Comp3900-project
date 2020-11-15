@@ -24,17 +24,6 @@ CORS(app)
 #CHANGE SECRET KEY
 app.config['SECRET_KEY'] = 'secret_key'
 
-def get_user_id(cur):
-	token = request.headers.get('token')
-	if token:
-		try:
-			data = jwt.decode(token, app.config['SECRET_KEY'])
-			cur.execute("SELECT id FROM users WHERE username ='%s' or email = '%s'" % (data['user'], data['user']))
-		except:
-			return None
-		return cur.fetchone()[0]
-	return None
-
 def create_token(username):
 	token = jwt.encode({'user' : username, 'exp' : datetime.datetime.utcnow() + datetime.timedelta(hours=24)}, app.config['SECRET_KEY'])
 	return token.decode('UTF-8')
@@ -153,37 +142,6 @@ class Users(Resource):
 		# return token
 		return {'token' : create_token(username), 'user': username}, 201
 
-	@token_required
-	def delete(self):
-		conn, cur = df.get_conn()
-		user_id = get_user_id(cur)
-		parser = reqparse.RequestParser(bundle_errors=True)
-		parser.add_argument('password', type=str, required=True, help="Need old password", location="json")
-		args = parser.parse_args()
-		cur.execute("SELECT hashedpassword FROM users WHERE id=%s", (user_id,))
-		old_pw = cur.fetchone()[0].strip()
-		if bcrypt.checkpw(args["password"].encode('UTF-8'), old_pw.encode('utf-8')):
-			# delete from users
-			cur.execute("DELETE FROM users WHERE id=%s", (user_id,))
-			# delete all subscriptions
-			cur.execute("DELETE FROM subscriptions WHERE userId=%s", (user_id,))
-			# delete podcast account
-			cur.execute("DELETE FROM podcastratings WHERE userId=%s", (user_id,))
-			# delete episode ratings
-			cur.execute("DELETE FROM episoderatings WHERE userId=%s", (user_id,))
-			# delete listens
-			cur.execute("DELETE FROM listens WHERE userId=%s", (user_id,))
-			# delete seach queries
-			cur.execute("DELETE FROM searchqueries WHERE userId=%s", (user_id,))
-			# delete rejected recommendations
-			cur.execute("DELETE FROM rejectedrecommendations WHERE userId=%s", (user_id,))
-			conn.commit()
-			df.close_conn(conn,cur)
-			return {"data" : "account deleted"}, 200
-		else:
-			df.close_conn(conn,cur)
-			return {"error" : "wrong password"}, 400
-
 
 class Podcasts(Resource):
 	def get(self):
@@ -286,6 +244,38 @@ class Settings(Resource):
 			return {"data" : "success"}, 200
 		df.close_conn(conn,cur)
 		return {"error" : "wrong password"}, 400
+
+class Self(Resource):
+	@token_required
+	def delete(self):
+		conn, cur = df.get_conn()
+		user_id = get_user_id(cur)
+		parser = reqparse.RequestParser(bundle_errors=True)
+		parser.add_argument('password', type=str, required=True, help="Need old password", location="json")
+		args = parser.parse_args()
+		cur.execute("SELECT hashedpassword FROM users WHERE id=%s", (user_id,))
+		old_pw = cur.fetchone()[0].strip()
+		if bcrypt.checkpw(args["password"].encode('UTF-8'), old_pw.encode('utf-8')):
+			# delete from users
+			cur.execute("DELETE FROM users WHERE id=%s", (user_id,))
+			# delete all subscriptions
+			cur.execute("DELETE FROM subscriptions WHERE userId=%s", (user_id,))
+			# delete podcast account
+			cur.execute("DELETE FROM podcastratings WHERE userId=%s", (user_id,))
+			# delete episode ratings
+			cur.execute("DELETE FROM episoderatings WHERE userId=%s", (user_id,))
+			# delete listens
+			cur.execute("DELETE FROM listens WHERE userId=%s", (user_id,))
+			# delete seach queries
+			cur.execute("DELETE FROM searchqueries WHERE userId=%s", (user_id,))
+			# delete rejected recommendations
+			cur.execute("DELETE FROM rejectedrecommendations WHERE userId=%s", (user_id,))
+			conn.commit()
+			df.close_conn(conn,cur)
+			return {"data" : "account deleted"}, 200
+		else:
+			df.close_conn(conn,cur)
+			return {"error" : "wrong password"}, 400
 
 
 class Podcast(Resource):
@@ -410,7 +400,7 @@ class Listens(Resource):
 		user_id = get_user_id(cur)
 		episodeGuid = request.json.get("episodeGuid")
 		if episodeGuid is None:
-			df.close_conn(cur,conn)
+			df.close_conn(conn, cur)
 			return {"error": "episodeGuid not included"}, 400
 
 		cur.execute("""
@@ -497,7 +487,7 @@ class Recommendations(Resource):
 		recs = []
 		cur.execute("select distinct * from recommendations(%s)", (user_id,))
 		results = cur.fetchall()
-		[recs.append({"title": i[0], "id": i[1], "subs": i[2], "eps": i[3]}) for i in results]
+		[recs.append({"title": i[0], "thumbnail": i[1], "id": i[2], "subs": i[3], "eps": i[4], "rating":  f"{i[5]:.1f}"}) for i in results]
 		df.close_conn(conn,cur)
 		return {"recommendations" : recs}
 
@@ -657,6 +647,7 @@ api.add_resource(BestPodcasts, "/top-podcasts")
 
 # user-specific
 api.add_resource(Settings, "/self/settings")
+api.add_resource(Self, "/self")
 api.add_resource(Recommendations, "/self/recommendations")
 api.add_resource(Subscriptions, "/self/subscriptions")
 api.add_resource(SubscriptionPanel, "/self/subscription-panel")

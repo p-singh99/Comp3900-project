@@ -24,19 +24,11 @@ function Recommended() {
       const recommendations = data.recommendations;
       console.log("Recommended.js podcasts.recommendations:", data.recommendations);
       for (let p of recommendations) {
-        // const parsedObject = getPodcastFromXML(p.xml);
-        // console.log(`Recommended Podcast is: ${JSON.stringify(parsedObject.title)}`);
-        // Podcasts.push({
-        //   'title': parsedObject.title , 
-        //   'description': parsedObject.description,
-        //   'pid': parsedObject.id,
-        //   'episodes': parsedObject.episodes
-        // });
         const episodes = p.eps.map(episodeTitle => ({title: episodeTitle}));
         console.log("mapped episodes:", episodes);
 
         // emulate the format of a podcast obj that Card.js expects, but with only the parts that it actually needs
-        podcasts.push({title: p.title, pid: p.id, episodes: episodes, image: p.image, subscribers: p.subs, rating: p.rating});
+        podcasts.push({title: p.title, pid: p.id, episodes: episodes, thumbnail: p.thumbnail, subscribers: p.subs, rating: p.rating});
       }
       console.log("Recommended end of for loop podcasts:", podcasts)
       setBody(<PodcastCards
