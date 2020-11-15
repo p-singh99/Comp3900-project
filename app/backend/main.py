@@ -159,7 +159,7 @@ class Podcasts(Resource):
 		cur.execute("""SELECT count(s.podcastid), v.title, v.author, v.description, v.id, v.thumbnail, rv.coalesce
 	     			FROM   searchvector v
 	     			FULL OUTER JOIN Subscriptions s ON s.podcastId = v.id
-		                LEFT JOIN ratingsview rv ON vid = rv.id
+		                LEFT JOIN ratingsview rv ON v.id = rv.id
 	     			WHERE  v.vector @@ plainto_tsquery(%s)
 	     			GROUP BY  (s.podcastid, v.title, v.author, v.description, v.id, v.vector, v.thumbnail, rv.coalesce)
 				ORDER BY  ts_rank(v.vector, plainto_tsquery(%s)) desc;
@@ -189,9 +189,9 @@ class Podcasts(Resource):
 			pID = p[4]
 			thumbnail = p[5]
 			rating = p[6]
-			results.append({"subscribers" : subscribers, "title" : title, "author" : author, "description" : description, "pid" : pID, "thumbnail" : thumbnail, "rating" : rating})
+			results.append({"subscribers" : subscribers, "title" : title, "author" : author, "description" : description, "pid" : pID, "thumbnail" : thumbnail, "rating" : f"{rating:.1f}"})
 		for c in categories:
-			results.append({"subscribers" : c[4], "title" : c[1], "author" : c[2], "description" : c[3], "pid" : c[0], "thumbnail" : c[5], "rating" : c[6]})
+			results.append({"subscribers" : c[4], "title" : c[1], "author" : c[2], "description" : c[3], "pid" : c[0], "thumbnail" : c[5], "rating" : f"{c[6]:.1f}"})
 		df.close_conn(conn, cur)
 		return results, 200
 

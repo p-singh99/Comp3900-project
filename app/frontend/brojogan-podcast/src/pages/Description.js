@@ -115,9 +115,12 @@ function Description(props) {
               const podcastDetails = first;
               console.log(podcastDetails);
               if (podcastDetails.xml) {
-                podcast = getPodcastFromXML(podcastDetails.xml);
+                try {
+                  podcast = getPodcastFromXML(podcastDetails.xml);
+                } catch {
+                  podcast = { error: "Error loading podcast" };
+                }
                 // podcast.rating = podcastDetails.rating;
-
                 console.log("Parsed podcast:", podcast);
               } else {
                 podcast = { error: "Error loading podcast" };
