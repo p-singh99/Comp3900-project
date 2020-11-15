@@ -1,5 +1,3 @@
-<http://sailortalk.podOmatic.com/rss2.xml>
-HTTP://www.knient.com/CAL/CAL-Podcast/CAL-Podcast.xml
 Http://feeds.feedburner.com/fridgeandhbomb
 Http://feeds.feedburner.com/wfodicks
 Http://ravenc-taouf.podomatic.com/rss2.xml
@@ -10,12 +8,11 @@ http://-myantioch.sermon.tv/rss/main
 http://004.podOmatic.com/rss2.xml
 http://0055808.NETSOLHOST.COM/Podcasts/podcast.xml
 http://0063fdd.netsolhost.com/PR_Tips_for_Helping_Media_Find_Your_Online_Press_Releases.xml
-http://02f112f.netsolhost.com/richtrainer/?feed=richtrainer
-http://02fc284.netsolhost.com/AudioPodcast/podcast.xml
 http://02fc284.netsolhost.com/VideoPodcast/podcast.xml
-http://03714fc.netsolhost.com/Downright_Brewed.xml
 http://04odedrajee.podomatic.com/rss2.xml
 http://06032012crossroads.podomatic.com/rss2.xml
+=======
+>>>>>>> rss-parser
 http://0814.eu/rss.xml
 http://0ddaud.io/feed/
 http://1000sofcats.com/files/cast/thousandsofcats.xml
@@ -23,18 +20,12 @@ http://100297.agchurches.org/SiteFiles/100297/Podcasts/2054/Podcast_2054.xml
 http://100jahre.michelin-online.de/podcast/michelin-podcast.rss
 http://100percenthusbands.com/feed/podcast
 http://101claves.com/web/index2.php?option=com_podcast&feed=RSS2.0&no_html=1
-http://1029thehog.com/feed/bobnbrianod/
 http://104fm.nl/podcast/feed.xml
 http://105900.agwebservices1.org/SiteFiles/105900/Podcasts/4262/Podcast_4262.xml
 http://107een.podOmatic.com/rss2.xml
 http://109.109.252.218/podcast/itunesfeed.xml
 http://1153friend.seesaa.net/index20.rdf
 http://117.20.105.158/feed/podcast
-http://119.rpod.ru/rss_9rs_5cb4.xml
-http://121.78.145.115/podcast/xml/3in.xml
-http://121.78.145.115/podcast/xml/nadoya_001.xml
-http://121.78.93.3/news1.xml
-http://121.78.93.3/~ytn/news.xml
 http://128.118.217.248:7777/fmi/xsl/iTunes_Export.xsl?-grammar=FMPXMLRESULT&-db=PSPBProduction.fp7&-lay=tom&-sortfield.1=AirDateCalc&-sortorder.1=descend&urlname=bookmark&urlname.op=cn&-find
 http://128.118.217.248:7777/fmi/xsl/iTunes_Export.xsl?-grammar=FMPXMLRESULT&-db=PSPBProduction.fp7&-lay=tom&-sortfield.1=AirDateCalc&-sortorder.1=descend&urlname=thisibelieve&urlname.op=cn&-find
 http://128.118.217.248:7777/fmi/xsl/iTunes_Export.xsl?-grammar=FMPXMLRESULT&-db=PSPBProduction.fp7&-max=200&-lay=tom&-sortfield.1=AirDateCalc&-sortorder.1=descend&urlname=stories&urlname.op=cn&-find
@@ -49233,10 +49224,6 @@ http://www.geobrief.tv/podcasts/movies/rss.xml
 http://www.geocaching-blogbuch.de/?feed=podcast
 http://www.geocaching-blogbuch.de/?feed=screencast
 http://www.geocities.jp/cyatoco/podcast/podcast.xml
-http://www.geologicpodcast.com/rss
-http://www.gep.de/chrismon/podcasts/audio/im_vertrauen/vertrauen.xml
-http://www.gep.de/chrismon/podcasts/huber.xml
-http://www.gep.de/chrismon/podcasts/segensreich.xml
 http://www.geraldkembellec.fr/cnam/cours/titre1/iTunesFeed.xml
 http://www.geraldkembellec.fr/unpidf/iTunesFeed.xml
 http://www.germanpod101.com/wp-feed-audio-video.php

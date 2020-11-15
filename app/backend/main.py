@@ -13,6 +13,8 @@ import urllib.parse
 import re
 from SemaThreadPool import SemaThreadPool
 import math
+from rss import update_rss
+import threading
 import dbfunctions as df
 
 app = Flask(__name__)
@@ -21,25 +23,9 @@ CORS(app)
 
 #CHANGE SECRET KEY
 app.config['SECRET_KEY'] = 'secret_key'
-# # remote
-# conn_pool = SemaThreadPool(1, 50,\
-# 	 dbname="ultracast", user="brojogan", password="GbB8j6Op", host="polybius.bowdens.me", port=5432)
-# # local
-# #conn_pool = SemaThreadPool(1, 50,\
-# #	 dbname="ultracast")
-
-# def get_conn():
-# 	conn = conn_pool.getconn()
-# 	cur = conn.cursor()
-# 	return conn, cur
-
-# def close_conn(conn, cur):
-# 	cur.close()
-# 	conn_pool.putconn(conn)
 
 def create_token(username):
-	# implement some kind of token refreshing scheme
-	token = jwt.encode({'user' : username, 'exp' : datetime.datetime.utcnow() + datetime.timedelta(minutes=60)}, app.config['SECRET_KEY'])
+	token = jwt.encode({'user' : username, 'exp' : datetime.datetime.utcnow() + datetime.timedelta(hours=24)}, app.config['SECRET_KEY'])
 	return token.decode('UTF-8')
 
 def token_required(f):
@@ -300,12 +286,13 @@ class Podcast(Resource):
 		flag = False
 		if cur.rowcount != 0:
 			flag = True
-		cur.execute("SELECT xml, id FROM Podcasts WHERE id=(%s)", (id,))
+		cur.execute("SELECT xml, id, rssfeed FROM Podcasts WHERE id=(%s)", (id,))
 		res = cur.fetchone()
 		if res is None:
 			return {}, 404
 		xml = res[0]
 		id  = res[1]
+		rssfeed=res[2]
 
 		cur.execute("SELECT count(*) from subscriptions where podcastid=(%s)", (id,))
 		res = cur.fetchone()
@@ -320,8 +307,12 @@ class Podcast(Resource):
 			rating = f"{res[0]:.1f}"
 		print(rating)
 		df.close_conn(conn,cur)
+		print("creating thread {}".format(datetime.datetime.now()))
+		thread = threading.Thread(target=update_rss, args=(rssfeed, df.conn_pool), daemon=True)
+		print("starting thread {}".format(datetime.datetime.now()))
+		thread.start()
+		print("returning from thread {}".format(datetime.datetime.now()))
 		return {"xml": xml, "id": id, "subscription": flag, "subscribers": subscribers, "rating": rating}, 200
-
 
 class Subscriptions(Resource):
 	@token_required
@@ -430,6 +421,7 @@ class Listens(Resource):
 		timestamp = request.json.get("time")
 		episodeGuid = request.json.get("episodeGuid")
 		duration = request.json.get("duration")
+		print("request.json is {}".format(request.json))
 		if timestamp is None:
 			df.close_conn(conn,cur)
 			return {"error": "timestamp not included"}, 400
@@ -444,13 +436,16 @@ class Listens(Resource):
 			return {"error": "duration is not included"}, 400
 		complete = timestamp >= 0.95 * duration
 		
-		# we're touching episodes so insert new episode (if it doesn't already exist)
-		cur.execute("""
-			INSERT INTO episodes (podcastId, guid)
-			values (%s, %s)
-			ON CONFLICT DO NOTHING
-		""",
-		(podcastId, episodeGuid))
+		try:
+			cur.execute("""
+				update episodes 
+				set duration=%s
+				where guid=%s and podcastId=%s
+			""",
+			(duration, episodeGuid, podcastId))
+		except Exception as e:
+			df.close_conn(conn,cur)
+			return {"error": "Failed to update episodes, probably because the episode does not exist:\n{}".format(str(e))}, 400
 
 		cur.execute("""
 			INSERT INTO listens (userId, podcastId, episodeGuid, listenDate, timestamp, complete)
@@ -496,6 +491,104 @@ class Recommendations(Resource):
 		df.close_conn(conn,cur)
 		return {"recommendations" : recs}
 
+class Notifications(Resource):
+	@token_required
+	def get(self):
+		conn, cur = df.get_conn()
+		user_id=get_user_id(cur)
+		cur.execute("""
+		select p.rssfeed from
+		subscriptions s
+		join podcasts p on s.podcastId=p.id
+		where s.userId = %s
+		""", (user_id,))
+		results = cur.fetchall()
+		subscribedPodcasts = []
+		if results:
+			subscribedPodcasts = [x[0] for x in results]
+		for sp in subscribedPodcasts:
+			print("creating thread {}".format(datetime.datetime.now()))
+			thread = threading.Thread(target=update_rss, args=(sp, df.conn_pool), daemon=True)
+			print("starting thread {}".format(datetime.datetime.now()))
+			thread.start()
+			print("thread returned {}".format(datetime.datetime.now()))
+
+		cur.execute("""
+		select p.title, p.id, e.title, e.created, e.guid, u.status, u.id from
+		notifications u
+		join episodes e on u.episodeguid=e.guid
+		join podcasts p on e.podcastid=p.id
+		where u.userid=%s
+		and (u.status='read' or u.status='unread')
+		order by e.created desc
+		""", (user_id,))
+		results = cur.fetchall()
+		df.close_conn(conn,cur)
+		for result in results:
+			print(result)
+		if results is None:
+			return {}, 200
+		json = [{
+			"podcastTitle": x[0],
+			"podcastId":    x[1],
+			"episodeTitle": x[2],
+			"dateCreated":  str(x[3]),
+			"episodeGuid":  x[4],
+			"status":       x[5],
+			"id": 		x[6]
+		} for x in results]
+		return json, 200
+
+
+class Notification(Resource):
+	@token_required
+	def delete(self, notificationId):
+		conn,cur = df.get_conn()
+		user_id=get_user_id(cur)
+		cur.execute("""
+		update notifications
+		set status='dismissed'
+		where id=%s and userId=%s
+		returning id
+		""", (notificationId, user_id))
+		results = cur.fetchall()
+		if len(results) > 1:
+			conn.rollback()
+			df.close_conn(conn,cur)
+			return {"data": "unexpectedly deleted more than 1 notification. rolling back"}, 500
+		conn.commit()
+		df.close_conn(conn,cur)
+		if len(results) == 0:
+			return {"data": "No notification associated with id {} and userId {}".format(notificationId, user_id)}, 404
+		return {}, 200
+
+
+	@token_required
+	def put(self, notificationId):
+		status = request.json.get("status")
+		if status is None:
+			return {"data": "must include status field"}, 400
+		if not isinstance(status, str) and status not in ['read', 'unread', 'dismissed']:
+			return {"data": "status must be one of read, undread, or dismissed"}, 400
+		conn, cur = df.get_conn()
+		user_id = get_user_id(cur)
+		cur.execute("""
+		update Notifications set status=%s
+		where id=%s and userid=%s
+		returning id
+		""", (status, notificationId, user_id))
+		results = cur.fetchall()
+		if len(results) > 1:
+			conn.rollback()
+			df.close_conn(conn,cur)
+			return {"data": "unexpectedly modified more than 1 notification. rolling back"}, 500
+		conn.commit()
+		df.close_conn(conn,cur)
+		if len(results) == 0:
+			return {"data": "No notification associated with id {} and userId {}".format(notificationId, user_id)}, 404
+		return {}, 200
+
+
 class RejectRecommendations(Resource):
 	@token_required
 	def put(self, id):
@@ -504,14 +597,6 @@ class RejectRecommendations(Resource):
 		cur.execute("INSERT INTO rejectedrecommendations (userid, podcastid) VALUES (%s, %s)", (user_id, id))
 		conn.commit()
 		df.close_conn(conn,cur)
-		
-class Notifications(Resource):
-	def get(self):
-		conn, cur = df.get_conn()
-		user_id = get_user_id(cur)
-		cur.execute("select * from notifications where user='%s'", (user_id))
-		df.close_conn(conn, cur)
-		return {"notifications": cur.fetchall()}
 
 class Ratings(Resource):
 	def get(self, id):
@@ -567,6 +652,8 @@ api.add_resource(Recommendations, "/self/recommendations")
 api.add_resource(Subscriptions, "/self/subscriptions")
 api.add_resource(SubscriptionPanel, "/self/subscription-panel")
 api.add_resource(History, "/self/history/<int:id>")
+api.add_resource(Notifications, "/self/notifications")
+api.add_resource(Notification, "/self/notification/<int:notificationId>")
 api.add_resource(Listens, "/self/podcasts/<int:podcastId>/episodes/time")
 api.add_resource(ManyListens, "/self/podcasts/<int:podcastId>/time")
 api.add_resource(Ratings, "/self/ratings/<int:id>")

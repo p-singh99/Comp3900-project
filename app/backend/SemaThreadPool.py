@@ -5,7 +5,7 @@ class SemaThreadPool(ThreadedConnectionPool):
     def __init__(self, minconn, maxconn, *args, **kwargs):
         self.semaphore = Semaphore(maxconn)
         super().__init__(minconn, maxconn, *args, **kwargs)
-    
+
     def getconn(self, *args, **kwargs):
         self.semaphore.acquire()
         print(self.semaphore._value)
