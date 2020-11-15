@@ -50,7 +50,7 @@ function SubCard({ details: podcast, context }) {
           } else {
             const pod = getPodcastFromXML(data.xml);
             setEpisodes(pod.episodes);
-            setPodcastObj({podcast: null, subscription: data.subscription, rating: data.rating});
+            setPodcastObj({podcast: pod, subscription: data.subscription, rating: data.rating});
             // change subscription to subscribed. subscribed: true/false
           }
         })
