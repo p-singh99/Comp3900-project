@@ -213,7 +213,7 @@ class Podcasts(Resource):
 				""",
 				(search,search))
 		podcasts = cur.fetchall()
-		cur.execute("""SELECT p.id, p.title, p.author, p.description, ps.count
+		cur.execute("""SELECT DISTINCT p.id, p.title, p.author, p.description, ps.count
 		               FROM   podcasts p
 		               LEFT JOIN podcastcategories t
 		                      ON t.podcastid = p.id
@@ -221,9 +221,9 @@ class Podcasts(Resource):
 		                      ON t.categoryid = c.id
 		               LEFT JOIN podcastsubscribers ps
 		                      ON ps.id = p.id
-		               WHERE     to_tsvector(c.name) @@ plainto_tsquery(%s);
+		               WHERE  to_tsvector(c.name) @@ plainto_tsquery(%s) and p.id not in (select podcastid from search(%s));
 		            """,
-		            (search,))
+		            (search,search))
 		categories = cur.fetchall()
 		results = []
 		for p in podcasts:
@@ -234,14 +234,14 @@ class Podcasts(Resource):
 			pID = p[4]
 			results.append({"subscribers" : subscribers, "title" : title, "author" : author, "description" : description, "pid" : pID})
 		for c in categories:
-			flag = False
-			for r in results:
-				if int(r['pid']) == int(c[0]):
-					flag = True
-					break
-			if flag == False:
+			#flag = False
+			#for r in results:
+				#if int(r['pid']) == int(c[0]):
+					#flag = True
+					#break
+			#if flag == False:
 			#if not any(str(c[0]) in sublist for sublist in results):
-				results.append({"subscribers" : c[4], "title" : c[1], "author" : c[2], "description" : c[3], "pid" : c[0]})
+			results.append({"subscribers" : c[4], "title" : c[1], "author" : c[2], "description" : c[3], "pid" : c[0]})
 		close_conn(conn, cur)
 		return results, 200
 
