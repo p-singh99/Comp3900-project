@@ -296,7 +296,7 @@ class Podcast(Resource):
 		subscribers = 0
 		if res is not None:
 			subscribers = res[0]
-		cur.execute("SELECT coalesce from ratingsview where id=%s", (id,))
+		cur.execute("SELECT rating from ratingsview where id=%s", (id,))
 		
 		res = cur.fetchone()
 		if res:
@@ -316,7 +316,7 @@ class Subscriptions(Resource):
 	def get(self):
 		conn, cur = df.get_conn()
 		uid = get_user_id(cur)
-		cur.execute("SELECT p.title, p.author, p.description, p.id, r.coalesce, p.thumbnail FROM podcasts p, ratingsview r, subscriptions s \
+		cur.execute("SELECT p.title, p.author, p.description, p.id, r.rating, p.thumbnail FROM podcasts p, ratingsview r, subscriptions s \
 			WHERE s.podcastId = p.id and s.userID = %s and r.id = p.id;", (uid,))
 		podcasts = cur.fetchall()
 		results = []
@@ -624,9 +624,9 @@ class Ratings(Resource):
 class BestPodcasts(Resource):
 	def get(self):
 		conn, cur = df.get_conn()
-		cur.execute("SELECT p.id, p.xml, p.count, t.thumbnail, r.coalesce FROM podcastsubscribers p, podcasts t, ratingsview r ORDER BY p.count DESC Limit 10")
+		cur.execute("SELECT p.id, p.xml, p.count, t.thumbnail, r.rating FROM podcastsubscribers p, podcasts t, ratingsview r ORDER BY p.count DESC Limit 10")
 		top_subbed = [{"id": i[0], "xml": i[1], "subs": i[2], "thumbnail": i[3], "rating": i[4]} for i in cur.fetchall()]
-		cur.execute("SELECT p.id, p.xml, p.count, t.thumbnail, r.coalesce FROM podcastsubscribers p, podcasts t, ratingsview r ORDER BY p.count DESC Limit 10")
+		cur.execute("SELECT p.id, p.xml, p.count, t.thumbnail, r.rating FROM podcastsubscribers p, podcasts t, ratingsview r ORDER BY p.count DESC Limit 10")
 		top_rated = [{"id": i[0], "xml": i[1], "subs": i[2], "thumbnail": i[3], "rating": i[4]} for i in cur.fetchall()]
 		df.close_conn(conn,cur)
 		return {"topSubbed": top_subbed, "topRated": top_rated}, 200
