@@ -1,21 +1,29 @@
 import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet';
+
 import PodcastCards from './../components/PodcastCards';
 import { fetchAPI } from './../authFunctions';
+
 import './../css/SearchPage.css';
 
-export default function Search(ppodcasts) {
+// for Search, the backend returns a list of results of form {todo}
+// And this component uses PodcastCards and passes it the list of podcasts
+// Each card then fetches the details for the podcast with the id it is given, and displays the details
+// when a link to a podcast description page is clicked, if the podcast details have finished loading, then they will be passed to the Description page
+// so they don't have to be fetched again
+export default function Search() {
   const [podcasts, setPodcasts] = useState();
   const [titleQuery, setTitleQuery] = useState("");
-  // const [error, setError] = useState();
+  const [error, setError] = useState();
 
+  // on page load, get query from url. then get and display query results
   useEffect(() => {
-    // setError();
+    setError(null);
 
     const controller = new AbortController();
 
     setPodcasts();
-    var query = window.location.search.substring(1);
+    const query = window.location.search.substring(1);
     setTitleQuery(query);
     console.log(`podcasts at start of ${query}: `, podcasts);
     console.log(`starting query ${query}`)
@@ -24,30 +32,21 @@ export default function Search(ppodcasts) {
     fetchAPI('/podcasts?search_query=' + query + '&offset=0&limit=50', 'get', null, controller.signal)
       .then(podcasts => {
         setPodcasts(podcasts);
-        // console.log(`${query}: podcasts: `, podcasts);
-        // console.log(`new wls: ${window.location.search.substring(1)}`);
-        // const newQuery = window.location.search.substring(1);
-        // if (query === newQuery) {
-        //   // component may have been rerendered with new query since that request was sent
-        //   // without this, if someone does a new search before the old search request has finished,
-        //   // then the old results display for a second before the new ones
-        //   // would be better to use xhr and cancel the request in the cleanup instead I think
-        //   // because js is single-threaded, I think it's impossible for the request to get back and be processed,
-        //   // but then switch to a new component before it's displayed, and display it after?
-        // }
       })
       .catch(err => {
-        // do something
-        // can't just display an error, because this will also be called on request aborting
+        // if err instanceof DOMException, then (hopefully) the error is from aborted request, so don't show the user that
+        if (! (err instanceof DOMException)) {
+          setError("Network or other error");
+        }
         console.log(err);
-        // setError("Network or other error");
       });
 
       return function cleanup() {
         console.log("aborting search request");
         controller.abort();
+        // abort pending request so that search results from this query don't show up for the next query?
       }
-  }, [window.location.search]);
+  }, [window.location.search]); // for reloading when something is searched from the search page
 
   return (
     <div id="search-page-div">
@@ -63,11 +62,11 @@ export default function Search(ppodcasts) {
               podcasts={podcasts}
             />)
         } else if (podcasts) {
-          return "No results";
-        // } else if (error) {
-        //   return error;
+          return <h1>No results</h1>;
+        } else if (error) {
+          return <h1>{error}</h1>;
         } else {
-          return "Loading";
+          return <h1>Loading...</h1>;
         }
       })()}
     </div>

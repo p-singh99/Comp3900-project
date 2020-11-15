@@ -1,0 +1,14 @@
+#notifications-div {
+  z-index: 1;
+  right: 10px;
+  position: fixed;
+  display: flex;
+  flex-direction: column;
+  width: 250px;
+  color: #90C1CE;
+  border: 2px solid #64CFEB;
+  padding-left: 15px;
+  background-color: #2E2B3F;
+  font-weight: bold;
+  margin-top: -7px;
+}

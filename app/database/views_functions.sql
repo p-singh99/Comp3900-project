@@ -8,8 +8,15 @@ order by subscribers desc;
 
 create or replace view podcastSubscribers as
 select podcasts.xml, podcasts.id, count(subscriptions.podcastid)
-from podcasts join subscriptions on id=podcastid
+from podcasts left outer join subscriptions on id=podcastid
 group by podcasts.xml, podcasts.id, subscriptions.podcastid;
+
+-- notifications details view
+create or replace view notificationDetails as
+select n.userId, n.podcastId, n.episodeGuid, e.title as episodeTitle, p.title as podcastTitle, n.id
+from notifications n
+join podcasts p on n.podcastId=p.id
+join episodes e on n.episodeGuid=e.guid;
 
 -- HELPER FUNCTIONS --
 
@@ -79,5 +86,5 @@ create or replace view searchvector as
 
 
 -- ratings view
-create or replace view ratingsview as
-    select id, AVG(rating) FROM podcasts left outer join podcastratings on (podcastid = id) group by id;
+create or replace view ratingsview as 
+    select id, coalesce(AVG(rating), 0) FROM podcasts left outer join podcastratings on (podcastid = id) group by id;

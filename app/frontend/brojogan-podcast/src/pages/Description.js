@@ -55,8 +55,13 @@ function Description(props) {
     const id = window.location.pathname.split("/").pop();
     console.log('Start useeffect: ' + Date.now());
     const queryParams = new URLSearchParams(window.location.search);
-    const episodeNum = queryParams.get("episode");
+    let episodeNum = parseInt(queryParams.get("episode"), 10); // NaN if episode isn't set
+    let episodeNumReversed = false;
     console.log("episodeNum:", episodeNum);
+    if (!episodeNum) {
+      episodeNum = parseInt(queryParams.get("episodeRecent"), 10); // NaN if episode isn't set
+      episodeNumReversed = true;
+    }
 
     function updatePodcastDetails(podcast, subscription, rating) {
       setPodcast(podcast);
@@ -110,9 +115,12 @@ function Description(props) {
               const podcastDetails = first;
               console.log(podcastDetails);
               if (podcastDetails.xml) {
-                podcast = getPodcastFromXML(podcastDetails.xml);
+                try {
+                  podcast = getPodcastFromXML(podcastDetails.xml);
+                } catch {
+                  podcast = { error: "Error loading podcast" };
+                }
                 // podcast.rating = podcastDetails.rating;
-
                 console.log("Parsed podcast:", podcast);
               } else {
                 podcast = { error: "Error loading podcast" };
@@ -148,7 +156,7 @@ function Description(props) {
             }
 
             console.log("podcast:", podcast);
-            setEpisodes({ episodes: (podcast ? podcast.episodes : null), showEpisode: episodeNum });
+            setEpisodes({ episodes: (podcast ? podcast.episodes : null), showEpisode: episodeNum, showEpisodeReversed: episodeNumReversed });
           })
           .catch(error => {
             displayError(error);
@@ -165,6 +173,7 @@ function Description(props) {
     } catch {
       podcastObj = null;
     }
+    // if podcastObj is provided, it must contain {podcast, subscribed, rating}
     fetchPodcast(podcastObj);
 
   }, [window.location, props]);
@@ -193,6 +202,18 @@ function Description(props) {
     // could cancel old requests when a new one is made but probably not woth it
   }
 
+  // if numReversed, the the number is from most recent episode, in order with the episodes list
+  // if not, then it is in opposite order to the episodes list
+  function getEpisodeIndex(episodeNum, numReversed, episodes) {
+    if (numReversed) {
+      return episodeNum - 1; // NaN (falsy) if episodeReversed wasn't set
+    } else if (episodeNum) {
+      return episodes.length - episodeNum;
+    } else {
+      return null;
+    }
+  }
+
   function getPodcastDescription(podcast) {
     let podcastDescription;
     try {
@@ -216,7 +237,7 @@ function Description(props) {
       return (
         <div>
           <div id="podcast-info">
-            {podcast.image && <img id="podcast-img" src={podcast.image} alt="Podcast icon" style={{ height: '300px', width: '300px' }}></img>}
+            {podcast.image && <img id="podcast-img" src={podcast.image} alt="Podcast icon" />}
             <div id="podcast-name-author">
               <h1 id="podcast-name">{podcast.title}</h1>
               <h3 id="podcast-author">{podcast.author}</h3>
@@ -231,7 +252,7 @@ function Description(props) {
                   value={1}
                 />
                 {console.log("Rating in return:", rating)}
-                {rating
+                {rating && parseFloat(rating) >= 1 // when there are no ratings for a podcast, the backend returns 0.0 as the rating. Rating can't be < 1 so we know this means no ratings.
                   ?
                   <React.Fragment>
                     <div className="current-rating-num">{rating}</div>
@@ -284,7 +305,7 @@ function Description(props) {
       <div id="episodes">
         <ul>
           {episodes && episodes.episodes && episodes.episodes.length > 0
-            ? <Pages itemDetails={episodes.episodes} context={{ podcast: podcast, setPlaying: setPlaying, podcastId: window.location.pathname.split("/").pop() }} itemsPerPage={10} Item={EpisodeDescription} showItemIndex={episodes.showEpisode} />
+            ? <Pages itemDetails={episodes.episodes} context={{ podcast: podcast, setPlaying: setPlaying, podcastId: window.location.pathname.split("/").pop() }} itemsPerPage={10} Item={EpisodeDescription} showItemIndex={getEpisodeIndex(episodes.showEpisode, episodes.showEpisodeReversed, episodes.episodes)} />
             : null}
         </ul>
       </div>

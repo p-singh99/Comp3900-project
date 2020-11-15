@@ -5,21 +5,23 @@ import {FiUser} from 'react-icons/fi';
 
 import { checkPassword, checkPasswordsMatch, checkField } from './../validationFunctions';
 import { fetchAPI, logoutHandler, getUsername } from './../authFunctions';
+
 import './../css/Settings.css';
 import './../css/bootstrap-modal.css'; // get rid of this, bootstrap css is already imported
 
 
+// handler for delete account modal delete button
 function handleDelete(event) {
   event.preventDefault();
-  // pop up / modal
-  // are you sure? Enter username and password to confirm
+  // check that they entered a password
   const password = document.getElementById("delete-password-input").value;
   if (!password) {
     return;
   }
 
   let body = { "password": password };
-  fetchAPI('/self/settings', 'delete', body)
+  document.getElementById("delete-error").textContent = "...";
+  fetchAPI('/self', 'delete', body)
     .then(() => {
       alert("Success. Account deleted.");
       logoutHandler();
@@ -28,7 +30,6 @@ function handleDelete(event) {
       document.getElementById("delete-error").textContent = err.toString();
     });
 }
-
 
 function Settings() {
   const [currentEmail, setCurrentEmail] = useState("");
@@ -40,8 +41,13 @@ function Settings() {
     setError(msg.toString());
   }
 
+  // for delete account modal: when entered username is correct, enable delete button
   function checkUsername(event) {
-    setDisabled(event.target.value !== getUsername());
+    if (event.target.value === getUsername()) {
+      setDisabled(false);
+    } else {
+      setDisabled(true);
+    }
   }
 
   function hideModal() {
@@ -49,6 +55,7 @@ function Settings() {
     setDisabled(true);
   }
 
+  // handler for settings submit button
   function settingsHandler(event) {
     event.preventDefault();
 
@@ -60,6 +67,7 @@ function Settings() {
 
     console.log(email.validity);
 
+    // if email or newpassword are empty or unchanged, send value as null
     if ((! email.value || (currentEmail && email.value === currentEmail)) && !password1.value) {
       displayMessage("You haven't made any changes.");
     } else if (!oldPassword.value) {
@@ -74,13 +82,13 @@ function Settings() {
       data.oldpassword = oldPassword.value;
       data.newpassword = password1.value ? password1.value : null;
       data.newemail = email.value ? email.value : null;
-      setError("...");
+      setError("..."); // loading message
       // confirmation popup?
       fetchAPI('/self/settings', 'put', data)
         .then(() => {
           displayMessage("Success");
           if (email.value) {
-            setCurrentEmail(email.value);
+            setCurrentEmail(email.value); // update email display in form
           }
           // refresh?
         })
@@ -90,6 +98,7 @@ function Settings() {
     }
   }
 
+  // on page load, fetch current settings ie current email address to display
   useEffect(() => {
     document.getElementById("new-email-input").value = "Loading...";
     const fetchEmail = async () => {
@@ -100,7 +109,7 @@ function Settings() {
           document.getElementById("new-email-input").value = data.email;
         }
       } catch (error) {
-        document.getElementById("new-email-input").value = "Error"; // for testing
+        document.getElementById("new-email-input").value = "Error";
         console.log(error);
         displayMessage(error);
       }
@@ -126,7 +135,7 @@ function Settings() {
             size="2.5em"
           />
         </div>
-        {window.localStorage.getItem('username')}
+        {getUsername()}
       </div>
       
       <form id="settings-form" onSubmit={settingsHandler}>
@@ -161,7 +170,7 @@ function Settings() {
       <p>This action is permanent and cannot be undone. This will delete your account including all subscriptions, listening history and ratings.</p>
       <button id="delete-btn-settings" className="settings-btn delete-btn" onClick={() => { console.log("show"); setDeleteShow(true) }}>Delete Account</button>
 
-      {/* Bootstrap requires importing bootstrap css which screws everything up because they couldn't be bothered using bootstrap-specific selectors */}
+      {/* Popup for deleting account */}
       <Modal show={deleteShow} onHide={hideModal}>
         <Modal.Header closeButton>
           <Modal.Title>Are you sure you want to delete your account?</Modal.Title>
@@ -182,8 +191,6 @@ function Settings() {
           <input type="submit" form="delete-form" disabled={disabled} className="settings-btn delete-btn" id="delete-btn" value="Delete my account" />
         </Modal.Footer>
       </Modal>
-
-
     </div >
   )
 }

@@ -9,10 +9,10 @@ html, body {
 }
 
 body {
-  padding-left: 120px;
+  padding-left: 10px;
   padding-top: 60px;
   /* padding-bottom: 200px; */
-  padding-right: 120px;
+  padding-right: 30px;
 }
 
 .App {
@@ -23,6 +23,12 @@ body {
   display: flex;
   flex-direction: column;
   overflow: scroll;
+}
+
+#content-div-main {
+  /* position: fixed; */
+  left: 0px;
+  /* overflow-y: scroll; */
 }
 
 #main {

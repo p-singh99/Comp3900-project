@@ -9,25 +9,6 @@ import { getPodcastFromXML } from './../rss';
 
 import './../css/History.css';
 
-// this is used in multiple pages, should extract to other file
-// async function getRSS(id, signal) {
-//   let resp, data;
-//   try {
-//     resp = await fetch(`${API_URL}/podcasts/${id}`, { signal });
-//     data = await resp.json();
-//   } catch {
-//     throw Error("Network error");
-//   }
-//   if (resp.status === 200) {
-//     // console.log(data.xml);
-//     return data.xml;
-//   } else if (resp.status === 404) {
-//     throw Error("Podcast does not exist");
-//   } else {
-//     throw Error("Error in retrieving podcast");
-//   }
-// }
-
 function History() {
   async function fetchItems(pgNum, signal) {
     const pageSize = 12;
