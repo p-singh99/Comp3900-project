@@ -431,11 +431,7 @@ class Listens(Resource):
 		close_conn(conn, cur)
 		if res is None:
 			return {"error":"invalid podcastId or episodeGuid"}, 400
-<<<<<<< HEAD
-		return {"time", int(res[0])}, 200
-=======
 		return {"time": int(res[0]), "complete": res[1]}, 200
->>>>>>> ec7e34458622e877e8d2150bf9a0b34965cde562
 
 	@token_required
 	def put(self, podcastId):
@@ -453,15 +449,11 @@ class Listens(Resource):
 		if episodeGuid is None:
 			close_conn(conn,cur)
 			return {"error": "episodeGuid not included"}, 400
-<<<<<<< HEAD
-
-=======
 		if duration is None:
 			close_conn(conn,cur)
 			return {"error": "duration is not included"}, 400
 		complete = timestamp >= 0.95 * duration
 		
->>>>>>> ec7e34458622e877e8d2150bf9a0b34965cde562
 		# we're touching episodes so insert new episode (if it doesn't already exist)
 		cur.execute("""
 			INSERT INTO episodes (podcastId, guid)
