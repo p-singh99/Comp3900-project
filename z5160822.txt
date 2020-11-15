@@ -24,3 +24,8 @@ I made a generalised Pages component, instead of infinite scroll, to display ite
 
 **Week 8**
 I made some performance optimizations to the search frontend. I added the unsubscribe button to the subscriptions page. I made the history page and some edits to the Details page.
+
+**Week 9**
+We are completing final functionality, fixing bugs and adding more error handling. 
+New functionality: I implemented the frontend for marking podcasts as played
+Fixes/adjustments: fixed a performance problem on the history frontend and made adjustments to match API adjustment, extracted Subscribe button to a separate component since it is reused on two pages, adjusted descriptions of podcasts and episodes to include target=_blank and rel="nofollow noopener noreferrer" on all links, adding a check of session expiration to app load, added more error handling eg for 404 on the podcast details page and for null xml, fix a signup bug resulting from repeated clicking of signup button, did some general code cleaning and commenting
