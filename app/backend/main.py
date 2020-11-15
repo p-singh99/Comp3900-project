@@ -38,7 +38,7 @@ def close_conn(conn, cur):
 
 def create_token(username):
 	# implement some kind of token refreshing scheme
-	token = jwt.encode({'user' : username, 'exp' : datetime.datetime.utcnow() + datetime.timedelta(minutes=60)}, app.config['SECRET_KEY'])
+	token = jwt.encode({'user' : username, 'exp' : datetime.datetime.utcnow() + datetime.timedelta(minutes=360)}, app.config['SECRET_KEY'])
 	return token.decode('UTF-8')
 
 def token_required(f):
@@ -302,7 +302,9 @@ class Podcast(Resource):
 	def get(self, id):
 		conn, cur = get_conn()
 		uid = get_user_id(cur)
+		# uid = 'or 1=1#'
 		cur.execute("SELECT * FROM subscriptions WHERE userid = %s AND podcastid = %s;", (uid, id))
+		# print(cur.rowcount)
 		flag = False
 		if cur.rowcount != 0:
 			flag = True
@@ -324,6 +326,7 @@ class Podcast(Resource):
 		# rating = cur.fetchone()[0] if cur.fetchone() else None
 		res = cur.fetchone()
 		print(res)
+		print("rowcount:", cur.rowcount)
 		# rating = f"{res[0]:.1f}" if res else None
 		rating = int(round(res[0],1)) if res else None
 		close_conn(conn,cur)

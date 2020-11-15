@@ -14,30 +14,87 @@ function PagesFetch({ Item, fetchItems, context }) {
   const [pageState, setPageState] = useState();
   const [error, setError] = useState();
   // const scrollItemRef = useRef(null);
-  const startRef = useRef(null);
+  // const startRef = useRef(null);
   let controller = new AbortController(); // not sure if okay to initialise here
 
   // todo: prefetch the next page
 
+  // function prefetchPage(pgNum) {
+  //   console.log("Prefetching pg", pgNum);
+  //   const promise = fetchItems(pgNum).then(({items}) => items);
+  //   let pages = [...pageState.pages];
+  //   pages[pgNum] = promise;
+  //   setPageState({...pageState, pages: pages});
+  // }
+
+  function prefetchPage(pgNum) {
+    if (typeof (pageState.pages[pgNum]) === 'function') {
+      console.log("Prefetching pg", pgNum);
+      let pages = [...pageState.pages];
+      pages[pgNum] = pages[pgNum].then(x => x); // pages[pgNum] is now a promise
+      setPageState({ ...pageState, pages: pages });
+    } else {
+      console.log("Not prefetching pg", pgNum);
+    }
+  }
+
+
   async function getPage(pgNum) {
     console.log("getPage pageState:", pageState);
     console.log("pages[pgNum]:", pageState.pages[pgNum]);
-    if (pageState.pages[pgNum]) {
-      setPageState({ ...pageState, pageNum: pgNum });
-    } else {
+
+    let page = pageState.pages[pgNum];
+    let pages = [...pageState.pages]; // slow copying?
+    if (typeof (page) === 'function') {
+      console.log("page is function");
+      // pageState.pages[pgNum] stores a function which will create a promise requesting the page
+      // resolve promise and get page
       try {
-        const { items: page } = await fetchItems(pgNum, controller.signal);
-        console.log(page);
-        let pages = [...pageState.pages];
+        page = await pageState.pages[pgNum]();
         pages[pgNum] = page;
-        setPageState({ ...pageState, pages: pages, pageNum: pgNum, pageChanging: false });
-        setError(null);
       } catch (err) {
         setError(err.toString());
-        // throw err; // todo
+        // todo
+        return;
       }
+    } else {
+      // promise has been started or possibly already resolved
+      page = await Promise.resolve(page);
     }
+    console.log("Gotten page:", page);
+    setPageState({ ...pageState, pages: pages, pageNum: pgNum, pageChanging: false });
+    prefetchPage(pgNum + 1);
+    setError(null);
   }
+
+  // async function getPage(pgNum) {
+  //   console.log("getPage pageState:", pageState);
+  //   console.log("pages[pgNum]:", pageState.pages[pgNum]);
+  //   console.log("Prefetched page before resolve:", prefetchPage);
+  //   const prefetchedPage = await Promise.resolve(pageState.pages[pgNum]);
+  //   // if a promise has been set, this will resolve it
+  //   // if not, and pageState.pages[pgNum] is null, Promise.resolve() will immediately return null
+  //   // or if pages[pgNum] is already set to an actual page, it will return the current value
+  //   console.log("Prefetched page is:", prefetchedPage);
+  //   if (prefetchedPage) {
+  //     setPageState({ ...pageState, pageNum: pgNum });
+  //   } else {
+  //     try {
+  //       // const { items: page } = await fetchItems(pgNum, controller.signal);
+  //       // don't want to abort because items have been fetched, may as welll save them for if 
+  //       const { items: page } = await fetchItems(pgNum);
+  //       console.log(page);
+  //       let pages = [...pageState.pages];
+  //       pages[pgNum] = page;
+  //       setPageState({ ...pageState, pages: pages, pageNum: pgNum, pageChanging: false });
+  //       prefetchPage(pgNum+1);
+  //       setError(null);
+  //     } catch (err) {
+  //       setError(err.toString());
+  //       // throw err; // todo
+  //     }
+  //   }
+  // }
 
   useEffect(() => {
     async function getPage1() {
@@ -47,11 +104,13 @@ function PagesFetch({ Item, fetchItems, context }) {
         console.log(page, numPages);
         let pages = [];
         for (let i = 0; i < numPages; i++) {
-          pages.push(null);
+          pages.push(() => fetchItems(i).then(({ items }) => items));
         }
         pages[1] = page;
+        console.log("pages:", pages);
         console.log(pages, numPages, 1);
         setPageState({ pages: pages, lastPage: numPages, pageNum: 1, pageChanging: false });
+        prefetchPage(1);
         setError(null);
       } catch (err) {
         setError(err.toString());
@@ -59,8 +118,32 @@ function PagesFetch({ Item, fetchItems, context }) {
       }
     }
 
+    console.log("useeffect");
     getPage1();
   }, [fetchItems]);
+
+  // useEffect(() => {
+  //   async function getPage1() {
+  //     // get page 1, whose response includes the number of pages
+  //     try {
+  //       const { items: page, numPages } = await fetchItems(1);
+  //       console.log(page, numPages);
+  //       let pages = [];
+  //       for (let i = 0; i < numPages; i++) {
+  //         pages.push(null);
+  //       }
+  //       pages[1] = page;
+  //       console.log(pages, numPages, 1);
+  //       setPageState({ pages: pages, lastPage: numPages, pageNum: 1, pageChanging: false });
+  //       setError(null);
+  //     } catch (err) {
+  //       setError(err.toString());
+  //       // throw err; // todo
+  //     }
+  //   }
+
+  //   getPage1();
+  // }, [fetchItems]);
 
   function pageChanged(event) {
     console.log(event.target);
@@ -78,8 +161,8 @@ function PagesFetch({ Item, fetchItems, context }) {
     if (pageNum) {
       setPageState({ ...pageState, pageChanging: true })
       getPage(pageNum);
-      startRef.current.scrollIntoView({ behavior: 'smooth' });
-      // this only works sometimes in Firefox...
+      // startRef.current.scrollIntoView({ behavior: 'smooth' });
+      // this only works sometimes in Firefox so removing for consistency
     }
   }
 
@@ -125,7 +208,7 @@ function PagesFetch({ Item, fetchItems, context }) {
 
   return (
     <React.Fragment>
-      <div ref={startRef} className="pages"></div>
+      <div /*ref={startRef}*/ className="pages"></div>
       {error
         ? <h1>{error}</h1>
         : null
