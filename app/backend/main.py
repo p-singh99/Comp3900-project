@@ -318,8 +318,12 @@ class Podcast(Resource):
 		subscribers = 0
 		if res is not None:
 			subscribers = res[0]
-		cur.execute("SELECT avg from ratingsview where id=%s" % id)
-		rating = int(round(cur.fetchone[0],1)) if cur.fetchone()[0] else None
+		cur.execute("SELECT coalesce from ratingsview where id=%s" % id)
+		
+		res = cur.fetchone()
+		if res:
+			rating = int(round(res[0],1))
+		print(rating)
 		close_conn(conn,cur)
 		return {"xml": xml, "id": id, "subscription": flag, "subscribers": subscribers, "rating": rating}, 200
 
@@ -329,7 +333,7 @@ class Subscriptions(Resource):
 	def get(self):
 		conn, cur = get_conn()
 		uid = get_user_id(cur)
-		cur.execute("SELECT p.title, p.author, p.description, p.id, r.avg FROM podcasts p, ratingsview r, subscriptions s \
+		cur.execute("SELECT p.title, p.author, p.description, p.id, r.coalesce FROM podcasts p, ratingsview r, subscriptions s \
 			WHERE s.podcastId = p.id and s.userID = %s and r.id = p.id;", (uid,))
 		podcasts = cur.fetchall()
 		results = []
@@ -340,9 +344,8 @@ class Subscriptions(Resource):
 			author = p[1]
 			description = p[2]
 			pID = p[3]
-			rating = p[4]
-			if rating:
-				rating = int(round(p[4],1))
+			#rating = p[4]
+			rating = int(round(p[4],1))
 			results.append({"subscribers" : subscribers, "title" : title, "author" : author, "description" : description, "pid" : pID, "rating": rating})
 		close_conn(conn, cur)
 		return results, 200
