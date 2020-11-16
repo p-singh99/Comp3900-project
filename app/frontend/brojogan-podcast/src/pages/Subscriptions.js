@@ -33,7 +33,7 @@ function Subscriptions() {
         } else if (podcasts) {
           return "You aren't subscribed to any podcasts.";
         } else {
-          return "Loading...";
+          return <h4>Loading...</h4>;
         }
       })()}
     </div>

@@ -223,7 +223,7 @@ function Description(props) {
   function getPodcastHTML(podcast) {
     if (podcast === null) {
       return (
-        <h1>Loading...</h1>
+        <h4>Loading...</h4>
       )
     } else if (podcast.error) {
       return (
@@ -274,8 +274,8 @@ function Description(props) {
                 ?
                 <SubscribeBtn defaultState={subscribeBtn} podcastID={window.location.pathname.split("/").pop()} />
                 : null}
+                {podcast.link && <h6><a href={podcast.link} target="_blank" rel="nofollow noopener noreferrer">Podcast website</a></h6>}
               {getPodcastDescription(podcast)}
-              {podcast.link && <h6><a href={podcast.link} target="_blank" rel="nofollow noopener noreferrer">Podcast website</a></h6>}
             </div>
           </div>
         </div>

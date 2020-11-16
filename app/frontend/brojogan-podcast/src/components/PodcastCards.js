@@ -12,9 +12,9 @@ function PodcastCards(props) {
 
   return (
     <React.Fragment>
-      <h3>
+      <h4>
         {props.heading}
-      </h3>
+      </h4>
       <div /*id="podcast-card-accordion"*/>
         <Accordion id="podcast-card-accordion" defaultActiveKey={null}>
           {/* {props.usePages == true 

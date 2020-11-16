@@ -39,6 +39,7 @@
 }
 
 #search-input {
+  margin-top: 15px;
   border-radius: 50px;
   width: 50%;
   height: 30px;

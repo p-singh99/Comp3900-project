@@ -35,10 +35,7 @@ function Home(props) {
         <div id="new-user-login">
         <div id="message">
           <p id="message-1">
-            {/* <h4> */}
               Subscribe And Get Notified
-              {/* Create an account with us */}
-            {/* </h4> */}
           </p>
           <p id="message-2">
               Create an account with us <br/>
@@ -67,7 +64,6 @@ function Home(props) {
       <h1>
         {/* {welcome(newUser)} */}
       </h1>
-      {/*  */}
       <TopPodcasts />
     </div>
   );

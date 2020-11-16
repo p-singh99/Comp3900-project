@@ -9,7 +9,7 @@ function SubscriptionPanel() {
   const result = [];
 
   const loadEpisodes = () => {
-    setNewEpisodes('Loading');
+    setNewEpisodes(<h4>Loading...</h4>);
     let results = fetchAPI('/users/self/subscription-panel', 'get', null);
     results.then(items => {
       console.log(`Result is: ${JSON.stringify(items)}`);
@@ -32,7 +32,7 @@ function SubscriptionPanel() {
             <div>
               <h4 id="episode-list-title">
                 Subscription Preview Panel
-          </h4>
+              </h4>
               <div className="episode-list-container" height="50px">
                 {result.map(item =>
                   <EpisodeComponent

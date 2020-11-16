@@ -5,10 +5,9 @@ import PodcastCards from './PodcastCards';
 function TopPodcasts() {
   const [topSubbed, setTopSubbed] = useState([]);
   const [topRated, setTopRated] = useState([]);
+  const [loaded, setloaded] = useState(false);
 
   const loadTopPodcasts = () => {
-    // setTopSubbed('Loading Top Subbed');
-    // setTopRated('Loading Top Rated');
 
     let results = fetchAPI('/top-podcasts');
     results.then(items => {
@@ -25,6 +24,7 @@ function TopPodcasts() {
       } 
       setTopSubbed(topSubscribedPodcasts);
       setTopRated(topRatedPodcasts);
+      setloaded(true);
     });
   }  
 
@@ -34,8 +34,14 @@ function TopPodcasts() {
 
   return (
     <div>
-      <PodcastCards heading="Most Subscribed" podcasts={topSubbed} options={{chunkedEpisodes: true}}/>
+      {!loaded ? 
+        ''
+      :
+      <div>
+        <PodcastCards heading="Most Subscribed" podcasts={topSubbed} options={{chunkedEpisodes: true}}/>
       <PodcastCards heading="Top Rated" podcasts={topRated} options={{chunkedEpisodes: true}}/>
+      </div>
+      }
     </div>
   )
 }
