@@ -434,7 +434,6 @@ function unTagDescription(description) {
   description = htmlDecode(description);
   return description;
 }
-}
 
 
 export default Description;
