@@ -34,13 +34,20 @@ export default class Footer extends React.Component {
 
   pingServer(progress, duration) {
     if (isLoggedIn()) {
-      if (duration) {
-        console.log("pinging " + progress + "/" + duration + " to server episodeguid = " + this.state.guid + ", podcastid = " + this.state.podcastID);
-        let uri = '/self/podcasts/' + this.state.podcastID + '/episodes/time';
-        let body = { 'time': progress, 'episodeGuid': this.state.guid, 'duration': duration };
-        fetchAPI(uri, 'put', body).then(() => console.log("updated"))
-      } else {
-        console.log("NOT pinging " + progress + "/" + duration + " to server episodeguid = " + this.state.guid + ", podcastid = " + this.state.podcastID);
+      if (isNaN(duration)) {
+        // set duration as -1. handle negative durations in the backend
+        console.log("duration was not a number for some reason. setting as -1 (duration is:)");
+        console.log(duration)
+        duration = -1;
+      }
+      console.log("pinging " + progress + "/" + duration + " to server episodeguid = " + this.state.guid + ", podcastid = " + this.state.podcastID);
+      let uri = '/self/podcasts/'+this.state.podcastID+'/episodes/time';
+      let body = {'time': progress, 'episodeGuid': this.state.guid, 'duration': duration};
+      try {
+        fetchAPI(uri, 'put', body).then(() => console.log("updated"));
+      } catch(err) {
+        console.log("error in playback");
+        console.log(err);
       }
     } else {
       console.log("not logged in");
