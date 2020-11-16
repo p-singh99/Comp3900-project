@@ -4,7 +4,7 @@ import time
 
 conn = pool.getconn()
 cur = conn.cursor()
-cur.execute("select id from podcasts where id not in (select podcastId from episodes)")
+cur.execute("select id from podcasts where id not in (select distinct podcastId from episodes)")
 podcastIds = [x[0] for x in cur.fetchall()]
 total = len(podcastIds)
 pool.putconn(conn)
