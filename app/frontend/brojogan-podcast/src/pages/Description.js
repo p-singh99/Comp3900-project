@@ -333,10 +333,6 @@ function getDate(timestamp) {
   return date.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }).replace(/,/g, '')/*.toUpperCase()*/;
 }
 
-function downloadEpisode(event) {
-  alert(event.target.getAttribute('eid'));
-}
-
 function secondstoTime(seconds) {
   let hours = Math.floor(seconds / (60 ** 2));
   let minutes = Math.floor((seconds - hours * (60 ** 2)) / 60);
@@ -392,7 +388,7 @@ function EpisodeDescription({ details: episode, context: { podcast, setPlaying, 
             progress: episode.progress ? episode.progress : 0.0
           });
         }}>Play</button>
-        <button className="download" eid={episode.guid} onClick={downloadEpisode}>Download</button>
+        {/* <button className="download" eid={episode.guid} onClick={downloadEpisode}>Download</button> */}
       </div>
       {/* guid won't always work because some of them will contain invalid characters I think ? */}
       {description}

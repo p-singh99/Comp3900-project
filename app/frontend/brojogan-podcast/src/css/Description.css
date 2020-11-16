@@ -69,12 +69,12 @@ h1.podcast-heading {
   font-size: 0.9em;
 }
 
-.subscribe-btn, .download, .play {
+.subscribe-btn, .play /*, .download,*/ {
   background-color: #6E59D6;
   border: none;
 }
 
-.download, .play {
+.play /*, .download*/ {
   margin-left: 10px;
   font-size: 13px;
   border: #9860db;
@@ -84,10 +84,10 @@ h1.podcast-heading {
   /* text-align: left; */
 }
 
-.download {
+/*.download {
   margin-left: auto;
   background-color: none;
-}
+}*/
 
 #podcast .description.collapsed {
   max-height: 50px;
