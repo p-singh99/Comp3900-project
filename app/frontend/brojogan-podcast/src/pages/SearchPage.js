@@ -25,13 +25,11 @@ export default function Search() {
     setPodcasts();
     const query = window.location.search.substring(1);
     setTitleQuery(query);
-    console.log(`podcasts at start of ${query}: `, podcasts);
-    console.log(`starting query ${query}`)
 
     // Need to send with token if logged in so backend can track searches
     fetchAPI('/podcasts?search_query=' + query + '&offset=0&limit=50', 'get', null, controller.signal)
-      .then(podcasts => {
-        setPodcasts(podcasts);
+      .then(results => {
+        setPodcasts(results);
       })
       .catch(err => {
         // if err instanceof DOMException, then (hopefully) the error is from aborted request, so don't show the user that

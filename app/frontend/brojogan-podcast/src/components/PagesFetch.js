@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState/*, useRef*/ } from 'react';
 import Pagination from 'react-bootstrap/Pagination';
 import './../css/Pages.css';
 
@@ -57,21 +57,6 @@ function PagesFetch({ Item, fetchItems, context }) {
   // const startRef = useRef(null);
   let controller = new AbortController(); // not sure if okay to initialise here
 
-  function prefetchPage(pgNum) {
-    console.log("prefetch pageState:", pageState);
-    if (!pageState.pages[pgNum]) {
-      console.log("Prefetching pg", pgNum);
-      let pages = [...pageState.pages];
-      console.log(pages);
-      console.log(typeof(pages));
-      pages[pgNum] = fetchItems(pgNum).then(({items}) => items); // pages[pgNum] is now a promise
-      setPageState({ ...pageState, pages: pages });
-    } else {
-      // page already fetched or fetching
-      console.log("Not prefetching pg", pgNum);
-    }
-  }
-
   async function getPage(pgNum) {
     console.log("getPage pageState:", pageState);
     console.log("pages[pgNum]:", pageState.pages[pgNum]);
@@ -79,7 +64,7 @@ function PagesFetch({ Item, fetchItems, context }) {
     let page = pageState.pages[pgNum];
     let pages = [...pageState.pages]; // slow copying?
     if (!page) { // fetching hasn't been started
-      page = fetchItems(pgNum).then(({items}) => items);
+      page = fetchItems(pgNum).then(({ items }) => items);
     }
     try {
       page = await Promise.resolve(page); // now page is the actual page object, which next time will Promise.resolve() to itself
@@ -123,11 +108,26 @@ function PagesFetch({ Item, fetchItems, context }) {
 
   // when page state has finished changing, prefetch the next page
   useEffect(() => {
+    const prefetchPage = (pgNum) => {
+      console.log("prefetch pageState:", pageState);
+      if (!pageState.pages[pgNum]) {
+        console.log("Prefetching pg", pgNum);
+        let pages = [...pageState.pages];
+        console.log(pages);
+        console.log(typeof (pages));
+        pages[pgNum] = fetchItems(pgNum).then(({ items }) => items); // pages[pgNum] is now a promise
+        setPageState({ ...pageState, pages: pages });
+      } else {
+        // page already fetched or fetching
+        console.log("Not prefetching pg", pgNum);
+      }
+    }
+
     if (pageState && pageState.pageNum < pageState.lastPage) {
       console.log("pageState useeffect");
       prefetchPage(pageState.pageNum + 1);
     }
-  }, [pageState])
+  }, [pageState]) // ofc linter wants fetchItems in this dependency array but its a bit weird
 
   function pageChanged(event) {
     console.log(event.target);

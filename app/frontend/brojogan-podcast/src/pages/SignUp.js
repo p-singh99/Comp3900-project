@@ -80,14 +80,14 @@ function SignUp() {
   // display/hide username help and password help displays
   useEffect(() => {
     // Check if user clicked help for password field
-    if (usernameHelpStatus == false) {
+    if (usernameHelpStatus === false) {
       document.getElementById('help-text-username').style.visibility = "hidden";
     } else {
       document.getElementById('help-text-username').style.visibility = "visible";
     }
 
     // Check if user clicked help for password field
-    if (passwordHelpStatus == false) {
+    if (passwordHelpStatus === false) {
       document.getElementById('help-text-password').style.visibility = "hidden";
     } else {
       document.getElementById('help-text-password').style.visibility = "visible";

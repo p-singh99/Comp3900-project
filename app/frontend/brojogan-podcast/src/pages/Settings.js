@@ -3,7 +3,7 @@ import Modal from 'react-bootstrap/Modal';
 import { Helmet } from 'react-helmet';
 import {FiUser} from 'react-icons/fi';
 
-import { checkPassword, checkPasswordsMatch, checkField } from './../validationFunctions';
+import { checkPassword, checkPasswordsMatch } from './../validationFunctions';
 import { fetchAPI, logoutHandler, getUsername } from './../authFunctions';
 
 import './../css/Settings.css';

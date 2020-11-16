@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import './../css/Footer.css';
 import AudioPlayer from 'react-h5-audio-player';
