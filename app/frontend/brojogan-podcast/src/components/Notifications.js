@@ -8,13 +8,13 @@ let alreadySeen = [];
 
 function sendSeenFor(notifications) {
     for (let notification of notifications.filter(e => !alreadySeen.includes(e.id))) {
-        fetchAPI(`/self/notification/${notification.id}`, 'put', {status:'read'})
+        fetchAPI(`/users/self/notification/${notification.id}`, 'put', {status:'read'})
         alreadySeen.push(notification.id);
     }
 }
 
 function sendDelete(notification) {
-    fetchAPI(`/self/notification/${notification.id}`, 'delete', null)
+    fetchAPI(`/users/self/notification/${notification.id}`, 'delete', null)
 }
 
 function Notification({notification, dismissNotification}) {
@@ -46,7 +46,7 @@ function Notifications ({visibility}) {
       window.setInterval(() => {
         if (isLoggedIn()) {
             console.log("fetching notifications");
-            fetchAPI('/self/notifications', 'get', null)
+            fetchAPI('/users/self/notifications', 'get', null)
             .then(newNotifications => {
                 console.log("Setting notifications:");
                 console.log(newNotifications);
@@ -62,7 +62,7 @@ function Notifications ({visibility}) {
         
         console.log("fetching notifications");
         if (isLoggedIn()) {
-            fetchAPI('/self/notifications', 'get', null)
+            fetchAPI('/users/self/notifications', 'get', null)
                 .then(newNotifications => {
                     console.log("Setting notifications:");
                     console.log(newNotifications);

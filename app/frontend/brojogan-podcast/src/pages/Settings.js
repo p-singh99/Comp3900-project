@@ -3,7 +3,7 @@ import Modal from 'react-bootstrap/Modal';
 import { Helmet } from 'react-helmet';
 import {FiUser} from 'react-icons/fi';
 
-import { checkPassword, checkPasswordsMatch, checkField } from './../validationFunctions';
+import { checkPassword, checkPasswordsMatch } from './../validationFunctions';
 import { fetchAPI, logoutHandler, getUsername } from './../authFunctions';
 
 import './../css/Settings.css';
@@ -21,7 +21,7 @@ function handleDelete(event) {
 
   let body = { "password": password };
   document.getElementById("delete-error").textContent = "...";
-  fetchAPI('/self', 'delete', body)
+  fetchAPI('/users/self', 'delete', body)
     .then(() => {
       alert("Success. Account deleted.");
       logoutHandler();
@@ -84,7 +84,7 @@ function Settings() {
       data.newemail = email.value ? email.value : null;
       setError("..."); // loading message
       // confirmation popup?
-      fetchAPI('/self/settings', 'put', data)
+      fetchAPI('/users/self/settings', 'put', data)
         .then(() => {
           displayMessage("Success");
           if (email.value) {
@@ -103,7 +103,7 @@ function Settings() {
     document.getElementById("new-email-input").value = "Loading...";
     const fetchEmail = async () => {
       try {
-        const data = await fetchAPI('/self/settings');
+        const data = await fetchAPI('/users/self/settings');
         if (data.email) {
           setCurrentEmail(data.email);
           document.getElementById("new-email-input").value = data.email;
@@ -168,7 +168,7 @@ function Settings() {
 
       <h2 id="delete-heading">Delete Account</h2>
       <p>This action is permanent and cannot be undone. This will delete your account including all subscriptions, listening history and ratings.</p>
-      <button id="delete-btn-settings" className="settings-btn delete-btn" onClick={() => { console.log("show"); setDeleteShow(true) }}>Delete Account</button>
+      <button id="delete-btn-settings" className="settings-btn delete-btn" onClick={() => setDeleteShow(true)}>Delete Account</button>
 
       {/* Popup for deleting account */}
       <Modal show={deleteShow} onHide={hideModal}>

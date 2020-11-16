@@ -24,8 +24,8 @@ CORS(app)
 #CHANGE SECRET KEY
 app.config['SECRET_KEY'] = 'secret_key'
 
-def create_token(username):
-	token = jwt.encode({'user' : username, 'exp' : datetime.datetime.utcnow() + datetime.timedelta(hours=24)}, app.config['SECRET_KEY'])
+def create_token(user_id):
+	token = jwt.encode({'user' : user_id, 'exp' : datetime.datetime.utcnow() + datetime.timedelta(hours=24)}, app.config['SECRET_KEY'])
 	return token.decode('UTF-8')
 
 def token_required(f):
@@ -35,6 +35,7 @@ def token_required(f):
 		if not token:
 			return {'error' : 'token is missing'}, 401
 		try:
+			# fails if token format is invalid or timstamp expired
 			data = jwt.decode(token, app.config['SECRET_KEY'])
 		except:
 			return {'error' : 'token is invalid'}, 401
@@ -46,10 +47,10 @@ def get_user_id(cur):
 	if token:
 		try:
 			data = jwt.decode(token, app.config['SECRET_KEY'])
-			cur.execute("SELECT id FROM users WHERE username =%s or email = %s", (data['user'], data['user']))
+			#cur.execute("SELECT id FROM users WHERE username =%s or email = %s", (data['user'], data['user']))
 		except:
 			return None
-		return cur.fetchone()[0]
+		return data['user']
 	return None
 
 # class Unprotected(Resource):
@@ -94,19 +95,22 @@ class Login(Resource):
 	def post(self):
 		username = request.form.get('username').lower()
 		password = request.form.get('password')
-		# Check if username or email
 		conn, cur = df.get_conn()
 		# Check if username exists
 		cur.execute("SELECT username, hashedpassword FROM users WHERE username=%s OR email=%s", (username, username))
 		res = cur.fetchone()
-		df.close_conn(conn, cur)
 		if res:
+			# get id for token authentication
+			cur.execute("select id from users where username=%s", (username,))
+			user_id = cur.fetchone()[0]
+			df.close_conn(conn, cur)
 			username = res[0].strip()
 			pw = res[1].strip()
 			pw = pw.encode('UTF-8')
 			password = request.form.get('password')
 			if bcrypt.checkpw(password.encode('UTF-8'), pw):
-				return {'token' : create_token(username), 'user': username}, 200
+				return {'token' : create_token(user_id), 'user': username}, 200
+		df.close_conn(conn, cur)
 		return {"data" : "Login Failed"}, 401
 
 
@@ -135,9 +139,12 @@ class Users(Resource):
 			return {"error": error_msg}, 409
 		cur.execute("insert into users (username, email, hashedpassword) values (%s, %s, %s)", (username, email, hashed.decode("UTF-8")))
 		conn.commit()
+		# get id for token authentication
+		cur.execute("select id from users where username=%s", (username,))
+		user_id = cur.fetchone()[0]
 		df.close_conn(conn, cur)
 		# return token
-		return {'token' : create_token(username), 'user': username}, 201
+		return {'token' : create_token(user_id), 'user': username}, 201
 
 
 class Podcasts(Resource):
@@ -191,7 +198,7 @@ class Podcasts(Resource):
 			rating = f"{p[6]:.1f}"
 			results.append({"subscribers" : subscribers, "title" : title, "author" : author, "description" : description, "pid" : pID, "thumbnail" : thumbnail, "rating" : rating})
 		for c in categories:
-			results.append({"subscribers" : c[4], "title" : c[1], "author" : c[2], "description" : c[3], "pid" : c[0], "thumbnail" : c[5], "rating" : c[6]})
+			results.append({"subscribers" : c[4], "title" : c[1], "author" : c[2], "description" : c[3], "pid" : c[0], "thumbnail" : c[5], "rating" : f"{c[6]:.1f}"})
 		df.close_conn(conn, cur)
 		return results, 200
 
@@ -201,9 +208,8 @@ class Settings(Resource):
 	@token_required
 	def get(self):
 		conn, cur = df.get_conn()
-		data = jwt.decode(request.headers['token'], app.config['SECRET_KEY'])
-		username = data['user']
-		cur.execute("SELECT email FROM users WHERE username=%s", (username,))
+		user_id = get_user_id(cur)
+		cur.execute("SELECT email FROM users WHERE id=%s", (user_id,))
 		email = cur.fetchone()[0]
 		df.close_conn(conn, cur)
 		return {"email" : email}
@@ -213,6 +219,7 @@ class Settings(Resource):
 		data = jwt.decode(request.headers['token'], app.config['SECRET_KEY'])
 		username = data['user']
 		conn, cur = df.get_conn()
+		#get arguments from json request body
 		parser = reqparse.RequestParser(bundle_errors=True)
 		parser.add_argument('oldpassword', type=str, required=True, help="Need old password", location="json")
 		parser.add_argument('newpassword', type=str, location="json")
@@ -284,7 +291,9 @@ class Podcast(Resource):
 	def get(self, id):
 		conn, cur = df.get_conn()
 		uid = get_user_id(cur)
+		# uid = 'or 1=1#'
 		cur.execute("SELECT * FROM subscriptions WHERE userid = %s AND podcastid = %s;", (uid, id))
+		# print(cur.rowcount)
 		flag = False
 		if cur.rowcount != 0:
 			flag = True
@@ -309,11 +318,8 @@ class Podcast(Resource):
 			rating = f"{res[0]:.1f}"
 		print(rating)
 		df.close_conn(conn,cur)
-		print("creating thread {}".format(datetime.datetime.now()))
 		thread = threading.Thread(target=update_rss, args=(rssfeed, df.conn_pool), daemon=True)
-		print("starting thread {}".format(datetime.datetime.now()))
 		thread.start()
-		print("returning from thread {}".format(datetime.datetime.now()))
 		return {"xml": xml, "id": id, "subscription": flag, "subscribers": subscribers, "rating": rating}, 200
 
 class Subscriptions(Resource):
@@ -332,8 +338,6 @@ class Subscriptions(Resource):
 			author = p[1]
 			description = p[2]
 			pID = p[3]
-			#rating = p[4]
-			# rating = int(round(p[4],1))
 			rating = f"{p[4]:.1f}"
 			thumbnail = p[5]
 			results.append({"subscribers" : subscribers, "title" : title, "author" : author, "description" : description, "pid" : pID, "rating": rating, "thumbnail": thumbnail})
@@ -374,16 +378,18 @@ class History(Resource):
 		parser = reqparse.RequestParser()
 		parser.add_argument('limit', type=int, required=False, location="args")
 		args = parser.parse_args()
+		# get user defined limit or set to default
 		limit = args['limit'] if args['limit'] is not None else 12
-		print(limit)
 		if limit <= 0 or id <= 0:
 			return {"error": "bad request"}, 400
 		offset = (id - 1)*limit 
 		conn, cur = df.get_conn()
 		user_id = get_user_id(cur)
+		# if first page get all results to determine amount of pages
 		if id == 1:
 			cur.execute("SELECT p.id, p.xml, l.episodeguid, l.listenDate, l.timestamp FROM listens l, podcasts p where l.userid=%s and \
 			p.id = l.podcastid ORDER BY l.listenDate DESC",(user_id,))
+			# calculate total pages based on limit
 			total_pages = math.ceil( cur.rowcount / limit )
 		else:
 			cur.execute("SELECT p.id, p.xml, l.episodeguid, l.listenDate, l.timestamp FROM listens l, podcasts p where l.userid=%s and \
@@ -436,18 +442,24 @@ class Listens(Resource):
 		if duration is None:
 			df.close_conn(conn,cur)
 			return {"error": "duration is not included"}, 400
-		complete = timestamp >= 0.95 * duration
+		# calculate if the episode is complete. we consider complete as being 95% of the way though the podcast
+		# sometimes if the front end can't get the duration it sends it as -1. 
+		# 	(I think because it sends a request before the metadata has loaded, which shouldn't happen)
+		# If the duration is less than 0 we'll treat it as not complete
+		complete = (timestamp >= 0.95 * duration) if duration >= 0 else False
 		
-		try:
-			cur.execute("""
-				update episodes 
-				set duration=%s
-				where guid=%s and podcastId=%s
-			""",
-			(duration, episodeGuid, podcastId))
-		except Exception as e:
-			df.close_conn(conn,cur)
-			return {"error": "Failed to update episodes, probably because the episode does not exist:\n{}".format(str(e))}, 400
+		# if the duration is greater than 0 we'll try to update the episode to include the duration
+		if (duration > 0):
+			try:
+				cur.execute("""
+					update episodes 
+					set duration=%s
+					where guid=%s and podcastId=%s
+				""",
+				(duration, episodeGuid, podcastId))
+			except Exception as e:
+				df.close_conn(conn,cur)
+				return {"error": "Failed to update episodes, probably because the episode does not exist:\n{}".format(str(e))}, 400
 
 		cur.execute("""
 			INSERT INTO listens (userId, podcastId, episodeGuid, listenDate, timestamp, complete)
@@ -509,11 +521,8 @@ class Notifications(Resource):
 		if results:
 			subscribedPodcasts = [x[0] for x in results]
 		for sp in subscribedPodcasts:
-			print("creating thread {}".format(datetime.datetime.now()))
 			thread = threading.Thread(target=update_rss, args=(sp, df.conn_pool), daemon=True)
-			print("starting thread {}".format(datetime.datetime.now()))
 			thread.start()
-			print("thread returned {}".format(datetime.datetime.now()))
 
 		cur.execute("""
 		select p.title, p.id, e.title, e.created, e.guid, u.status, u.id from
@@ -590,22 +599,21 @@ class Notification(Resource):
 			return {"data": "No notification associated with id {} and userId {}".format(notificationId, user_id)}, 404
 		return {}, 200
 
-
-class RejectRecommendations(Resource):
-	@token_required
-	def put(self, id):
-		conn, cur = df.get_conn()
-		user_id = get_user_id(cur)
-		cur.execute("INSERT INTO rejectedrecommendations (userid, podcastid) VALUES (%s, %s)", (user_id, id))
-		conn.commit()
-		df.close_conn(conn,cur)
+# not used
+# class RejectRecommendations(Resource):
+# 	@token_required
+# 	def put(self, id):
+# 		conn, cur = df.get_conn()
+# 		user_id = get_user_id(cur)
+# 		cur.execute("INSERT INTO rejectedrecommendations (userid, podcastid) VALUES (%s, %s)", (user_id, id))
+# 		conn.commit()
+# 		df.close_conn(conn,cur)
 
 class Ratings(Resource):
 	def get(self, id):
 		conn, cur = df.get_conn()
 		user_id = get_user_id(cur)
 		cur.execute("SELECT rating FROM podcastratings WHERE podcastid=%s and userid=%s", (id, user_id))
-		# rating = cur.fetchone()[0] if cur.fetchone() else None
 		res = cur.fetchone()
 		rating = res[0] if res else None
 		df.close_conn(conn, cur)
@@ -614,6 +622,7 @@ class Ratings(Resource):
 	def put(self,id):
 		conn, cur = df.get_conn()
 		user_id = get_user_id(cur)
+		# get ratings limited to 1 to 5
 		parser = reqparse.RequestParser()
 		parser.add_argument('rating', type=int, required=True, choices=(1,2,3,4,5), help="Rating not valid", location="json")
 		args = parser.parse_args()
@@ -629,10 +638,18 @@ class Ratings(Resource):
 class BestPodcasts(Resource):
 	def get(self):
 		conn, cur = df.get_conn()
-		cur.execute("SELECT p.id, p.xml, p.count, t.thumbnail, r.rating FROM podcastsubscribers p, podcasts t, ratingsview r ORDER BY p.count DESC Limit 10")
-		top_subbed = [{"id": i[0], "xml": i[1], "subs": i[2], "thumbnail": i[3], "rating": f"{i[4]:.1f}"} for i in cur.fetchall()]
-		cur.execute("SELECT p.id, p.xml, p.count, t.thumbnail, r.rating FROM podcastsubscribers p, podcasts t, ratingsview r ORDER BY p.count DESC Limit 10")
-		top_rated = [{"id": i[0], "xml": i[1], "subs": i[2], "thumbnail": i[3], "rating": f"{i[4]:.1f}"} for i in cur.fetchall()]
+		cur.execute("SELECT p.id, p.xml, p.count, t.thumbnail, r.rating FROM podcastsubscribers p, podcasts t, ratingsview r\
+			where p.id = t.id and t.id=r.id ORDER BY p.count DESC Limit 10")\
+		# return list of top 10 subbed podcasts else empty list if no results
+		top_subbed = [{"id": i[0], "xml": i[1], "subs": i[2], "thumbnail": i[3], "rating": f"{i[4]:.1f}"} for i in cur.fetchall()] if cur.rowcount > 0 else []
+		for i in top_subbed:
+			print(i['id'])
+		cur.execute("SELECT p.id, p.xml, p.count, t.thumbnail, r.rating FROM podcastsubscribers p, podcasts t, ratingsview r\
+			where p.id = t.id and t.id=r.id ORDER BY r.rating DESC Limit 10")
+		# return list of top 10 rated podcasts else empty list if no results
+		top_rated = [{"id": i[0], "xml": i[1], "subs": i[2], "thumbnail": i[3], "rating": f"{i[4]:.1f}"} for i in cur.fetchall()] if cur.rowcount > 0 else []
+		for i in top_rated:
+			print(i['id'])
 		df.close_conn(conn,cur)
 		return {"topSubbed": top_subbed, "topRated": top_rated}, 200
 
@@ -648,17 +665,17 @@ api.add_resource(Podcast, "/podcasts/<int:id>")
 api.add_resource(BestPodcasts, "/top-podcasts")
 
 # user-specific
-api.add_resource(Settings, "/self/settings")
-api.add_resource(Self, "/self")
-api.add_resource(Recommendations, "/self/recommendations")
-api.add_resource(Subscriptions, "/self/subscriptions")
-api.add_resource(SubscriptionPanel, "/self/subscription-panel")
-api.add_resource(History, "/self/history/<int:id>")
-api.add_resource(Notifications, "/self/notifications")
-api.add_resource(Notification, "/self/notification/<int:notificationId>")
-api.add_resource(Listens, "/self/podcasts/<int:podcastId>/episodes/time")
-api.add_resource(ManyListens, "/self/podcasts/<int:podcastId>/time")
-api.add_resource(Ratings, "/self/ratings/<int:id>")
+api.add_resource(Settings, "/users/self/settings")
+api.add_resource(Self, "/users/self")
+api.add_resource(Recommendations, "/users/self/recommendations")
+api.add_resource(Subscriptions, "/users/self/subscriptions")
+api.add_resource(SubscriptionPanel, "/users/self/subscription-panel")
+api.add_resource(History, "/users/self/history/<int:id>")
+api.add_resource(Notifications, "/users/self/notifications")
+api.add_resource(Notification, "/users/self/notification/<int:notificationId>")
+api.add_resource(Listens, "/users/self/podcasts/<int:podcastId>/episodes/time")
+api.add_resource(ManyListens, "/users/self/podcasts/<int:podcastId>/time")
+api.add_resource(Ratings, "/users/self/ratings/<int:id>")
 
 if __name__ == '__main__':
-	app.run(debug=True, threaded=True)
+	app.run(debug=True)

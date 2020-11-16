@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import './../css/Footer.css';
 import AudioPlayer from 'react-h5-audio-player';
@@ -16,8 +16,8 @@ const audioPlayerStyle = {
 };
 
 export default class Footer extends React.Component {
-  constructor (props) {
-    super (props);
+  constructor(props) {
+    super(props);
     this.state = {
       title: "No Podcast Playing",
       podcastTitle: "",
@@ -34,10 +34,21 @@ export default class Footer extends React.Component {
 
   pingServer(progress, duration) {
     if (isLoggedIn()) {
+      if (isNaN(duration)) {
+        // set duration as -1. handle negative durations in the backend
+        console.log("duration was not a number for some reason. setting as -1 (duration is:)");
+        console.log(duration)
+        duration = -1;
+      }
       console.log("pinging " + progress + "/" + duration + " to server episodeguid = " + this.state.guid + ", podcastid = " + this.state.podcastID);
-      let uri = '/self/podcasts/'+this.state.podcastID+'/episodes/time';
+      let uri = '/users/self/podcasts/'+this.state.podcastID+'/episodes/time';
       let body = {'time': progress, 'episodeGuid': this.state.guid, 'duration': duration};
-      fetchAPI(uri, 'put', body).then(() => console.log("updated"))
+      try {
+        fetchAPI(uri, 'put', body).then(() => console.log("updated"));
+      } catch(err) {
+        console.log("error in playback");
+        console.log(err);
+      }
     } else {
       console.log("not logged in");
     }
@@ -51,20 +62,19 @@ export default class Footer extends React.Component {
     this.setState(state);
   }
   render() {
-    let setPlayed=false;
+    let setPlayed = false;
     return (
       <div id='footer-div'>
-         <div id='player'>
-            <div id="podcast-playing-details">
-              <Link to={`/podcast/${this.state.podcastID}`}><img src={this.state.thumb} className="thumbnail"></img></Link>
-              <div id="podcast-playing-info">
-                <p id="podcast-episode-title">
-                  {this.state.title}  
-                </p>
-                <p id="podcast-playing-title">
-                  {this.state.podcastTitle}
-                </p>
-              </div>
+        <div id='player'>
+          <div id="podcast-playing-details">
+            <Link to={`/podcast/${this.state.podcastID}`}><img src={this.state.thumb} className="thumbnail"></img></Link>
+            <div id="podcast-playing-info">
+              <p id="podcast-episode-title">
+                {this.state.title}
+              </p>
+              <p id="podcast-playing-title">
+                {this.state.podcastTitle}
+              </p>
             </div>
             <AudioPlayer
               style={audioPlayerStyle}
@@ -88,8 +98,9 @@ export default class Footer extends React.Component {
             />
           </div>
         </div>
+      </div>
     );
-      
+
   }
 }
 

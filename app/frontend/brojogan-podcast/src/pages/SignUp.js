@@ -27,31 +27,6 @@ function displaySignupErrors(errors) {
   errorElem.style.visibility = 'visible';
 }
 
-// if we can add password2change() as a once event listener, can do it this way - only display doesn't match message after password2 is changed once
-// function password2change() {
-//   console.log('password2change');
-//   const password2 = document.forms['signUp-form'].elements.password2;
-//   const password1 = document.forms['signUp-form'].elements.password1;
-//   // password2.removeEventListener('onInput', password2change);
-//   password2.addEventListener('input', checkPasswordsMatch);
-//   password1.addEventListener('input', checkPasswordsMatch);
-//   checkPasswordsMatch();
-// }
-
-// function validPassword(pw) {
-//   if (pw.length < 10 || pw.length > 64) {
-//     return false;
-//   }
-//   lower = false;
-//   upper = false;
-//   number = false;
-//   symbol = false;
-//   count = 0;
-//   for (let c of pw) {
-//     if ()
-//   }
-// }
-
 function SignUp() {
   const history = useHistory();
 
@@ -89,9 +64,7 @@ function SignUp() {
               saveToken(data);
               // window.sessionStorage.setItem("newuser", true); // maybe - user stays as a new user for their entire first session
               history.push("/", {newUser: true});
-              console.log("resp status 201");
             } else {
-              console.log("resp status not 201");
               displaySignupErrors(data.error);
             }
             setPendingRequest(false);
@@ -107,14 +80,14 @@ function SignUp() {
   // display/hide username help and password help displays
   useEffect(() => {
     // Check if user clicked help for password field
-    if (usernameHelpStatus == false) {
+    if (usernameHelpStatus === false) {
       document.getElementById('help-text-username').style.visibility = "hidden";
     } else {
       document.getElementById('help-text-username').style.visibility = "visible";
     }
 
     // Check if user clicked help for password field
-    if (passwordHelpStatus == false) {
+    if (passwordHelpStatus === false) {
       document.getElementById('help-text-password').style.visibility = "hidden";
     } else {
       document.getElementById('help-text-password').style.visibility = "visible";
@@ -212,3 +185,28 @@ function SignUp() {
 }
 
 export default SignUp;
+
+// if we can add password2change() as a once event listener, can do it this way - only display doesn't match message after password2 is changed once
+// function password2change() {
+//   console.log('password2change');
+//   const password2 = document.forms['signUp-form'].elements.password2;
+//   const password1 = document.forms['signUp-form'].elements.password1;
+//   // password2.removeEventListener('onInput', password2change);
+//   password2.addEventListener('input', checkPasswordsMatch);
+//   password1.addEventListener('input', checkPasswordsMatch);
+//   checkPasswordsMatch();
+// }
+
+// function validPassword(pw) {
+//   if (pw.length < 10 || pw.length > 64) {
+//     return false;
+//   }
+//   lower = false;
+//   upper = false;
+//   number = false;
+//   symbol = false;
+//   count = 0;
+//   for (let c of pw) {
+//     if ()
+//   }
+// }
