@@ -22,7 +22,8 @@ class SubscriptionPanel(Resource):
 			search = re.search('<guid.*>(.*)</guid>', p[1])		#This Regex searchs for the guid
 			guid = search.group(1)
 			cur.execute("SELECT complete FROM Listens where episodeGuid =%s AND userId = %s;", (guid, uid))
-			if cur.fetchone()[0] == False:		# if the episode has been completely watched then we don't add it to the subscription panel
+			res = cur.fetchone()
+			if res is None or res[0] == False: # if the episode has been completely watched then we don't add it to the subscription panel
 				title = p[0]
 				xml = p[1]
 				pid = p[2]
