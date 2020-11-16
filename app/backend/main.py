@@ -645,7 +645,7 @@ class BestPodcasts(Resource):
 		top_subbed = []
 		top_rated = []
 		for i in res:
-			cur.execute("select array(select title from episodes where podcastid=%s group by title, pubdate::timestamp order by pubdate::timestamp desc limit 30)", (i[0],))
+			cur.execute("select title from episodes where podcastid=%s group by title, pubdate::timestamp order by pubdate::timestamp desc limit 30", (i[0],))
 			eps = cur.fetchall()
 			top_subbed.append({"id": i[0], "title": i[1], "subs": i[2], "thumbnail": i[3], "rating": f"{i[4]:.1f}", "eps":eps[0]})
 			#print({"id": i[0], "title": i[1], "subs": i[2], "thumbnail": i[3], "rating": f"{i[4]:.1f}", "eps":eps})
@@ -654,7 +654,7 @@ class BestPodcasts(Resource):
 		res = cur.fetchall()
 		# return list of top 10 rated podcasts else empty list if no results
 		for i in res:
-			cur.execute("select array(select title from episodes where podcastid=%s group by title, pubdate::timestamp order by pubdate::timestamp desc limit 30)", (i[0],))
+			cur.execute("select title from episodes where podcastid=%s group by title, pubdate::timestamp order by pubdate::timestamp desc limit 30", (i[0],))
 			eps = cur.fetchall()
 			top_rated.append({"id": i[0], "title": i[1], "subs": i[2], "thumbnail": i[3], "rating": f"{i[4]:.1f}", "eps":eps[0]})
 		# for i in top_rated:
