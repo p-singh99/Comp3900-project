@@ -18,13 +18,11 @@ function SubscribeBtn({ defaultState, podcastID }) {
     }
 
     // unsubscription button
-    function unSubscribeHandler(podcastID) {
+    function unSubscribeHandler(podcastId) {
         console.log("entered into Unsubhandler");
         console.log(podcastID);
-        let body = {};
-        body.podcastid = podcastID;
         setSubscribeBtn("...");
-        fetchAPI(`/users/self/subscriptions`, 'delete', body)
+        fetchAPI(`/users/self/subscriptions/${podcastId}`, 'delete', null)
             .then(data => {
                 setSubscribeBtn("Subscribe");
             })
