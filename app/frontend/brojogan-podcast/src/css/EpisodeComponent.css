@@ -36,11 +36,10 @@
 #episode-title a {
   color: white;
 }
-/* a {
-  color: red;
-} */
+
 .episode-list-container {
   height: 250px;
   overflow-x: hidden;
   overflow-y: auto;
+  margin-bottom: 30px;
 }

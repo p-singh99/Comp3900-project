@@ -36,10 +36,11 @@ function Subscriptions() {
             />)
         } else if (podcasts) { // podcasts has been set, but it is empty
           return "You aren't subscribed to any podcasts.";
+
         } else if (error) {
           return "Error retrieving subscriptions";
-        } else { // podcasts is still the original null
-          return "Loading...";
+        } else {
+          return <h4>Loading...</h4>;
         }
       })()}
     </div>

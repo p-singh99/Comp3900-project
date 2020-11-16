@@ -10,5 +10,9 @@
   padding-left: 15px;
   background-color: #2E2B3F;
   font-weight: bold;
-  margin-top: -7px;
+  margin-top: -52px;
+}
+
+.dismiss-notification:hover {
+  cursor: pointer;
 }

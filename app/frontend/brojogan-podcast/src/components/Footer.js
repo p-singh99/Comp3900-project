@@ -7,12 +7,12 @@ import { fetchAPI, isLoggedIn } from './../authFunctions';
 import './../css/footer.scss';
 
 const audioPlayerStyle = {
-  width: '60%',
+  width: '100%',
   backgroundColor: 'rgba(255, 255, 255, 0.7)',
   border: '3px solid #6E59D6',
   borderRadius: '20px',
   paddingTop: '1px',
-  paddingBottom: '1px',
+  paddingBottom: '1px'
 };
 
 export default class Footer extends React.Component {
@@ -78,24 +78,25 @@ export default class Footer extends React.Component {
             </div>
           </div>
           <AudioPlayer
-            style={audioPlayerStyle}
-            layout="horizontal"
-            autoPlay
-            src={this.state.src}
-            currentTime={this.state.progress}
-            listenInterval="30000" /*trigger onListen every 30 seconds*/
-            onPause={e => this.pingServer(Math.floor(Number(e.target.currentTime)), e.target.duration)}
-            onListen={e => this.pingServer(Math.floor(Number(e.target.currentTime)), e.target.duration)}
-            onSeeked={e => this.pingServer(Math.floor(Number(e.target.currentTime)), e.target.duration)}
-            onCanPlay={e => {
-              if (!setPlayed) {
-                setPlayed = true;
-                console.log("can play!");
-                e.target.currentTime = this.state.progress
-              }
-              this.pingServer(Math.floor(Number(e.target.currentTime)), e.target.duration)
-            }}
-          />
+              style={audioPlayerStyle}
+              customAdditionalControls={[]}
+              layout="horizontal"
+              autoPlay
+              src={this.state.src}
+              currentTime={this.state.progress}
+              listenInterval="30000" /*trigger onListen every 30 seconds*/
+              onPause={e=>this.pingServer(Math.floor(Number(e.target.currentTime)), e.target.duration)}
+              onListen={e=>this.pingServer(Math.floor(Number(e.target.currentTime)), e.target.duration)}
+              onSeeked={e=>this.pingServer(Math.floor(Number(e.target.currentTime)), e.target.duration)}
+              onCanPlay={e=>{
+                if (! setPlayed) {
+                  setPlayed = true;
+                  console.log("can play!");
+                  e.target.currentTime=this.state.progress
+                }
+                this.pingServer(Math.floor(Number(e.target.currentTime)), e.target.duration)
+                }}
+            />
         </div>
       </div>
     );

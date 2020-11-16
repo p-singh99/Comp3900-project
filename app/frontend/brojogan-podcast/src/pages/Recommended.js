@@ -12,7 +12,7 @@ import PodcastCards from '../components/PodcastCards';
 // this makes the Recommended page display faster but the transition from Recommended to Description page is slower
 // Recommended uses PodcastCards. PodcastCards uses Pages, and passes it Item=Subcard. Pages instantiates lots of SubCards (Card.js).
 function Recommended() {
-  let [body, setBody] = useState(<h2>Loading...</h2>);
+  let [body, setBody] = useState(<h4>Loading...</h4>);
 
   const setupPodcasts = () => {
     let result = fetchAPI('/users/self/recommendations', 'get');
