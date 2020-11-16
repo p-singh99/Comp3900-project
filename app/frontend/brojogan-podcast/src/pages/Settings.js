@@ -34,8 +34,8 @@ function handleDelete(event) {
 function Settings() {
   const [currentEmail, setCurrentEmail] = useState("");
   const [error, setError] = useState("");
-  const [deleteShow, setDeleteShow] = useState(false);
-  const [disabled, setDisabled] = useState(true);
+  const [deleteShow, setDeleteShow] = useState(false); // whether delete account modal is shown
+  const [disabled, setDisabled] = useState(true); // whether delete account modal button is disabled
 
   function displayMessage(msg) {
     setError(msg.toString());
@@ -100,6 +100,8 @@ function Settings() {
 
   // on page load, fetch current settings ie current email address to display
   useEffect(() => {
+    // using DOM .value instead of React because React uses defaultValue, so it gets set again
+    // on every re-render, overwriting the user's input
     document.getElementById("new-email-input").value = "Loading...";
     const fetchEmail = async () => {
       try {

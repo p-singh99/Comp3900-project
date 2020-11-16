@@ -3,14 +3,14 @@ import { Helmet } from 'react-helmet';
 // import { useParams } from 'react-router-dom';
 import ProgressBar from 'react-bootstrap/ProgressBar';
 import ReactStars from 'react-rating-stars-component';
+// import GetAppIcon from '@material-ui/icons/GetApp';
+// import {Icon} from '@material-ui/icons';
 
 import { getPodcastFromXML } from '../rss';
 import Pages from './../components/Pages';
 import './../css/Description.css';
 import { isLoggedIn, fetchAPI } from '../authFunctions';
 import SubscribeBtn from '../components/SubscribeBtn';
-// import GetAppIcon from '@material-ui/icons/GetApp';
-// import {Icon} from '@material-ui/icons';
 
 // !! what happens if the description is invalid html, will it break the whole page?
 // eg the a tag doesn't close
@@ -176,7 +176,7 @@ function Description(props) {
     // if podcastObj is provided, it must contain {podcast, subscribed, rating}
     fetchPodcast(podcastObj);
 
-  }, [window.location, props]);
+  }, [props]); // window.location
 
   function displayError(msg) {
     // setPodcast(<h1>{msg.toString()}</h1>);
@@ -278,11 +278,6 @@ function Description(props) {
               {isLoggedIn()
                 ?
                 <SubscribeBtn defaultState={subscribeBtn} podcastID={window.location.pathname.split("/").pop()} />
-                // <form id="subscribe-form" onClick={() => handleClickRequest()}>
-                //   <div id="subscribe-btns">
-                //     <button id="subscribe-btn" type="button">{subscribeBtn}</button>
-                //   </div>
-                // </form>
                 : null}
               {getPodcastDescription(podcast)}
               {podcast.link && <h6><a href={podcast.link} target="_blank" rel="nofollow noopener noreferrer">Podcast website</a></h6>}

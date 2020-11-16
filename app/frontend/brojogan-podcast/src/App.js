@@ -18,23 +18,13 @@ import { isLoggedIn, checkLogin } from './authFunctions';
 
 
 function App() {
-  // on app load, check if token valid using useeffect?
   const ref = createRef();
-  let playing = {
-    title: "No Podcast Playing",
-    podcastTitle: "",
-    src: "",
-    thumb: "",
-    guid: "",
-    podcastID: "",
-    progress: 0.0
-  };
 
   function changePlaying(state) {
-    playing = state;
     ref.current.updateState(state);
   }
 
+  // on app load, check if token is valid or session has expired
   useEffect(checkLogin, []);
 
   const defaultComponents = () => (

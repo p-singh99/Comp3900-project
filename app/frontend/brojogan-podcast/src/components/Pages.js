@@ -121,7 +121,7 @@ function Pages({ itemDetails, context, itemsPerPage, Item, showItemIndex }) {
       <React.Fragment>
         <div ref={startRef} className="pages"></div> { /* empty div to scroll to top without affecting child selectors */}
         {pages[pageNum].map((item, index) => {
-          // this onLoad scrolling doesn't work
+          // onLoad scrolling doesn't work
           if (scrollIndex === index) {
             console.log("scrollIndex matches:", scrollIndex, index);
             return <Item details={item} context={context} id="scroll-item" />

@@ -18,9 +18,7 @@ function Recommended() {
     let result = fetchAPI('/users/self/recommendations', 'get');
     result.then(data => {
       let podcasts = [];
-      console.log(`Result is: ${JSON.stringify(data)}`);
       const recommendations = data.recommendations;
-      console.log("Recommended.js podcasts.recommendations:", data.recommendations);
       for (let p of recommendations) {
         const episodes = p.eps.map(episodeTitle => ({title: episodeTitle}));
         console.log("mapped episodes:", episodes);
@@ -28,7 +26,6 @@ function Recommended() {
         // emulate the format of a podcast obj that Card.js expects, but with only the parts that it actually needs
         podcasts.push({title: p.title, pid: p.id, episodes: episodes, thumbnail: p.thumbnail, subscribers: p.subs, rating: p.rating});
       }
-      console.log("Recommended end of for loop podcasts:", podcasts)
       setBody(<PodcastCards
         heading={'Recommendations'}
         podcasts={podcasts}

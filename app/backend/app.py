@@ -31,6 +31,7 @@ from resources.settings import Settings
 from resources.subscriptionpanel import SubscriptionPanel
 from resources.subscriptions import Subscriptions
 from resources.users import Users
+from resources.deletesubscription import DeleteSubscription
 
 # auth
 api.add_resource(Protected, "/protected")
@@ -50,6 +51,7 @@ api.add_resource(Subscriptions, "/users/self/subscriptions")
 api.add_resource(SubscriptionPanel, "/users/self/subscription-panel")
 api.add_resource(History, "/users/self/history/<int:id>")
 api.add_resource(Notifications, "/users/self/notifications")
+api.add_resource(DeleteSubscription, "/users/self/subscriptions/<podcastId>")
 api.add_resource(Notification, "/users/self/notification/<int:notificationId>")
 api.add_resource(Listens, "/users/self/podcasts/<int:podcastId>/episodes/time")
 api.add_resource(ManyListens, "/users/self/podcasts/<int:podcastId>/time")
