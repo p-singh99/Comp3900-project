@@ -11,7 +11,7 @@
     transition: background 250ms ease-in-out, transform 150ms ease;
 
     margin: 5px 0 5px 10px;
-    width: 90px;
+    min-width: 90px;
     height: 30px;
     background-color: #6E59D6; 
     border-radius: 50px;

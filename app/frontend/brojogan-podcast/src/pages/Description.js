@@ -53,11 +53,11 @@ function Description(props) {
   // it sometimes does and sometimes doesn't include query parameters in the result
   useEffect(() => {
     const id = window.location.pathname.split("/").pop();
-    console.log('Start useeffect: ' + Date.now());
+    // console.log('Start useeffect: ' + Date.now());
     const queryParams = new URLSearchParams(window.location.search);
     let episodeNum = parseInt(queryParams.get("episode"), 10); // NaN if episode isn't set
     let episodeNumReversed = false;
-    console.log("episodeNum:", episodeNum);
+    // console.log("episodeNum:", episodeNum);
     if (!episodeNum) {
       episodeNum = parseInt(queryParams.get("episodeRecent"), 10); // NaN if episode isn't set
       episodeNumReversed = true;
@@ -65,11 +65,11 @@ function Description(props) {
 
     function updatePodcastDetails(podcast, subscription, rating) {
       setPodcast(podcast);
-      console.log(`Subscribed: ${subscription}`);
+      // console.log(`Subscribed: ${subscription}`);
       if (subscription) {
         setSubscribeBtn('Unsubscribe');
       }
-      console.log("updatePodcastDetails Rating:", rating);
+      // console.log("updatePodcastDetails Rating:", rating);
       setRating(rating);
       // } else {
       //   setSubscribeBtn('Subscribe');
@@ -78,7 +78,7 @@ function Description(props) {
 
     const fetchPodcast = async (prefetchedPodcast) => {
       try {
-        console.log("prefetched:", prefetchedPodcast);
+        // console.log("prefetched:", prefetchedPodcast);
 
         // TODO: need to figure out how to check for 401s etc, here.
         let promises = [];
@@ -97,14 +97,14 @@ function Description(props) {
           promises.push(ratingPromise);
         }
 
-        console.log(promises);
+        // console.log(promises);
         // have both promises running until we can resolve both
         Promise.all(promises)
           .then(([first, second, third]) => {
             // this [xml, times] thing won't work now that both are optional
             // will fail if times is used but xml isn't, because times will get assigned as xml
             // hence the below bad code
-            console.log("Promises all");
+            // console.log("Promises all");
             let times, rating;
             let podcast;
             if (prefetchedPodcast) {
@@ -113,12 +113,15 @@ function Description(props) {
               rating = second;
             } else {
               const podcastDetails = first;
-              console.log(podcastDetails);
+              // console.log(podcastDetails);
               if (podcastDetails.xml) {
-                podcast = getPodcastFromXML(podcastDetails.xml);
+                try {
+                  podcast = getPodcastFromXML(podcastDetails.xml);
+                } catch {
+                  podcast = { error: "Error loading podcast" };
+                }
                 // podcast.rating = podcastDetails.rating;
-
-                console.log("Parsed podcast:", podcast);
+                // console.log("Parsed podcast:", podcast);
               } else {
                 podcast = { error: "Error loading podcast" };
               }
@@ -131,8 +134,8 @@ function Description(props) {
             // we might not have times since its only if we're logged in
             if (isLoggedIn()) {
               // user's current time position in each episode
-              console.log("times are: ");
-              console.log(times);
+              // console.log("times are: ");
+              // console.log(times);
               for (let time of times) {
                 let episode = podcast.episodes.find(e => e.guid === time.episodeGuid);
                 if (episode !== undefined) {
@@ -146,13 +149,13 @@ function Description(props) {
 
               // user's current rating of the podcast
               setUserRating(rating.rating);
-              console.log("rating.rating:", rating.rating);
+              // console.log("rating.rating:", rating.rating);
               // user rating: undefined means not yet set
               // null means the rating has been received and the answer is that the user hasn't set one
               // number means the number is the rating
             }
 
-            console.log("podcast:", podcast);
+            // console.log("podcast:", podcast);
             setEpisodes({ episodes: (podcast ? podcast.episodes : null), showEpisode: episodeNum, showEpisodeReversed: episodeNumReversed });
           })
           .catch(error => {
@@ -163,7 +166,7 @@ function Description(props) {
       }
     }
 
-    console.log(props);
+    // console.log(props);
     let podcastObj;
     try {
       podcastObj = props.location.state.podcastObj;
@@ -189,12 +192,12 @@ function Description(props) {
 
   async function ratingChanged(newRating) {
     const podcastID = window.location.pathname.split("/").pop();
-    console.log("Rating changed:", newRating);
+    // console.log("Rating changed:", newRating);
     try {
       await fetchAPI(`/users/self/ratings/${podcastID}`, 'put', { rating: newRating });
     } catch (err) {
       // show some kind of error
-      console.log(err);
+      // console.log(err);
     }
     // could cancel old requests when a new one is made but probably not woth it
   }
@@ -248,7 +251,7 @@ function Description(props) {
                   edit={false}
                   value={1}
                 />
-                {console.log("Rating in return:", rating)}
+                {/* {console.log("Rating in return:", rating)} */}
                 {rating && parseFloat(rating) >= 1 // when there are no ratings for a podcast, the backend returns 0.0 as the rating. Rating can't be < 1 so we know this means no ratings.
                   ?
                   <React.Fragment>
@@ -374,10 +377,10 @@ function EpisodeDescription({ details: episode, context: { podcast, setPlaying, 
       <div className="play-div">
         <span className="duration">{episode.duration}</span>
         <button className="play" eid={episode.guid} onClick={(event) => {
-          console.log("podcast is");
-          console.log(podcast);
-          console.log("episode is");
-          console.log(episode);
+          // console.log("podcast is");
+          // console.log(podcast);
+          // console.log("episode is");
+          // console.log(episode);
           setPlaying({
             title: episode.title,
             podcastTitle: podcast.title,

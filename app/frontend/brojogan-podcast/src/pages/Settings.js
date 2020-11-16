@@ -3,7 +3,7 @@ import Modal from 'react-bootstrap/Modal';
 import { Helmet } from 'react-helmet';
 import {FiUser} from 'react-icons/fi';
 
-import { checkPassword, checkPasswordsMatch, checkField } from './../validationFunctions';
+import { checkPassword, checkPasswordsMatch } from './../validationFunctions';
 import { fetchAPI, logoutHandler, getUsername } from './../authFunctions';
 
 import './../css/Settings.css';
@@ -168,7 +168,7 @@ function Settings() {
 
       <h2 id="delete-heading">Delete Account</h2>
       <p>This action is permanent and cannot be undone. This will delete your account including all subscriptions, listening history and ratings.</p>
-      <button id="delete-btn-settings" className="settings-btn delete-btn" onClick={() => { console.log("show"); setDeleteShow(true) }}>Delete Account</button>
+      <button id="delete-btn-settings" className="settings-btn delete-btn" onClick={() => setDeleteShow(true)}>Delete Account</button>
 
       {/* Popup for deleting account */}
       <Modal show={deleteShow} onHide={hideModal}>
