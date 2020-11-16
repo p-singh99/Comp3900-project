@@ -1,9 +1,49 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState/*, useRef*/ } from 'react';
 import Pagination from 'react-bootstrap/Pagination';
 import './../css/Pages.css';
 
 function isDigits(str) {
   return str.match(/^\d+$/);
+}
+
+function pagination(pageNum, lastPage, onPageChange) {
+  let paginationMiddleItems;
+  if (lastPage <= 7) {
+    let pages = [2, 3, 4, 5, 6].filter(x => x < lastPage);
+    paginationMiddleItems = <>{pages.map(num => <Pagination.Item active={pageNum === num}>{num}</Pagination.Item>)}</>;
+  } else {
+    let items;
+    switch (pageNum) {
+      case 1: items = [2, 3, 4]; break;
+      case 2: items = [1, 2, 3]; break;
+      case 3: items = [0, 1, 2]; break;
+      case lastPage - 2: items = [-2, -1, 0]; break;
+      case lastPage - 1: items = [-3, -2, -1]; break;
+      case lastPage: items = [-4, -3, -2]; break;
+      default: items = [-1, 0, 1]; break;
+    }
+
+    paginationMiddleItems =
+      <>
+        {pageNum - 2 <= 2 ? <Pagination.Item active={pageNum === 2}>{2}</Pagination.Item> : <Pagination.Ellipsis />}
+        {items.map(change => {
+          let num = pageNum + change;
+          return <Pagination.Item active={pageNum === num}>{num}</Pagination.Item>
+        })}
+        {pageNum + 2 >= lastPage - 1 ? <Pagination.Item active={pageNum === lastPage - 1}>{lastPage - 1}</Pagination.Item> : <Pagination.Ellipsis />}
+      </>;
+  }
+
+  // https://github.com/react-bootstrap/react-bootstrap/issues/3281
+  return (
+    <Pagination onClick={onPageChange} >
+      <Pagination.Prev id="prev" disabled={pageNum === 1} />
+      <Pagination.Item active={pageNum === 1}>{1}</Pagination.Item>
+      {paginationMiddleItems}
+      {lastPage !== 1 ? <Pagination.Item active={pageNum === lastPage}>{lastPage}</Pagination.Item> : null}
+      <Pagination.Next id="next" disabled={pageNum === lastPage} />
+    </Pagination >
+  )
 }
 
 // the showItemIndex is implemented quite awkwardly
@@ -14,29 +54,31 @@ function PagesFetch({ Item, fetchItems, context }) {
   const [pageState, setPageState] = useState();
   const [error, setError] = useState();
   // const scrollItemRef = useRef(null);
-  const startRef = useRef(null);
+  // const startRef = useRef(null);
   let controller = new AbortController(); // not sure if okay to initialise here
-
-  // todo: prefetch the next page
 
   async function getPage(pgNum) {
     console.log("getPage pageState:", pageState);
     console.log("pages[pgNum]:", pageState.pages[pgNum]);
-    if (pageState.pages[pgNum]) {
-      setPageState({ ...pageState, pageNum: pgNum });
-    } else {
-      try {
-        const { items: page } = await fetchItems(pgNum, controller.signal);
-        console.log(page);
-        let pages = [...pageState.pages];
-        pages[pgNum] = page;
-        setPageState({ ...pageState, pages: pages, pageNum: pgNum, pageChanging: false });
-        setError(null);
-      } catch (err) {
-        setError(err.toString());
-        // throw err; // todo
-      }
+
+    let page = pageState.pages[pgNum];
+    let pages = [...pageState.pages]; // slow copying?
+    if (!page) { // fetching hasn't been started
+      page = fetchItems(pgNum).then(({ items }) => items);
     }
+    try {
+      page = await Promise.resolve(page); // now page is the actual page object, which next time will Promise.resolve() to itself
+      console.log("resolved page:", page);
+    } catch (err) {
+      setError(err.toString());
+      // todo
+      return;
+    }
+
+    pages[pgNum] = page;
+    console.log("Gotten page:", page);
+    setPageState({ ...pageState, pages: pages, pageNum: pgNum, pageChanging: false });
+    setError(null);
   }
 
   useEffect(() => {
@@ -44,14 +86,15 @@ function PagesFetch({ Item, fetchItems, context }) {
       // get page 1, whose response includes the number of pages
       try {
         const { items: page, numPages } = await fetchItems(1);
-        console.log(page, numPages);
+        console.log("getPage1:", page, numPages);
         let pages = [];
-        for (let i = 0; i < numPages; i++) {
+        for (let i = 0; i <= numPages; i++) { // page numbers start at 1
           pages.push(null);
         }
         pages[1] = page;
+        console.log("pages:", pages);
         console.log(pages, numPages, 1);
-        setPageState({ pages: pages, lastPage: numPages, pageNum: 1, pageChanging: false });
+        setPageState({ pages: pages, lastPage: numPages, pageNum: 1, pageChanging: false }, () => console.log("callback"));
         setError(null);
       } catch (err) {
         setError(err.toString());
@@ -59,8 +102,32 @@ function PagesFetch({ Item, fetchItems, context }) {
       }
     }
 
+    console.log("pagesFetch useeffect");
     getPage1();
   }, [fetchItems]);
+
+  // when page state has finished changing, prefetch the next page
+  useEffect(() => {
+    const prefetchPage = (pgNum) => {
+      console.log("prefetch pageState:", pageState);
+      if (!pageState.pages[pgNum]) {
+        console.log("Prefetching pg", pgNum);
+        let pages = [...pageState.pages];
+        console.log(pages);
+        console.log(typeof (pages));
+        pages[pgNum] = fetchItems(pgNum).then(({ items }) => items); // pages[pgNum] is now a promise
+        setPageState({ ...pageState, pages: pages });
+      } else {
+        // page already fetched or fetching
+        console.log("Not prefetching pg", pgNum);
+      }
+    }
+
+    if (pageState && pageState.pageNum < pageState.lastPage) {
+      console.log("pageState useeffect");
+      prefetchPage(pageState.pageNum + 1);
+    }
+  }, [pageState]) // ofc linter wants fetchItems in this dependency array but its a bit weird
 
   function pageChanged(event) {
     console.log(event.target);
@@ -78,59 +145,24 @@ function PagesFetch({ Item, fetchItems, context }) {
     if (pageNum) {
       setPageState({ ...pageState, pageChanging: true })
       getPage(pageNum);
-      startRef.current.scrollIntoView({ behavior: 'smooth' });
-      // this only works sometimes in Firefox...
+      // startRef.current.scrollIntoView({ behavior: 'smooth' });
+      // this only works sometimes in Firefox so removing for consistency
     }
-  }
-
-  function pagination(pageNum, lastPage, onPageChange) {
-    let paginationMiddleItems;
-    if (lastPage <= 7) {
-      let pages = [2, 3, 4, 5, 6].filter(x => x < lastPage);
-      paginationMiddleItems = <>{pages.map(num => <Pagination.Item active={pageNum === num}>{num}</Pagination.Item>)}</>;
-    } else {
-      let items;
-      switch (pageNum) {
-        case 1: items = [2, 3, 4]; break;
-        case 2: items = [1, 2, 3]; break;
-        case 3: items = [0, 1, 2]; break;
-        case lastPage - 2: items = [-2, -1, 0]; break;
-        case lastPage - 1: items = [-3, -2, -1]; break;
-        case lastPage: items = [-4, -3, -2]; break;
-        default: items = [-1, 0, 1]; break;
-      }
-
-      paginationMiddleItems =
-        <>
-          {pageNum - 2 <= 2 ? <Pagination.Item active={pageNum === 2}>{2}</Pagination.Item> : <Pagination.Ellipsis />}
-          {items.map(change => {
-            let num = pageNum + change;
-            return <Pagination.Item active={pageNum === num}>{num}</Pagination.Item>
-          })}
-          {pageNum + 2 >= lastPage - 1 ? <Pagination.Item active={pageNum === lastPage - 1}>{lastPage - 1}</Pagination.Item> : <Pagination.Ellipsis />}
-        </>;
-    }
-
-    // https://github.com/react-bootstrap/react-bootstrap/issues/3281
-    return (
-      <Pagination onClick={onPageChange} >
-        <Pagination.Prev id="prev" disabled={pageNum === 1} />
-        <Pagination.Item active={pageNum === 1}>{1}</Pagination.Item>
-        {paginationMiddleItems}
-        {lastPage !== 1 ? <Pagination.Item active={pageNum === lastPage}>{lastPage}</Pagination.Item> : null}
-        <Pagination.Next id="next" disabled={pageNum === lastPage} />
-      </Pagination >
-    )
   }
 
   return (
     <React.Fragment>
-      <div ref={startRef} className="pages"></div>
+      <div /*ref={startRef}*/ className="pages"></div>
       {error
         ? <h1>{error}</h1>
         : null
       }
 
+      {pageState && !pageState.pageChanging && pageState.lastPage > 0 && (() => {
+        console.log("pageState.pages:", pageState.pages);
+        console.log("pageState.pageNum]:", pageState.pageNum);
+        console.log("pageState.pages[pageState.pageNum]:", pageState.pages[pageState.pageNum]);
+      })()}
       {pageState && !pageState.pageChanging && pageState.lastPage > 0
         ? pageState.pages[pageState.pageNum].map(item => {
           return <Item details={item} context={context} />

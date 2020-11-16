@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import ReactDOM from 'react-dom';
 import { Helmet } from 'react-helmet';
 import { isLoggedIn, fetchAPI } from '../authFunctions';
 import PodcastCards from '../components/PodcastCards';
-import { getPodcastFromXML } from '../rss';
 
 // for Recommended, the backend returns a list of podcasts
 // Each podcast has title, id, image, subscribers, rating and a list of the titles of the last 30 episodes

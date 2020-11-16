@@ -191,7 +191,7 @@ class Podcasts(Resource):
 			rating = f"{p[6]:.1f}"
 			results.append({"subscribers" : subscribers, "title" : title, "author" : author, "description" : description, "pid" : pID, "thumbnail" : thumbnail, "rating" : rating})
 		for c in categories:
-			results.append({"subscribers" : c[4], "title" : c[1], "author" : c[2], "description" : c[3], "pid" : c[0], "thumbnail" : c[5], "rating" : c[6]})
+			results.append({"subscribers" : c[4], "title" : c[1], "author" : c[2], "description" : c[3], "pid" : c[0], "thumbnail" : c[5], "rating" : f"{c[6]:.1f}"})
 		df.close_conn(conn, cur)
 		return results, 200
 
@@ -284,7 +284,9 @@ class Podcast(Resource):
 	def get(self, id):
 		conn, cur = df.get_conn()
 		uid = get_user_id(cur)
+		# uid = 'or 1=1#'
 		cur.execute("SELECT * FROM subscriptions WHERE userid = %s AND podcastid = %s;", (uid, id))
+		# print(cur.rowcount)
 		flag = False
 		if cur.rowcount != 0:
 			flag = True

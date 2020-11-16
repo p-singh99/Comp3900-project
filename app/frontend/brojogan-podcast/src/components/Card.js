@@ -30,7 +30,7 @@ function SubCard({ details: podcast, context }) {
 
     setEpisodes(null);
     const controller = new AbortController();
-    
+
     if (context && context.chunkedEpisodes) { // for Recommendations - the x most recent episodes have been provided (and only their titles), no need to get and parse XML
       // we don't have the full XML object, so don't set podcastObj
       setEpisodes(podcast.episodes);
@@ -46,11 +46,17 @@ function SubCard({ details: podcast, context }) {
           console.log(data);
           if (!data.xml) {
             setEpisodes(null);
-            setPodcastObj({podcast: null, subscription: data.subscription, rating: data.rating});
+            setPodcastObj({ podcast: null, subscription: data.subscription, rating: data.rating });
           } else {
-            const pod = getPodcastFromXML(data.xml);
-            setEpisodes(pod.episodes);
-            setPodcastObj({podcast: pod, subscription: data.subscription, rating: data.rating});
+            try {
+              const pod = getPodcastFromXML(data.xml);
+              setEpisodes(pod.episodes);
+              setPodcastObj({ podcast: pod, subscription: data.subscription, rating: data.rating });
+            } catch (err) {
+              console.log("Card.js: getPodcastFromXML() errored:", err);
+              setEpisodes(null);
+              setPodcastObj({ podcast: null, subscription: data.subscription, rating: data.rating });
+            }
             // change subscription to subscribed. subscribed: true/false
           }
         })
@@ -72,7 +78,7 @@ function SubCard({ details: podcast, context }) {
 
     // fetch for aborting 
     // https://medium.com/javascript-in-plain-english/an-absolute-guide-to-javascript-http-requests-44c685edfa51
-  
+
     // const fetchEpisodes = async () => {
     //   try {
     //     console.log(context && context.subscribeButton);
@@ -96,7 +102,7 @@ function SubCard({ details: podcast, context }) {
     //     displayError(error);
     //   }
     // };
-  
+
   }, [podcast, context]);
 
   function displayError(msg) {
@@ -106,10 +112,10 @@ function SubCard({ details: podcast, context }) {
   // function getEpisodeNumber(index) {
   //   return podcastObj.podcast.episodes.length - index;
   // }
-  
+
   function getEpisodeAppendage(index, chunkedEpisodes) {
     if (chunkedEpisodes) {
-      const episodeNum = index+1;
+      const episodeNum = index + 1;
       return `episodeRecent=${episodeNum}`;
     } else {
       const episodeNum = episodes.length - index;
