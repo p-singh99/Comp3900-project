@@ -31,6 +31,9 @@ function Recommended() {
         podcasts={podcasts}
         options={{chunkedEpisodes: true}}
       />);
+    });
+    result.catch(err => {
+      setBody(<h2>Error retrieving recommendations</h2>);
     })
   }
 
