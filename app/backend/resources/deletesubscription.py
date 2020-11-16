@@ -5,6 +5,7 @@ from flask_restful import Api, Resource, reqparse
 from user_functions import token_required, get_user_id
 import dbfunctions as df
 
+# deletes subscription from the user's subscription
 class DeleteSubscription(Resource):
 	@token_required
 	def delete(self, podcastId):

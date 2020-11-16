@@ -21,7 +21,6 @@ class BestPodcasts(Resource):
 			cur.execute("select title from episodes where podcastid=%s group by title, pubdate::timestamp order by pubdate::timestamp desc limit 30", (i[0],))
 			eps = cur.fetchall()
 			top_subbed.append({"id": i[0], "title": i[1], "subs": i[2], "thumbnail": i[3], "rating": f"{i[4]:.1f}", "eps":eps})
-			#print({"id": i[0], "title": i[1], "subs": i[2], "thumbnail": i[3], "rating": f"{i[4]:.1f}", "eps":eps})
 		cur.execute("SELECT p.id, t.title, p.count, t.thumbnail, r.rating FROM podcastsubscribers p, podcasts t, ratingsview r\
 			where p.id = t.id and t.id=r.id ORDER BY r.rating DESC Limit 10")
 		res = cur.fetchall()
@@ -31,7 +30,5 @@ class BestPodcasts(Resource):
 			eps = cur.fetchall()
 			top_rated.append({"id": i[0], "title": i[1], "subs": i[2], "thumbnail": i[3], "rating": f"{i[4]:.1f}", "eps":eps})
 		# for i in top_rated:
-		# 	print(i['id'])
-		print("finished")
 		df.close_conn(conn,cur)
 		return {"topSubbed": top_subbed, "topRated": top_rated}, 200

@@ -34,7 +34,6 @@ class Listens(Resource):
 		timestamp = request.json.get("time")
 		episodeGuid = request.json.get("episodeGuid")
 		duration = request.json.get("duration")
-		print("request.json is {}".format(request.json))
 		if timestamp is None:
 			df.close_conn(conn,cur)
 			return {"error": "timestamp not included"}, 400

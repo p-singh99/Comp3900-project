@@ -41,8 +41,6 @@ class Notifications(Resource):
 		""", (user_id,))
 		results = cur.fetchall()
 		df.close_conn(conn,cur)
-		for result in results:
-			print(result)
 		if results is None:
 			return {}, 200
 		json = [{
