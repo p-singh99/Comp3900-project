@@ -416,6 +416,7 @@ function sanitiseDescription(description) {
       console.log("Blocked node:", node);
       throw Error("Sanitisation failed");
     }
+  }
   return dom.querySelector("body").innerHTML;
   // return description;
 }
@@ -432,6 +433,7 @@ function unTagDescription(description) {
   description = description.replace(/<[^>]+>/g, ''); // remove HTML tags - could be flawed
   description = htmlDecode(description);
   return description;
+}
 }
 
 
