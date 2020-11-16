@@ -19,6 +19,7 @@ function verifyPodcast(podcast) {
 }
 // todo handle dodgy feeds
 
+// wrap this in a try catch always...
 export function getPodcastFromXML(xmlText) {
   const parser = new DOMParser();
   const xml = parser.parseFromString(xmlText, "text/xml");
