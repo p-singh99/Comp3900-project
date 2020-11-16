@@ -8,7 +8,7 @@ import Pages from './Pages';
 // options is given to SubCard as context
 function PodcastCards(props) {
 
-  console.log(`Props: ${props.podcasts.pid}`);
+  // console.log(`Props: ${props.podcasts.pid}`);
 
   return (
     <React.Fragment>

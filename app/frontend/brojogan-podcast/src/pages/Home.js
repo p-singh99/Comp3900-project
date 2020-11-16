@@ -31,43 +31,43 @@ function Home(props) {
       <Helmet>
         <title>Brojogan Podcasts</title>
       </Helmet>
-
-    {isLoggedIn() ? 
-    <div id="new-user-login">
-    <div id="message">
-      <p id="message-1">
-        {/* <h4> */}
-          Subscribe And Get Notified
-          {/* Create an account with us */}
-        {/* </h4> */}
-      </p>
-      <p id="message-2">
-          Create an account with us <br/>
-      </p>
-      <p id="message-3">
-          Its Free!
-      </p>
-      <div id="form-homePage">
-        <Link to={{ pathname: `/login`}}>
-          <button type="button" id="login-homePage" className="homePage-btn">
-            Login
-          </button>
-        </Link>
-        <Link to={{ pathname: `/signup`}}>
-          <button type="button" id="signup-homePage" className="homePage-btn">
-            Sign Up
-          </button>
-        </Link>
+      {!isLoggedIn() ?
+        <div id="new-user-login">
+        <div id="message">
+          <p id="message-1">
+            {/* <h4> */}
+              Subscribe And Get Notified
+              {/* Create an account with us */}
+            {/* </h4> */}
+          </p>
+          <p id="message-2">
+              Create an account with us <br/>
+          </p>
+          <p id="message-3">
+              Its Free!
+          </p>
+          <div id="form-homePage">
+            <Link to={{ pathname: `/login`}}>
+              <button type="button" id="login-homePage" className="homePage-btn">
+                Login
+              </button>
+            </Link>
+            <Link to={{ pathname: `/signup`}}>
+              <button type="button" id="signup-homePage" className="homePage-btn">
+                Sign Up
+              </button>
+            </Link>
+          </div>
+        </div>
       </div>
-    </div>
-  </div>
-    : <SubscriptionPanel />}
+      :
+      < SubscriptionPanel/>}
       
 
       <h1>
         {/* {welcome(newUser)} */}
       </h1>
-      {/* < SubscriptionPanel/> */}
+      {/*  */}
       <TopPodcasts />
     </div>
   );

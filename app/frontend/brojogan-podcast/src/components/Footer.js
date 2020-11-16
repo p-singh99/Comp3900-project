@@ -76,7 +76,8 @@ export default class Footer extends React.Component {
                 {this.state.podcastTitle}
               </p>
             </div>
-            <AudioPlayer
+          </div>
+          <AudioPlayer
               style={audioPlayerStyle}
               customAdditionalControls={[]}
               layout="horizontal"
@@ -96,7 +97,6 @@ export default class Footer extends React.Component {
                 this.pingServer(Math.floor(Number(e.target.currentTime)), e.target.duration)
                 }}
             />
-          </div>
         </div>
       </div>
     );

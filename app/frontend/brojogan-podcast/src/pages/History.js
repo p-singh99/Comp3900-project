@@ -59,6 +59,7 @@ function HistoryCard({ details }) {
   let controller = new AbortController();
 
   useEffect(() => {
+
     console.log(details);
     controller.abort();
     controller = new AbortController();
@@ -86,12 +87,19 @@ function HistoryCard({ details }) {
             ? <p>{state.error}</p>
             :
             <React.Fragment>
-              <Link to={`/podcast/${details.pid}`}><p>{state.podcast.title}</p></Link>
-              <Link to={`/podcast/${details.pid}`}><img src={state.episode.image ? state.episode.image : state.podcast.image} alt={`${state.podcast.title}: ${state.episode.title} icon`} /></Link>
-              <p>{state.episode.title}</p>
-              <p>Listen Date: {getDate(details.listenDate * 1000)}</p>
-              <p>Progress: {details.timestamp} (for testing)</p>
-              <p>Episode duration: {state.episode.duration}</p>
+              {/* <Link to={`/podcast/${details.pid}`}><p>{state.podcast.title}</p></Link> */}
+              {/* <Link to={`/podcast/${details.pid}`}><img src={state.episode.image ? state.episode.image : state.podcast.image} alt={`${state.podcast.title}: ${state.episode.title} icon`} /></Link> */}
+              <div>
+                <Link to={`/podcast/${details.pid}`}>
+                  <img src={state.podcast.image ? state.podcast.image : state.episode.image} alt={`${state.podcast.title}: ${state.episode.title} icon`} />
+                </Link>
+                <div id="test">
+                  {getDate(details.listenDate * 1000)}
+                </div>
+              </div>
+              <p id="episode-title-history">{state.episode.title}</p>
+              {/* <p>Progress: {details.timestamp} (for testing)</p> */}
+              {/* <p>Episode duration: {state.episode.duration}</p> */}
               {/* Some kind of progress bar based on state.timestamp.
             Though it seems like the durations in the rss feeds are sometimes wrong */}
               {state.episode.durationSeconds
@@ -104,7 +112,7 @@ function HistoryCard({ details }) {
           null}
       </div>
 
-      {state
+      {/* {state
         ?
         (state.error
           ? <p>{state.error}</p>
@@ -120,7 +128,7 @@ function HistoryCard({ details }) {
             {state.podcast.title}
           </div>
         )
-        : null}
+        : null} */}
     </React.Fragment>
   );
 }

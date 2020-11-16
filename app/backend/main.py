@@ -395,7 +395,7 @@ class History(Resource):
 			cur.execute("SELECT p.id, p.xml, l.episodeguid, l.listenDate, l.timestamp FROM listens l, podcasts p where l.userid=%s and \
 				p.id = l.podcastid ORDER BY l.listenDate DESC LIMIT %s OFFSET %s", (user_id, limit, offset))
 		eps = cur.fetchmany(limit)
-		print(eps)
+		# print(eps)
 		# change to episodes
 		jsoneps = [{"pid" : ep[0], "xml": ep[1], "episodeguid": ep[2], "listenDate": ep[3].timestamp(), "timestamp": ep[4]} for ep in eps]
 		df.close_conn(conn, cur)
