@@ -312,11 +312,6 @@ function getDate(timestamp) {
   return date.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }).replace(/,/g, '')/*.toUpperCase()*/;
 }
 
-function downloadEpisode(event) {
-  event.stopPropagation();
-  alert(event.target.getAttribute('eid'));
-}
-
 function secondstoTime(seconds) {
   let hours = Math.floor(seconds / (60 ** 2));
   let minutes = Math.floor((seconds - hours * (60 ** 2)) / 60);
