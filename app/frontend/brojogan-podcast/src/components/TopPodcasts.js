@@ -16,11 +16,11 @@ function TopPodcasts() {
       const topSubscribedPodcasts = [];
       for (let item of items.topSubbed ) {
         const episodes = item.eps.map(episodeTitle => ({title: episodeTitle}));
-        topSubscribedPodcasts.push({title: item.title, pid: item.id, episodes: episodes, thumbnail: item.thumbnail, subscriber: item.subs, rating: item.rating});
+        topSubscribedPodcasts.push({title: item.title, pid: item.id, episodes: episodes, thumbnail: item.thumbnail, subscribers: item.subs, rating: item.rating});
       }
       for (let item of items.topRated ) {
         const episodes = item.eps.map(episodeTitle => ({title: episodeTitle}));
-        topRatedPodcasts.push({title: item.title, pid: item.id, episodes: episodes, thumbnail: item.thumbnail, subscriber: item.subs, rating: item.rating});
+        topRatedPodcasts.push({title: item.title, pid: item.id, episodes: episodes, thumbnail: item.thumbnail, subscribers: item.subs, rating: item.rating});
       } 
       setTopSubbed(topSubscribedPodcasts);
       setTopRated(topRatedPodcasts);
