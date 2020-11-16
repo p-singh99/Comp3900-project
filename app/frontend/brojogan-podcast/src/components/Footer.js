@@ -7,12 +7,12 @@ import { fetchAPI, isLoggedIn } from './../authFunctions';
 import './../css/footer.scss';
 
 const audioPlayerStyle = {
-  width: '60%',
+  width: '100%',
   backgroundColor: 'rgba(255, 255, 255, 0.7)',
   border: '3px solid #6E59D6',
   borderRadius: '20px',
   paddingTop: '1px',
-  paddingBottom: '1px',
+  paddingBottom: '1px'
 };
 
 export default class Footer extends React.Component {
@@ -68,6 +68,7 @@ export default class Footer extends React.Component {
             </div>
             <AudioPlayer
               style={audioPlayerStyle}
+              customAdditionalControls={[]}
               layout="horizontal"
               autoPlay
               src={this.state.src}
