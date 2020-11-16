@@ -7,6 +7,7 @@ import bcrypt
 from flask_restful import Api, Resource, reqparse
 import user_functions as uf
 import dbfunctions as df
+from main import conn_pool
 import threading
 from rss import update_rss
 
@@ -26,7 +27,7 @@ class Notifications(Resource):
 		if results:
 			subscribedPodcasts = [x[0] for x in results]
 		for sp in subscribedPodcasts:
-			thread = threading.Thread(target=update_rss, args=(sp, df.conn_pool), daemon=True)
+			thread = threading.Thread(target=update_rss, args=(sp, conn_pool), daemon=True)
 			thread.start()
 
 		cur.execute("""

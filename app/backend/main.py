@@ -3,12 +3,12 @@ from flask_restful import Api, Resource, reqparse
 from flask_cors import CORS, cross_origin
 from SemaThreadPool import SemaThreadPool
 import dbfunctions
+import os
 
 app = Flask(__name__)
 api = Api(app)
 CORS(app)
 api.init_app(app)
-import os
 
 conn_pool = None
 if os.environ.get("BROJOGAN_USE_LOCAL") == "1":
