@@ -2,10 +2,10 @@ from flask import Flask, jsonify, request
 from flask_restful import Resource
 from functools import wraps
 from flask_restful import Api, Resource, reqparse
-import backend.user_functions as uf
-import backend.dbfunctions as df
+import user_functions as uf
+import dbfunctions as df
 import threading
-from backend.rss import update_rss
+from rss import update_rss
 
 class Podcast(Resource):
 	def get(self, id):

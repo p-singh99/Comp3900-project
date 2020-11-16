@@ -2,8 +2,8 @@ from flask import request
 from flask_restful import Resource
 from functools import wraps
 import datetime
-import backend.user_functions as uf
-import backend.dbfunctions as df
+import user_functions as uf
+import dbfunctions as df
 
 class Podcasts(Resource):
 	def get(self):

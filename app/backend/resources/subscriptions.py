@@ -2,8 +2,8 @@ from flask import Flask, jsonify, request
 from flask_restful import Resource
 from functools import wraps
 from flask_restful import Api, Resource, reqparse
-from backend.user_functions import token_required, get_user_id
-import backend.dbfunctions as df
+from user_functions import token_required, get_user_id
+import dbfunctions as df
 import threading
 
 class Subscriptions(Resource):

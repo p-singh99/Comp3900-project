@@ -5,10 +5,10 @@ import datetime
 import jwt
 import bcrypt
 from flask_restful import Api, Resource, reqparse
-import backend.user_functions as uf
-import backend.dbfunctions as df
+import user_functions as uf
+import dbfunctions as df
 import threading
-from backend.rss import update_rss
+from rss import update_rss
 
 class Notifications(Resource):
 	@uf.token_required

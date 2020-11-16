@@ -1,6 +1,8 @@
+from flask import request
 import jwt
 import datetime
-
+from functools import wraps
+from app import app
 
 def create_token(user_id):
 	token = jwt.encode({'user' : user_id, 'exp' : datetime.datetime.utcnow() + datetime.timedelta(hours=24)}, app.config['SECRET_KEY'])

@@ -1,8 +1,8 @@
 from flask import request
 from flask_restful import Resource
 from functools import wraps
-import backend.user_functions as uf
-import backend.dbfunctions as df
+import user_functions as uf
+import dbfunctions as df
 import bcrypt
 
 class Users(Resource):

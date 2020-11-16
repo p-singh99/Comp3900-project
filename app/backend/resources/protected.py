@@ -1,7 +1,7 @@
 from flask_restful import Resource
-from backend import main
+from user_functions import token_required
 
 class Protected(Resource):
-	@main.token_required
+	@token_required
 	def get(self):
 		return {'message': 'not anyone'}, 200

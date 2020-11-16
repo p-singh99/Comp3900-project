@@ -2,14 +2,14 @@ from flask import Flask, jsonify, request
 from flask_restful import Resource
 from functools import wraps
 from flask_restful import Api, Resource, reqparse
-from backend.user_functions import token_required, get_user_id
-from backend.dbfunctions import get_conn, close_conn
+from user_functions import token_required, get_user_id
+import dbfunctions as df
 import bcrypt
 
 class Self(Resource):
 	@token_required
 	def delete(self):
-		conn, cur = get_conn()
+		conn, cur = df.get_conn()
 		user_id = get_user_id()
 		parser = reqparse.RequestParser(bundle_errors=True)
 		parser.add_argument('password', type=str, required=True, help="Need old password", location="json")
@@ -32,8 +32,8 @@ class Self(Resource):
 			# delete rejected recommendations
 			cur.execute("DELETE FROM rejectedrecommendations WHERE userId=%s", (user_id,))
 			conn.commit()
-			close_conn(conn,cur)
+			df.close_conn(conn,cur)
 			return {"data" : "account deleted"}, 200
 		else:
-			close_conn(conn,cur)
+			df.close_conn(conn,cur)
 			return {"error" : "wrong password"}, 400

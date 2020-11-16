@@ -5,8 +5,8 @@ import datetime
 import jwt
 import bcrypt
 from flask_restful import Api, Resource, reqparse
-import backend.user_functions as uf
-import backend.dbfunctions as df
+import user_functions as uf
+import dbfunctions as df
 
 
 class Settings(Resource):

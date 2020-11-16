@@ -1,19 +1,19 @@
 from flask import request
 from flask_restful import Resource
-from functools import wraps
-import datetime
-import jwt
-import bcrypt
-from flask_restful import Api, Resource, reqparse
-import backend.user_functions as uf
-import backend.dbfunctions as df
-from backend.rss import update_rss
+#from functools import wraps
+#import datetime
+#import jwt
+#import bcrypt
+#from flask_restful import Api, Resource, reqparse
+from user_functions import token_required, get_user_id
+import dbfunctions as df
+from rss import update_rss
 
 class Notification(Resource):
-	@uf.token_required
+	@token_required
 	def delete(self, notificationId):
 		conn,cur = df.get_conn()
-		user_id=uf.get_user_id()
+		user_id=get_user_id()
 		cur.execute("""
 		update notifications
 		set status='dismissed'
@@ -32,7 +32,7 @@ class Notification(Resource):
 		return {}, 200
 
 
-	@uf.token_required
+	@token_required
 	def put(self, notificationId):
 		status = request.json.get("status")
 		if status is None:
@@ -40,7 +40,7 @@ class Notification(Resource):
 		if not isinstance(status, str) and status not in ['read', 'unread', 'dismissed']:
 			return {"data": "status must be one of read, undread, or dismissed"}, 400
 		conn, cur = df.get_conn()
-		user_id = uf.get_user_id()
+		user_id = get_user_id()
 		cur.execute("""
 		update Notifications set status=%s
 		where id=%s and userid=%s

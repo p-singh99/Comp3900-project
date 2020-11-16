@@ -2,6 +2,18 @@ from flask import Flask, jsonify, request, make_response
 from flask_restful import Api, Resource, reqparse
 from flask_cors import CORS, cross_origin
 from SemaThreadPool import SemaThreadPool
+import dbfunctions
+
+app = Flask(__name__)
+api = Api(app)
+CORS(app)
+api.init_app(app)
+
+conn_pool = SemaThreadPool(1, 50,\
+	 dbname="ultracast", user="brojogan", password="GbB8j6Op", host="polybius.bowdens.me", port=5432)
+
+app.config['SECRET_KEY'] = 'secret_key'
+
 from resources.notification import Notification
 from resources.notifications import Notifications
 from resources.bestpodcasts import BestPodcasts
@@ -19,17 +31,6 @@ from resources.settings import Settings
 from resources.subscriptionpanel import SubscriptionPanel
 from resources.subscriptions import Subscriptions
 from resources.users import Users
-
-
-
-app = Flask(__name__)
-api = Api(app)
-CORS(app)
-
-conn_pool = SemaThreadPool(1, 50,\
-	 dbname="ultracast", user="brojogan", password="GbB8j6Op", host="polybius.bowdens.me", port=5432)
-
-app.config['SECRET_KEY'] = 'secret_key'
 
 # auth
 api.add_resource(Protected, "/protected")
@@ -53,7 +54,7 @@ api.add_resource(Notification, "/users/self/notification/<int:notificationId>")
 api.add_resource(Listens, "/users/self/podcasts/<int:podcastId>/episodes/time")
 api.add_resource(ManyListens, "/users/self/podcasts/<int:podcastId>/time")
 api.add_resource(Ratings, "/users/self/ratings/<int:id>")
-api.init_app(app)
+#api.init_app(app)
 
 if __name__ == '__main__':
 	app.run(debug=True)

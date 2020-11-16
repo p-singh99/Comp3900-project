@@ -2,8 +2,8 @@ from flask import request
 from flask_restful import Resource, reqparse
 from functools import wraps
 import datetime
-import backend.user_functions as uf
-import backend.dbfunctions as df
+import user_functions as uf
+import dbfunctions as df
 
 class Ratings(Resource):
 	def get(self, id):
