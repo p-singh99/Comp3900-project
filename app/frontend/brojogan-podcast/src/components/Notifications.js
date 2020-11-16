@@ -8,15 +8,23 @@ let alreadySeen = [];
 
 function sendSeenFor(notifications) {
     for (let notification of notifications.filter(e => !alreadySeen.includes(e.id))) {
-        // add try catch
-        fetchAPI(`/users/self/notification/${notification.id}`, 'put', { status: 'read' })
-        alreadySeen.push(notification.id);
+        try {
+            fetchAPI(`/users/self/notification/${notification.id}`, 'put', { status: 'read' })
+            alreadySeen.push(notification.id);
+        } catch (err) {
+            // not really a big deal, fail (mostly) silently
+            console.warn("there was a problem sending seen: " + err);
+        }
     }
 }
 
 function sendDelete(notification) {
-    // add try catch
-    fetchAPI(`/users/self/notification/${notification.id}`, 'delete', null)
+    try {
+        fetchAPI(`/users/self/notification/${notification.id}`, 'delete', null)
+    } catch (err) {
+        // not much to do here
+        console.warn("there was a problem deleting the notification: " + err);
+    }
 }
 
 function Notification({ notification, dismissNotification }) {
@@ -48,13 +56,17 @@ function Notifications({ visibility }) {
         window.setInterval(() => {
             if (isLoggedIn()) {
                 console.log("fetching notifications");
-                // add try catch
-                fetchAPI('/users/self/notifications', 'get', null)
+                try {
+                    fetchAPI('/users/self/notifications', 'get', null)
                     .then(newNotifications => {
                         console.log("Setting notifications:");
                         console.log(newNotifications);
                         setState(newNotifications);
                     })
+                } catch (err) {
+                    // could do something fancy here but it would take a bit of effort.
+                    console.warn("failed to get notifications " + err);
+                }
             }
         }, 60000);
     }, []);
