@@ -42,16 +42,16 @@ class Settings(Resource):
 					hashedpassword = bcrypt.hashpw(password, bcrypt.gensalt())
 			if args['newemail']:
 				# change email
-				cur.execute("SELECT email FROM users where email=%s", (args['newemail']))
+				cur.execute("SELECT email FROM users where email=%s", (args['newemail'],))
 				if cur.fetchone():
 					cur.execute("SELECT email FROM users where email=%s and id=%s", (args['newemail'], user_id))
 					if not cur.fetchone():
 						df.close_conn(conn, cur)
 						return {"error": "Email already exists"}, 400
 
-				cur.execute("UPDATE users SET email=%s WHERE user_id=%s", (args['newemail'], user_id))
+				cur.execute("UPDATE users SET email=%s WHERE id=%s", (args['newemail'], user_id))
 			if hashedpassword:
-				cur.execute("UPDATE users SET hashedpassword=%s WHERE user_id=%s", (hashedpassword.decode('UTF-8'), user_id))
+				cur.execute("UPDATE users SET hashedpassword=%s WHERE id=%s", (hashedpassword.decode('UTF-8'), user_id))
 			conn.commit()
 			df.close_conn(conn, cur)
 			return {"data" : "success"}, 200

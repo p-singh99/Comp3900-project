@@ -17,8 +17,7 @@ class Self(Resource):
 		cur.execute("SELECT hashedpassword FROM users WHERE id=%s", (user_id,))
 		old_pw = cur.fetchone()[0].strip()
 		if bcrypt.checkpw(args["password"].encode('UTF-8'), old_pw.encode('utf-8')):
-			# delete from users
-			cur.execute("DELETE FROM users WHERE id=%s", (user_id,))
+			
 			# delete all subscriptions
 			cur.execute("DELETE FROM subscriptions WHERE userId=%s", (user_id,))
 			# delete podcast account
@@ -29,8 +28,10 @@ class Self(Resource):
 			cur.execute("DELETE FROM listens WHERE userId=%s", (user_id,))
 			# delete seach queries
 			cur.execute("DELETE FROM searchqueries WHERE userId=%s", (user_id,))
-			# delete rejected recommendations
-			cur.execute("DELETE FROM rejectedrecommendations WHERE userId=%s", (user_id,))
+			cur.execute("DELETE FROM notifications WHERE userid=%s", (user_id,))
+			# delete from users
+			cur.execute("DELETE FROM users WHERE id=%s", (user_id,))
+		
 			conn.commit()
 			df.close_conn(conn,cur)
 			return {"data" : "account deleted"}, 200
