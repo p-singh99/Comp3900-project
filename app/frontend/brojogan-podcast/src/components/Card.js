@@ -17,7 +17,6 @@ import './../css/Card.css';
 function SubCard({ details: podcast, context }) {
   const [podcastObj, setPodcastObj] = useState(); // the entire parsed XML object, for passing to the Description page
   const [episodes, setEpisodes] = useState(); // episodes for displaying in this card
-  console.log("Podcast:", podcast);
   // podcast object must contain title, pid, rating, image, subscribers
 
   // when you do something like <Item props={state} />, when the state changes,
@@ -26,7 +25,6 @@ function SubCard({ details: podcast, context }) {
 
   // on component load: fetch episodes if they weren't provided to the component
   useEffect(() => {
-    // todo: so subscription endpoint returns title, author, description etc, we should use that?
 
     setEpisodes(null);
     const controller = new AbortController();
@@ -34,16 +32,10 @@ function SubCard({ details: podcast, context }) {
     if (context && context.chunkedEpisodes) { // for Recommendations - the x most recent episodes have been provided (and only their titles), no need to get and parse XML
       // we don't have the full XML object, so don't set podcastObj
       setEpisodes(podcast.episodes);
-      console.log("Chunked Episodes podcast:", podcast);
     } else {
-      // if (!podcast.episodes || podcast.episodes.length === 0) {
-
-      // request is cancellable so when page changes to podB while podA is still fetching, 
-      // podcastObj doesn't get to set to null and then set to podA when the response returns
       // get xml
       fetchAPI(`/podcasts/${podcast.pid}`, 'get', null, controller.signal)
         .then(data => {
-          console.log(data);
           if (!data.xml) {
             setEpisodes(null);
             setPodcastObj({ podcast: null, subscription: data.subscription, rating: data.rating });
@@ -61,18 +53,15 @@ function SubCard({ details: podcast, context }) {
           }
         })
         .catch(error => {
-          console.log(`Error is ${error}`);
+          console.log(`Card.js fetchAPI failed: Error is ${error}`);
           displayError(error);
         })
     }
-    // this was being used for recommendations
-    /*else { // the xml has already been parsed and episodes are available
-      console.log("podcast PREPARSED:", podcast);
-      setPodcastObj({ podcast: podcast });
-    }*/
 
     return function cleanup() {
       controller.abort();
+      // Abort request so when page changes to podB while podA is still fetching, 
+      // podcastObj doesn't get to set to null and then set to podA when the response returns
       console.log("cleanup card");
     }
 
@@ -83,10 +72,6 @@ function SubCard({ details: podcast, context }) {
   function displayError(msg) {
     console.log('Error loading episodes');
   }
-
-  // function getEpisodeNumber(index) {
-  //   return podcastObj.podcast.episodes.length - index;
-  // }
 
   function getEpisodeAppendage(index, chunkedEpisodes) {
     if (chunkedEpisodes) {
@@ -172,28 +157,3 @@ function SubCard({ details: podcast, context }) {
 }
 
 export default SubCard;
-
-
-    // const fetchEpisodes = async () => {
-    //   try {
-    //     console.log(context && context.subscribeButton);
-    //     // request is cancellable so when page changes to podB while podA is still fetching, 
-    //     // podcastObj doesn't get to set to null and then set to podA when the response returns
-    //     // get xml
-    //     const data = await fetchAPI(`/podcasts/${podcast.pid}`, 'get', null, controller.signal);
-    //     console.log(data);
-    //     if (!data.xml) {
-    //       // setPodcastObj({ podcast: null, subscription: data.subscription, rating: data.rating});
-    //       setEpisodes(null);
-    //     } else {
-    //       const pod = getPodcastFromXML(data.xml);
-    //       setEpisodes(pod.episodes);
-    //       // setPodcastObj({ podcast: pod, subscription: data.subscription, rating: data.rating });
-    //       // podcastObj.subscription was being set but I don't know why, it's not used
-    //       // console.log(`Episodes for ${podcast.pid}`);
-    //     }
-    //   } catch (error) {
-    //     console.log(`Error is ${error}`);
-    //     displayError(error);
-    //   }
-    // };
