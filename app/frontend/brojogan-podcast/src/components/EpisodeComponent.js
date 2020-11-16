@@ -6,7 +6,7 @@ import './../css/EpisodeComponent.css';
 function EpisodeComponent(props) {
   return (
     <div id="episode-list">
-      <img src={props.podcastImage} width={50} height={50}/>
+      <img src={props.podcastImage} width={50} height={50} alt="" /> {/* Linter says to put empty string alt */}
       <div id="episode-list-text">
         <p className="episode-component-p" id="episode-title">
         <Link to={{ pathname: `/podcast/${props.podcastPid}`}}>
