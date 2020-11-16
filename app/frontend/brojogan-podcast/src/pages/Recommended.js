@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import ReactDOM from 'react-dom';
 import { Helmet } from 'react-helmet';
 import { isLoggedIn, fetchAPI } from '../authFunctions';
 import PodcastCards from '../components/PodcastCards';
-import { getPodcastFromXML } from '../rss';
 
 // for Recommended, the backend returns a list of podcasts
 // Each podcast has title, id, image, subscribers, rating and a list of the titles of the last 30 episodes
@@ -14,10 +12,10 @@ import { getPodcastFromXML } from '../rss';
 // this makes the Recommended page display faster but the transition from Recommended to Description page is slower
 // Recommended uses PodcastCards. PodcastCards uses Pages, and passes it Item=Subcard. Pages instantiates lots of SubCards (Card.js).
 function Recommended() {
-  let [body, setBody] = useState(<h2>Loading...</h2>);
+  let [body, setBody] = useState(<h4>Loading...</h4>);
 
   const setupPodcasts = () => {
-    let result = fetchAPI('/self/recommendations', 'get');
+    let result = fetchAPI('/users/self/recommendations', 'get');
     result.then(data => {
       let podcasts = [];
       console.log(`Result is: ${JSON.stringify(data)}`);

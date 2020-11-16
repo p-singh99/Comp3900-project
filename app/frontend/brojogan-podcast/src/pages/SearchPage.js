@@ -14,30 +14,29 @@ import './../css/SearchPage.css';
 export default function Search() {
   const [podcasts, setPodcasts] = useState();
   const [titleQuery, setTitleQuery] = useState("");
-  // const [error, setError] = useState();
+  const [error, setError] = useState();
 
   // on page load, get query from url. then get and display query results
   useEffect(() => {
-    // setError();
+    setError(null);
 
     const controller = new AbortController();
 
     setPodcasts();
     const query = window.location.search.substring(1);
     setTitleQuery(query);
-    console.log(`podcasts at start of ${query}: `, podcasts);
-    console.log(`starting query ${query}`)
 
     // Need to send with token if logged in so backend can track searches
     fetchAPI('/podcasts?search_query=' + query + '&offset=0&limit=50', 'get', null, controller.signal)
-      .then(podcasts => {
-        setPodcasts(podcasts);
+      .then(results => {
+        setPodcasts(results);
       })
       .catch(err => {
-        // do something
-        // can't just display an error, because this will also be called on request aborting as well as actual error
+        // if err instanceof DOMException, then (hopefully) the error is from aborted request, so don't show the user that
+        if (! (err instanceof DOMException)) {
+          setError("Network or other error");
+        }
         console.log(err);
-        // setError("Network or other error");
       });
 
       return function cleanup() {
@@ -61,11 +60,11 @@ export default function Search() {
               podcasts={podcasts}
             />)
         } else if (podcasts) {
-          return "No results";
-        // } else if (error) {
-        //   return error;
+          return <h1>No results</h1>;
+        } else if (error) {
+          return <h1>{error}</h1>;
         } else {
-          return "Loading";
+          return <h1>Loading...</h1>;
         }
       })()}
     </div>

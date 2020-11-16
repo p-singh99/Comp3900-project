@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './../css/NavBar.css';
-import { NavLink, withRouter } from 'react-router-dom';
+import { NavLink } from 'react-router-dom'; // withRouter
 import { BiHomeAlt } from 'react-icons/bi';
 import { AiOutlineHistory } from 'react-icons/ai';
 import { FiThumbsUp } from 'react-icons/fi';

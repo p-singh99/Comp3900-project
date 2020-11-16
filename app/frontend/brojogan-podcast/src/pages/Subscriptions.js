@@ -9,7 +9,7 @@ function Subscriptions() {
 
   useEffect(() => {
     setPodcasts();
-    fetchAPI(`/self/subscriptions`,'get',null)
+    fetchAPI(`/users/self/subscriptions`,'get',null)
       .then(podcasts => {
           setPodcasts(podcasts);
         }
@@ -33,7 +33,7 @@ function Subscriptions() {
         } else if (podcasts) {
           return "You aren't subscribed to any podcasts.";
         } else {
-          return "Loading...";
+          return <h4>Loading...</h4>;
         }
       })()}
     </div>
