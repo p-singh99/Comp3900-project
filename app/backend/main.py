@@ -2,7 +2,6 @@ from flask import Flask, jsonify, request, make_response
 from flask_restful import Api, Resource, reqparse
 from flask_cors import CORS, cross_origin
 from SemaThreadPool import SemaThreadPool
-import dbfunctions
 import os
 
 app = Flask(__name__)
@@ -20,6 +19,7 @@ else:
 
 app.config['SECRET_KEY'] = 'secret_key'
 
+import dbfunctions
 from resources.notification import Notification
 from resources.notifications import Notifications
 from resources.bestpodcasts import BestPodcasts
