@@ -91,9 +91,9 @@ function Description(props) {
 
         // if we're logged in we'll get the listened data for this podcast
         if (isLoggedIn()) {
-          let timesPromise = fetchAPI('/self/podcasts/' + id + '/time', 'get');
+          let timesPromise = fetchAPI('/users/self/podcasts/' + id + '/time', 'get');
           promises.push(timesPromise);
-          let ratingPromise = fetchAPI(`/self/ratings/${id}`);
+          let ratingPromise = fetchAPI(`/users/self/ratings/${id}`);
           promises.push(ratingPromise);
         }
 
@@ -194,7 +194,7 @@ function Description(props) {
     const podcastID = window.location.pathname.split("/").pop();
     // console.log("Rating changed:", newRating);
     try {
-      await fetchAPI(`/self/ratings/${podcastID}`, 'put', { rating: newRating });
+      await fetchAPI(`/users/self/ratings/${podcastID}`, 'put', { rating: newRating });
     } catch (err) {
       // show some kind of error
       // console.log(err);

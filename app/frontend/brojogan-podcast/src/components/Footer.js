@@ -41,7 +41,7 @@ export default class Footer extends React.Component {
         duration = -1;
       }
       console.log("pinging " + progress + "/" + duration + " to server episodeguid = " + this.state.guid + ", podcastid = " + this.state.podcastID);
-      let uri = '/self/podcasts/'+this.state.podcastID+'/episodes/time';
+      let uri = '/users/self/podcasts/'+this.state.podcastID+'/episodes/time';
       let body = {'time': progress, 'episodeGuid': this.state.guid, 'duration': duration};
       try {
         fetchAPI(uri, 'put', body).then(() => console.log("updated"));

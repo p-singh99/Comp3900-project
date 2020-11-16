@@ -15,7 +15,7 @@ function Recommended() {
   let [body, setBody] = useState(<h2>Loading...</h2>);
 
   const setupPodcasts = () => {
-    let result = fetchAPI('/self/recommendations', 'get');
+    let result = fetchAPI('/users/self/recommendations', 'get');
     result.then(data => {
       let podcasts = [];
       console.log(`Result is: ${JSON.stringify(data)}`);
