@@ -32,7 +32,7 @@ import './../css/History.css';
 function History() {
   async function fetchItems(pgNum, signal) {
     const pageSize = 12;
-    const data = await fetchAPI(`/self/history/${pgNum}?limit=${pageSize}`, 'get', null, signal);
+    const data = await fetchAPI(`/users/self/history/${pgNum}?limit=${pageSize}`, 'get', null, signal);
     console.log("History data:", data);
     console.log(data.numPages);
     if (pgNum === 1) {
