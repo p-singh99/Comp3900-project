@@ -53,11 +53,11 @@ function Description(props) {
   // it sometimes does and sometimes doesn't include query parameters in the result
   useEffect(() => {
     const id = window.location.pathname.split("/").pop();
-    // console.log('Start useeffect: ' + Date.now());
+
+    // get episodeNum for scrolling to specific episode
     const queryParams = new URLSearchParams(window.location.search);
     let episodeNum = parseInt(queryParams.get("episode"), 10); // NaN if episode isn't set
     let episodeNumReversed = false;
-    // console.log("episodeNum:", episodeNum);
     if (!episodeNum) {
       episodeNum = parseInt(queryParams.get("episodeRecent"), 10); // NaN if episode isn't set
       episodeNumReversed = true;
@@ -65,11 +65,9 @@ function Description(props) {
 
     function updatePodcastDetails(podcast, subscription, rating) {
       setPodcast(podcast);
-      // console.log(`Subscribed: ${subscription}`);
       if (subscription) {
         setSubscribeBtn('Unsubscribe');
       }
-      // console.log("updatePodcastDetails Rating:", rating);
       setRating(rating);
       // } else {
       //   setSubscribeBtn('Subscribe');
@@ -78,9 +76,6 @@ function Description(props) {
 
     const fetchPodcast = async (prefetchedPodcast) => {
       try {
-        // console.log("prefetched:", prefetchedPodcast);
-
-        // TODO: need to figure out how to check for 401s etc, here.
         let promises = [];
         if (prefetchedPodcast) {
           updatePodcastDetails((prefetchedPodcast.podcast ? prefetchedPodcast.podcast : { error: "Error loading podcast" }), prefetchedPodcast.subscription, prefetchedPodcast.rating);
@@ -97,14 +92,12 @@ function Description(props) {
           promises.push(ratingPromise);
         }
 
-        // console.log(promises);
         // have both promises running until we can resolve both
         Promise.all(promises)
           .then(([first, second, third]) => {
             // this [xml, times] thing won't work now that both are optional
             // will fail if times is used but xml isn't, because times will get assigned as xml
             // hence the below bad code
-            // console.log("Promises all");
             let times, rating;
             let podcast;
             if (prefetchedPodcast) {
@@ -113,7 +106,6 @@ function Description(props) {
               rating = second;
             } else {
               const podcastDetails = first;
-              // console.log(podcastDetails);
               if (podcastDetails.xml) {
                 try {
                   podcast = getPodcastFromXML(podcastDetails.xml);
@@ -121,7 +113,6 @@ function Description(props) {
                   podcast = { error: "Error loading podcast" };
                 }
                 // podcast.rating = podcastDetails.rating;
-                // console.log("Parsed podcast:", podcast);
               } else {
                 podcast = { error: "Error loading podcast" };
               }
@@ -134,8 +125,6 @@ function Description(props) {
             // we might not have times since its only if we're logged in
             if (isLoggedIn()) {
               // user's current time position in each episode
-              // console.log("times are: ");
-              // console.log(times);
               for (let time of times) {
                 let episode = podcast.episodes.find(e => e.guid === time.episodeGuid);
                 if (episode !== undefined) {
@@ -149,13 +138,11 @@ function Description(props) {
 
               // user's current rating of the podcast
               setUserRating(rating.rating);
-              // console.log("rating.rating:", rating.rating);
               // user rating: undefined means not yet set
               // null means the rating has been received and the answer is that the user hasn't set one
               // number means the number is the rating
             }
 
-            // console.log("podcast:", podcast);
             setEpisodes({ episodes: (podcast ? podcast.episodes : null), showEpisode: episodeNum, showEpisodeReversed: episodeNumReversed });
           })
           .catch(error => {
@@ -166,7 +153,6 @@ function Description(props) {
       }
     }
 
-    // console.log(props);
     let podcastObj;
     try {
       podcastObj = props.location.state.podcastObj;
@@ -183,21 +169,13 @@ function Description(props) {
     setPodcast({ error: msg.toString() });
   }
 
-  // function isEmptyObj(obj) {
-  //   for (const i in obj) {
-  //     return false;
-  //   }
-  //   return true;
-  // }
-
   async function ratingChanged(newRating) {
     const podcastID = window.location.pathname.split("/").pop();
-    // console.log("Rating changed:", newRating);
     try {
       await fetchAPI(`/users/self/ratings/${podcastID}`, 'put', { rating: newRating });
     } catch (err) {
-      // show some kind of error
-      // console.log(err);
+      // todo show some kind of error
+      console.log("Description.js rating change fetchAPI error:", err);
     }
     // could cancel old requests when a new one is made but probably not woth it
   }
@@ -251,7 +229,6 @@ function Description(props) {
                   edit={false}
                   value={1}
                 />
-                {/* {console.log("Rating in return:", rating)} */}
                 {rating && parseFloat(rating) >= 1 // when there are no ratings for a podcast, the backend returns 0.0 as the rating. Rating can't be < 1 so we know this means no ratings.
                   ?
                   <React.Fragment>
@@ -261,7 +238,6 @@ function Description(props) {
                   </React.Fragment>
                   : <div className="no-ratings">No ratings</div>
                 }
-                {/* {console.log("!pendingRating:", !pendingRating)} */}
                 {userRating || userRating === null // don't render until user's rating has been retrieved, so don't have to force re-render later
                   ?
                   <ReactStars classNames="choose-rating"
@@ -311,9 +287,7 @@ function Description(props) {
 function toggleDescription(event) {
   if (event.target.tagName.toLowerCase() !== "button") {
     const episode = event.target.closest(".episode"); // traverses element and its parents
-    // console.log(episode);
     const description = episode.querySelector(".description");
-    // console.log(description);
     description.classList.toggle("collapsed");
     description.classList.toggle("expanded");
     // maybe want to do this fancier using js not css
@@ -368,10 +342,6 @@ function EpisodeDescription({ details: episode, context: { podcast, setPlaying, 
       <div className="play-div">
         <span className="duration">{episode.duration}</span>
         <button className="play" eid={episode.guid} onClick={(event) => {
-          // console.log("podcast is");
-          // console.log(podcast);
-          // console.log("episode is");
-          // console.log(episode);
           setPlaying({
             title: episode.title,
             podcastTitle: podcast.title,
@@ -446,15 +416,6 @@ function sanitiseDescription(description) {
       console.log("Blocked node:", node);
       throw Error("Sanitisation failed");
     }
-    // if (!["a", "br"].includes(node.nodeName.toLowerCase())) {
-    //   console.log("Blocked node:", node);
-    //   throw Error("Failed sanitisation");
-    // }
-  }
-  // for (const node of dom.querySelectorAll("a")) {
-  //   node.setAttribute("target", "_blank");
-  //   node.setAttribute("rel", "nofollow noopener noreferrer");
-  // }
   return dom.querySelector("body").innerHTML;
   // return description;
 }

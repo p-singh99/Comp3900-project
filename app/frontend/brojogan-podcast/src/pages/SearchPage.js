@@ -6,7 +6,7 @@ import { fetchAPI } from './../authFunctions';
 
 import './../css/SearchPage.css';
 
-// for Search, the backend returns a list of results of form {todo}
+// for Search, the backend returns a list of results of form {subscribers, title, author, description, pid, title, rating, thumbnail}
 // And this component uses PodcastCards and passes it the list of podcasts
 // Each card then fetches the details for the podcast with the id it is given, and displays the details
 // when a link to a podcast description page is clicked, if the podcast details have finished loading, then they will be passed to the Description page
