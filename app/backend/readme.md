@@ -18,9 +18,6 @@ FLASK_APP=main.py flask run
 | DELETE      | `/users/self/`                                                |                      |               | Delete account |
 | PUT         | `/users/self/settings`                                       | `{"oldpassword": <oldpassword>, "newpassword": <newpassword>, "newemail":<email>}` | `{"data" : "success"}`, 200, `{"error" : "wrong password"}` 400, `{"error": "Email already exists"}`,400 `{"oldpassword": "Need old password"}`, 400 |                                                               Change password and/or email |  
 | GET        | `/users/self/history/<pagenumber>`                                  |   `{"limit": <int>}`                                    | `{"history": [{"pid" : podcastid, "xml": xml, "episodeguid": guid, "listenDate": listendate, "timestamp": timestamp}]}`, 200<br>`{“error“ :  “bad request”}`, 400 | Check user history |
-
-| HTTP Method |  Endpoint                                                    | Request body         | Response body | Action                  |
-|-------------|--------------------------------------------------------------|----------------------|---------------|-------------------------|
 | GET         | `/users/self/podcasts/<podcastID>/episodes/<episodeID>/time` |                      |   `{"episodeGuid": guid, "listenDate": listendate, "timestamp": timestamp, "complete", <bool>}`, 200            | Return time progress in episode |
 | PUT         | `/users/self/podcasts/<podcastID>/episodes/<episodeID>/time` | `{"time": <time>}`   |    `{"userId": user_id, "podcastId": podcastid "episodeGuid": guid, "listenDate": listendate, "timestamp": timestamp, "complete", <bool>}`, 200             | Update time progress in episode, and also listening history |
 | PUT         | `/users/self/ratings/<podcastID>`                    | `{"rating": <rating>}` |       `{"rating": rating}`, 200      | Update rating for podcast |
