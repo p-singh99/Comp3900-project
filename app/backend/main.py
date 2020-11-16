@@ -21,7 +21,7 @@ app = Flask(__name__)
 api = Api(app)
 CORS(app)
 
-# In production, we would make a real, randomised secret key and store it in an environment variable
+#CHANGE SECRET KEY
 app.config['SECRET_KEY'] = 'secret_key'
 
 def create_token(user_id):
@@ -227,7 +227,7 @@ class Settings(Resource):
 		args = parser.parse_args()
 		hashedpassword = ""
 		# check current password
-		cur.execute("SELECT hashedpassword FROM users WHERE username=%s", (username,))
+		cur.execute("SELECT hashedpassword FROM users WHERE username=%s", (username))
 		old_pw = cur.fetchone()[0].strip()
 		if bcrypt.checkpw(args["oldpassword"].encode('UTF-8'), old_pw.encode('utf-8')):
 			if args["newpassword"]:
@@ -238,7 +238,7 @@ class Settings(Resource):
 					hashedpassword = bcrypt.hashpw(password, bcrypt.gensalt())
 			if args['newemail']:
 				# change email
-				cur.execute("SELECT email FROM users where email=%s", (args['newemail']),)
+				cur.execute("SELECT email FROM users where email=%s", (args['newemail']))
 				if cur.fetchone():
 					cur.execute("SELECT email FROM users where email=%s and username=%s", (args['newemail'], data['user']))
 					if not cur.fetchone():
@@ -356,20 +356,16 @@ class Subscriptions(Resource):
 		conn.commit()
 		df.close_conn(conn, cur)
 		return {'data' : "subscription successful"}, 200
-
+	
+class DeleteSubscription(Resource):
 	@token_required
-	def delete(self):
+	def delete(self, podcastId):
 		conn, cur = df.get_conn()
 		userID = get_user_id(cur)
-		parser = reqparse.RequestParser(bundle_errors=True)
-		parser.add_argument('podcastid', type=str, location="json")
-		args = parser.parse_args()
-		podcastID = args["podcastid"]
-		cur.execute("DELETE FROM subscriptions WHERE userid = %s AND podcastid = %s;", (userID, podcastID))
+		cur.execute("DELETE FROM subscriptions WHERE userid = %s AND podcastid = %s;", (userID, podcastId))
 		conn.commit()
 		df.close_conn(conn,cur)
 		return {"data" : "subscription deleted"}, 200
-
 
 class History(Resource):
 	@token_required
@@ -645,18 +641,18 @@ class BestPodcasts(Resource):
 		top_subbed = []
 		top_rated = []
 		for i in res:
-			cur.execute("select title from episodes where podcastid=%s group by title, pubdate::timestamp order by pubdate::timestamp desc limit 30", (i[0],))
+			cur.execute("select array(select title from episodes where podcastid=%s group by title, pubdate::timestamp order by pubdate::timestamp desc limit 30)", (i[0],))
 			eps = cur.fetchall()
-			top_subbed.append({"id": i[0], "title": i[1], "subs": i[2], "thumbnail": i[3], "rating": f"{i[4]:.1f}", "eps":eps[0]})
+			top_subbed.append({"id": i[0], "title": i[1], "subs": i[2], "thumbnail": i[3], "rating": f"{i[4]:.1f}", "eps":eps})
 			#print({"id": i[0], "title": i[1], "subs": i[2], "thumbnail": i[3], "rating": f"{i[4]:.1f}", "eps":eps})
 		cur.execute("SELECT p.id, t.title, p.count, t.thumbnail, r.rating FROM podcastsubscribers p, podcasts t, ratingsview r\
 			where p.id = t.id and t.id=r.id ORDER BY r.rating DESC Limit 10")
 		res = cur.fetchall()
 		# return list of top 10 rated podcasts else empty list if no results
 		for i in res:
-			cur.execute("select title from episodes where podcastid=%s group by title, pubdate::timestamp order by pubdate::timestamp desc limit 30", (i[0],))
+			cur.execute("select array(select title from episodes where podcastid=%s group by title, pubdate::timestamp order by pubdate::timestamp desc limit 30)", (i[0],))
 			eps = cur.fetchall()
-			top_rated.append({"id": i[0], "title": i[1], "subs": i[2], "thumbnail": i[3], "rating": f"{i[4]:.1f}", "eps":eps[0]})
+			top_rated.append({"id": i[0], "title": i[1], "subs": i[2], "thumbnail": i[3], "rating": f"{i[4]:.1f}", "eps":eps})
 		# for i in top_rated:
 		# 	print(i['id'])
 		print("finished")
@@ -679,6 +675,7 @@ api.add_resource(Settings, "/users/self/settings")
 api.add_resource(Self, "/users/self")
 api.add_resource(Recommendations, "/users/self/recommendations")
 api.add_resource(Subscriptions, "/users/self/subscriptions")
+api.add_resource(DeleteSubscription, "/users/self/subscriptions/<podcastId>")
 api.add_resource(SubscriptionPanel, "/users/self/subscription-panel")
 api.add_resource(History, "/users/self/history/<int:id>")
 api.add_resource(Notifications, "/users/self/notifications")
