@@ -22,6 +22,4 @@ class ManyListens(Resource):
 			"timestamp": x[2],
 			"complete": x[3]
 		} for x in res]
-		print("got res")
-		print(jsonready)
 		return jsonready, 200
