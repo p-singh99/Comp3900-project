@@ -67,7 +67,7 @@ export default class Footer extends React.Component {
       <div id='footer-div'>
         <div id='player'>
           <div id="podcast-playing-details">
-            <Link to={`/podcast/${this.state.podcastID}`}><img src={this.state.thumb} className="thumbnail"></img></Link>
+            <Link to={`/podcast/${this.state.podcastID}`}><img src={this.state.thumb} className="thumbnail" alt=''></img></Link> {/* Linter wants empty alt */}
             <div id="podcast-playing-info">
               <p id="podcast-episode-title">
                 {this.state.title}
