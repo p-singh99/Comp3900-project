@@ -42,7 +42,7 @@ def token_required(f):
 		return f(*args, **kwargs)
 	return decorated
 
-def get_user_id(cur):
+def get_user_id():
 	token = request.headers.get('token')
 	if token:
 		try:
@@ -65,7 +65,7 @@ class Protected(Resource):
 class SubscriptionPanel(Resource):
 	def get(self):
 		conn,cur = df.get_conn()
-		uid = get_user_id(cur)
+		uid = get_user_id()
 		print(uid)
 		cur.execute("""SELECT p.title, p.xml, p.id
 		               FROM   podcasts p
@@ -156,7 +156,7 @@ class Podcasts(Resource):
 		# todo: try catch this
 		conn, cur = df.get_conn()
 		# add search query to db
-		user_id = get_user_id(cur)
+		user_id = get_user_id()
 		if user_id:
 			cur.execute("insert into searchqueries (userid, query, searchdate) values (%s, %s, %s)",(user_id, search, datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")))
 		conn.commit()
@@ -208,7 +208,7 @@ class Settings(Resource):
 	@token_required
 	def get(self):
 		conn, cur = df.get_conn()
-		user_id = get_user_id(cur)
+		user_id = get_user_id()
 		cur.execute("SELECT email FROM users WHERE id=%s", (user_id,))
 		email = cur.fetchone()[0]
 		df.close_conn(conn, cur)
@@ -217,7 +217,7 @@ class Settings(Resource):
 	@token_required
 	def put(self):
 		data = jwt.decode(request.headers['token'], app.config['SECRET_KEY'])
-		username = data['user']
+		user_id = get_user_id()
 		conn, cur = df.get_conn()
 		#get arguments from json request body
 		parser = reqparse.RequestParser(bundle_errors=True)
@@ -227,7 +227,7 @@ class Settings(Resource):
 		args = parser.parse_args()
 		hashedpassword = ""
 		# check current password
-		cur.execute("SELECT hashedpassword FROM users WHERE username=%s", (username))
+		cur.execute("SELECT hashedpassword FROM users WHERE id=%s", (user_id,))
 		old_pw = cur.fetchone()[0].strip()
 		if bcrypt.checkpw(args["oldpassword"].encode('UTF-8'), old_pw.encode('utf-8')):
 			if args["newpassword"]:
@@ -258,7 +258,7 @@ class Self(Resource):
 	@token_required
 	def delete(self):
 		conn, cur = df.get_conn()
-		user_id = get_user_id(cur)
+		user_id = get_user_id()
 		parser = reqparse.RequestParser(bundle_errors=True)
 		parser.add_argument('password', type=str, required=True, help="Need old password", location="json")
 		args = parser.parse_args()
@@ -290,7 +290,7 @@ class Self(Resource):
 class Podcast(Resource):
 	def get(self, id):
 		conn, cur = df.get_conn()
-		uid = get_user_id(cur)
+		uid = get_user_id()
 		# uid = 'or 1=1#'
 		cur.execute("SELECT * FROM subscriptions WHERE userid = %s AND podcastid = %s;", (uid, id))
 		# print(cur.rowcount)
@@ -326,7 +326,7 @@ class Subscriptions(Resource):
 	@token_required
 	def get(self):
 		conn, cur = df.get_conn()
-		uid = get_user_id(cur)
+		uid = get_user_id()
 		cur.execute("SELECT p.title, p.author, p.description, p.id, r.rating, p.thumbnail FROM podcasts p, ratingsview r, subscriptions s \
 			WHERE s.podcastId = p.id and s.userID = %s and r.id = p.id;", (uid,))
 		podcasts = cur.fetchall()
@@ -347,7 +347,7 @@ class Subscriptions(Resource):
 	@token_required
 	def post(self):
 		conn, cur = df.get_conn()
-		userID = get_user_id(cur)
+		userID = get_user_id()
 		parser = reqparse.RequestParser(bundle_errors=True)
 		parser.add_argument('podcastid', type=str, location="json")
 		args = parser.parse_args()
@@ -360,7 +360,7 @@ class Subscriptions(Resource):
 	@token_required
 	def delete(self):
 		conn, cur = df.get_conn()
-		userID = get_user_id(cur)
+		userID = get_user_id()
 		parser = reqparse.RequestParser(bundle_errors=True)
 		parser.add_argument('podcastid', type=str, location="json")
 		args = parser.parse_args()
@@ -384,7 +384,7 @@ class History(Resource):
 			return {"error": "bad request"}, 400
 		offset = (id - 1)*limit 
 		conn, cur = df.get_conn()
-		user_id = get_user_id(cur)
+		user_id = get_user_id()
 		# if first page get all results to determine amount of pages
 		if id == 1:
 			cur.execute("SELECT p.id, p.xml, l.episodeguid, l.listenDate, l.timestamp FROM listens l, podcasts p where l.userid=%s and \
@@ -405,7 +405,7 @@ class Listens(Resource):
 	@token_required
 	def get(self, podcastId):
 		conn, cur = df.get_conn()
-		user_id = get_user_id(cur)
+		user_id = get_user_id()
 		episodeGuid = request.json.get("episodeGuid")
 		if episodeGuid is None:
 			df.close_conn(conn, cur)
@@ -425,7 +425,7 @@ class Listens(Resource):
 	@token_required
 	def put(self, podcastId):
 		conn, cur = df.get_conn()
-		user_id = get_user_id(cur)
+		user_id = get_user_id()
 		timestamp = request.json.get("time")
 		episodeGuid = request.json.get("episodeGuid")
 		duration = request.json.get("duration")
@@ -475,7 +475,7 @@ class ManyListens(Resource):
 	@token_required
 	def get(self, podcastId):
 		conn, cur = df.get_conn()
-		user_id = get_user_id(cur)
+		user_id = get_user_id()
 		cur.execute("""
 			select episodeGuid, listenDate, timestamp, complete
 			from listens where userid=%s and podcastid=%s
@@ -497,7 +497,7 @@ class Recommendations(Resource):
 	@token_required
 	def get(self):
 		conn, cur = df.get_conn()
-		user_id = get_user_id(cur)
+		user_id = get_user_id()
 		recs = []
 		cur.execute("select distinct * from recommendations(%s)", (user_id,))
 		results = cur.fetchall()
@@ -509,7 +509,7 @@ class Notifications(Resource):
 	@token_required
 	def get(self):
 		conn, cur = df.get_conn()
-		user_id=get_user_id(cur)
+		user_id=get_user_id()
 		cur.execute("""
 		select p.rssfeed from
 		subscriptions s
@@ -555,7 +555,7 @@ class Notification(Resource):
 	@token_required
 	def delete(self, notificationId):
 		conn,cur = df.get_conn()
-		user_id=get_user_id(cur)
+		user_id=get_user_id()
 		cur.execute("""
 		update notifications
 		set status='dismissed'
@@ -582,7 +582,7 @@ class Notification(Resource):
 		if not isinstance(status, str) and status not in ['read', 'unread', 'dismissed']:
 			return {"data": "status must be one of read, undread, or dismissed"}, 400
 		conn, cur = df.get_conn()
-		user_id = get_user_id(cur)
+		user_id = get_user_id()
 		cur.execute("""
 		update Notifications set status=%s
 		where id=%s and userid=%s
@@ -604,7 +604,7 @@ class Notification(Resource):
 # 	@token_required
 # 	def put(self, id):
 # 		conn, cur = df.get_conn()
-# 		user_id = get_user_id(cur)
+# 		user_id = get_user_id()
 # 		cur.execute("INSERT INTO rejectedrecommendations (userid, podcastid) VALUES (%s, %s)", (user_id, id))
 # 		conn.commit()
 # 		df.close_conn(conn,cur)
@@ -612,7 +612,7 @@ class Notification(Resource):
 class Ratings(Resource):
 	def get(self, id):
 		conn, cur = df.get_conn()
-		user_id = get_user_id(cur)
+		user_id = get_user_id()
 		cur.execute("SELECT rating FROM podcastratings WHERE podcastid=%s and userid=%s", (id, user_id))
 		res = cur.fetchone()
 		rating = res[0] if res else None
@@ -621,7 +621,7 @@ class Ratings(Resource):
 
 	def put(self,id):
 		conn, cur = df.get_conn()
-		user_id = get_user_id(cur)
+		user_id = get_user_id()
 		# get ratings limited to 1 to 5
 		parser = reqparse.RequestParser()
 		parser.add_argument('rating', type=int, required=True, choices=(1,2,3,4,5), help="Rating not valid", location="json")

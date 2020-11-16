@@ -1,40 +1,35 @@
 from flask import Flask, jsonify, request, make_response
 from flask_restful import Api, Resource, reqparse
 from flask_cors import CORS, cross_origin
+from SemaThreadPool import SemaThreadPool
+from resources.notification import Notification
+from resources.notifications import Notifications
+from resources.bestpodcasts import BestPodcasts
+from resources.history import History
+from resources.listens import Listens
+from resources.login import Login
+from resources.manylistens import ManyListens
+from resources.podcast import Podcast
+from resources.podcasts import Podcasts
+from resources.protected import Protected
+from resources.ratings import Ratings
+from resources.recommendations import Recommendations
+from resources.self import Self
+from resources.settings import Settings
+from resources.subscriptionpanel import SubscriptionPanel
+from resources.subscriptions import Subscriptions
+from resources.users import Users
+
+
 
 app = Flask(__name__)
 api = Api(app)
 CORS(app)
 
+conn_pool = SemaThreadPool(1, 50,\
+	 dbname="ultracast", user="brojogan", password="GbB8j6Op", host="polybius.bowdens.me", port=5432)
 
-def create_token(user_id):
-	token = jwt.encode({'user' : user_id, 'exp' : datetime.datetime.utcnow() + datetime.timedelta(hours=24)}, app.config['SECRET_KEY'])
-	return token.decode('UTF-8')
-
-def token_required(f):
-	@wraps(f)
-	def decorated(*args, **kwargs):
-		token = request.headers.get('token')
-		if not token:
-			return {'error' : 'token is missing'}, 401
-		try:
-			# fails if token format is invalid or timstamp expired
-			data = jwt.decode(token, app.config['SECRET_KEY'])
-		except:
-			return {'error' : 'token is invalid'}, 401
-		return f(*args, **kwargs)
-	return decorated
-
-def get_user_id(cur):
-	token = request.headers.get('token')
-	if token:
-		try:
-			data = jwt.decode(token, app.config['SECRET_KEY'])
-			#cur.execute("SELECT id FROM users WHERE username =%s or email = %s", (data['user'], data['user']))
-		except:
-			return None
-		return data['user']
-	return None
+app.config['SECRET_KEY'] = 'secret_key'
 
 # auth
 api.add_resource(Protected, "/protected")
@@ -58,3 +53,7 @@ api.add_resource(Notification, "/users/self/notification/<int:notificationId>")
 api.add_resource(Listens, "/users/self/podcasts/<int:podcastId>/episodes/time")
 api.add_resource(ManyListens, "/users/self/podcasts/<int:podcastId>/time")
 api.add_resource(Ratings, "/users/self/ratings/<int:id>")
+api.init_app(app)
+
+if __name__ == '__main__':
+	app.run(debug=True)
