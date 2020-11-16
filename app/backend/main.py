@@ -227,7 +227,7 @@ class Settings(Resource):
 		args = parser.parse_args()
 		hashedpassword = ""
 		# check current password
-		cur.execute("SELECT hashedpassword FROM users WHERE username=%s", (username))
+		cur.execute("SELECT hashedpassword FROM users WHERE username=%s", (username,))
 		old_pw = cur.fetchone()[0].strip()
 		if bcrypt.checkpw(args["oldpassword"].encode('UTF-8'), old_pw.encode('utf-8')):
 			if args["newpassword"]:
@@ -238,7 +238,7 @@ class Settings(Resource):
 					hashedpassword = bcrypt.hashpw(password, bcrypt.gensalt())
 			if args['newemail']:
 				# change email
-				cur.execute("SELECT email FROM users where email=%s", (args['newemail']))
+				cur.execute("SELECT email FROM users where email=%s", (args['newemail']),)
 				if cur.fetchone():
 					cur.execute("SELECT email FROM users where email=%s and username=%s", (args['newemail'], data['user']))
 					if not cur.fetchone():
