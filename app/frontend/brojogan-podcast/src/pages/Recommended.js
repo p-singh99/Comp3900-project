@@ -34,7 +34,7 @@ function Recommended() {
     });
     result.catch(err => {
       setBody(<h2>Error retrieving recommendations</h2>);
-    })
+    });
   }
 
   useEffect(() => {
