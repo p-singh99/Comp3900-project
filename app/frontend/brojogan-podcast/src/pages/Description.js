@@ -176,7 +176,7 @@ function Description(props) {
     // if podcastObj is provided, it must contain {podcast, subscribed, rating}
     fetchPodcast(podcastObj);
 
-  }, [window.location, props]);
+  }, [props]); // window.location
 
   function displayError(msg) {
     // setPodcast(<h1>{msg.toString()}</h1>);
