@@ -9,7 +9,7 @@ function isDigits(str) {
 // the showItemIndex is implemented quite awkwardly
 // to be able to scroll to the item, the Item component will need to accept an id prop
 // and set this id as the id of the element. The only id used will be 'scroll-item'.
-// maybe should use #id thing?
+// maybe should use #id in url thing?
 function Pages({ itemDetails, context, itemsPerPage, Item, showItemIndex }) {
   const [pageState, setPageState] = useState();
   const [pageJSX, setPageJSX] = useState();
@@ -26,12 +26,6 @@ function Pages({ itemDetails, context, itemsPerPage, Item, showItemIndex }) {
     if (itemDetails.length === 0) {
       return;
     }
-
-    // moved to Description page
-    // showItemIndex = parseInt(showItemIndex, 10);
-    // if (showItemIndex) {
-    //   showItemIndex = itemDetails.length - showItemIndex; // it's reversed to the indexes of the array so that eg episode=1 takes you to the first episodes instead of the most recent
-    // }
 
     let pages = [];
     const numPages = Math.ceil(itemDetails.length / itemsPerPage);
@@ -88,11 +82,12 @@ function Pages({ itemDetails, context, itemsPerPage, Item, showItemIndex }) {
     console.log(pages);
     console.log(pageNum);
 
+    // manages the page number display
     // there needs to be a way to make big jumps to the middle when there are a lot of pages
     let paginationMiddleItems;
     if (lastPage <= 7) {
       let pages = [2, 3, 4, 5, 6].filter(x => x < lastPage);
-      paginationMiddleItems = <>{pages.map(num => <Pagination.Item active={pageNum === num}>{num}</Pagination.Item>)}</>;
+      paginationMiddleItems = <React.Fragment>{pages.map(num => <Pagination.Item active={pageNum === num}>{num}</Pagination.Item>)}</React.Fragment>;
     } else {
       let items;
       switch (pageNum) {
@@ -106,14 +101,14 @@ function Pages({ itemDetails, context, itemsPerPage, Item, showItemIndex }) {
       }
 
       paginationMiddleItems =
-        <>
+        <React.Fragment>
           {pageNum - 2 <= 2 ? <Pagination.Item active={pageNum === 2}>{2}</Pagination.Item> : <Pagination.Ellipsis />}
           {items.map(change => {
             let num = pageNum + change;
             return <Pagination.Item active={pageNum === num}>{num}</Pagination.Item>
           })}
           {pageNum + 2 >= lastPage - 1 ? <Pagination.Item active={pageNum === lastPage - 1}>{lastPage - 1}</Pagination.Item> : <Pagination.Ellipsis />}
-        </>;
+        </React.Fragment>;
     }
 
     setPageJSX(
@@ -128,6 +123,7 @@ function Pages({ itemDetails, context, itemsPerPage, Item, showItemIndex }) {
             return <Item details={item} context={context} />
           }
         })}
+        
         {/* https://github.com/react-bootstrap/react-bootstrap/issues/3281 */}
         {/* Maybe want to allow passing of some 'end' JSX to put before the pagination? */}
         <Pagination onClick={pageChanged}>
