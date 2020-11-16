@@ -1,6 +1,6 @@
-import React, {useState, useEffect} from 'react';
-import {isLoggedIn, fetchAPI} from './../authFunctions';
-import {getPodcastFromXML} from './../rss';
+import React, { useState, useEffect } from 'react';
+import { isLoggedIn, fetchAPI } from './../authFunctions';
+import { getPodcastFromXML } from './../rss';
 import EpisodeComponent from './EpisodeComponent';
 
 function SubscriptionPanel() {
@@ -9,45 +9,53 @@ function SubscriptionPanel() {
   const result = [];
 
   const loadEpisodes = () => {
-    setNewEpisodes('Loading');
-    let results = fetchAPI('/self/subscription-panel', 'get', null);
+    setNewEpisodes(<h4>Loading...</h4>);
+    let results = fetchAPI('/users/self/subscription-panel', 'get', null);
     results.then(items => {
       console.log(`Result is: ${JSON.stringify(items)}`);
       for (let item of items) {
         console.log(`title: ${item.title}`);
-        const res = getPodcastFromXML(item.xml);
-        console.log(`Episode is: ${JSON.stringify(res.episodes)}`);
-        console.log(`Image is: ${JSON.stringify(res.image)}`);
+        try { // getPodcastFromXML crashes sometimes so I am being liberal with try catches
+          const res = getPodcastFromXML(item.xml);
+          console.log(`Episode is: ${JSON.stringify(res.episodes)}`);
+          console.log(`Image is: ${JSON.stringify(res.image)}`);
 
-        result.push({title: item.title, 
-                    episode: res.episodes[0],
-                    image: res.image,
-                    pid: item.pid}
-                  );
+          result.push({
+            title: item.title,
+            episode: res.episodes[0],
+            image: res.image,
+            pid: item.pid
+          }
+          );
 
-      }
-      const Rows = 
-      setNewEpisodes(
-        <div>
-          <h4 id="episode-list-title">
-            Subscription Preview Panel
-          </h4>
+          setNewEpisodes(
+            <div>
+              <h4 id="episode-list-title">
+                Subscription Preview Panel
+              </h4>
               <div className="episode-list-container" height="50px">
-                {result.map(item => 
-                    <EpisodeComponent 
-                      podcastName={item.title} 
-                      episodeTitle={item.episode.title}
-                      podcastImage={item.image}
-                      podcastPid={item.pid}  
-                    />
+                {result.map(item =>
+                  <EpisodeComponent
+                    podcastName={item.title}
+                    episodeTitle={item.episode.title}
+                    podcastImage={item.image}
+                    podcastPid={item.pid}
+                  />
                 )}
               </div>
-        </div>);
-      setEpisodesReceived(true);
-    });
+            </div>);
+          setEpisodesReceived(true);
+        } catch (err) {
+          console.log("SubscriptionPanel.js:", err);
+          // do nothing
+        }
+    }});
+    results.catch(err => {
+      setNewEpisodes("Error retrieving podcasts");
+    })
   }
 
-  useEffect (() => {
+  useEffect(() => {
     if (isLoggedIn()) {
       console.log(`Logged in`);
       loadEpisodes();

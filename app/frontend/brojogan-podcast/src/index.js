@@ -1,7 +1,4 @@
-// import './App.scss';
 import 'bootstrap/dist/css/bootstrap.css';
-
-//import 'maxcdn.bootstrapcdn.com/bootstrap3.3.7/css/bootstrap.min.css'
 
 import React from 'react';
 import ReactDOM from 'react-dom';

@@ -7,32 +7,13 @@ import { fetchAPI } from './../authFunctions';
 import PagesFetch from './../components/PagesFetch';
 import { getPodcastFromXML } from './../rss';
 
-import { API_URL } from './../constants';
 import './../css/History.css';
 
-// this is used in multiple pages, should extract to other file
-// async function getRSS(id, signal) {
-//   let resp, data;
-//   try {
-//     resp = await fetch(`${API_URL}/podcasts/${id}`, { signal });
-//     data = await resp.json();
-//   } catch {
-//     throw Error("Network error");
-//   }
-//   if (resp.status === 200) {
-//     // console.log(data.xml);
-//     return data.xml;
-//   } else if (resp.status === 404) {
-//     throw Error("Podcast does not exist");
-//   } else {
-//     throw Error("Error in retrieving podcast");
-//   }
-// }
-
 function History() {
+  // it is up to PagesFetch to do the try catch for fetchItems()
   async function fetchItems(pgNum, signal) {
     const pageSize = 12;
-    const data = await fetchAPI(`/self/history/${pgNum}?limit=${pageSize}`, 'get', null, signal);
+    const data = await fetchAPI(`/users/self/history/${pgNum}?limit=${pageSize}`, 'get', null, signal);
     console.log("History data:", data);
     console.log(data.numPages);
     if (pgNum === 1) {
@@ -40,14 +21,6 @@ function History() {
     } else {
       return { items: data.history };
     }
-
-    // const offset = (pgNum-1)*pageSize;
-    // const data = await fetchAPI(`/self/history?offset=${offset}&limit=${pageSize}`, 'get', null, signal);
-    // try {
-
-    // } catch (err) {
-    //   throw err;
-    // }
   }
 
   return (
@@ -64,7 +37,7 @@ function History() {
   )
 }
 
-// copied from description.js, move to other file
+// same as description.js, but may want to change the format
 function getDate(timestamp) {
   console.log(timestamp, typeof (timestamp));
   let date = new Date(timestamp);
@@ -76,12 +49,13 @@ function getDate(timestamp) {
 // but would have to communicate the state between the card and History function somehow
 function HistoryCard({ details }) {
   const [state, setState] = useState();
-  let controller = new AbortController();
+  // let controller = new AbortController();
 
   useEffect(() => {
+
     console.log(details);
-    controller.abort();
-    controller = new AbortController();
+    // controller.abort();
+    // controller = new AbortController();
     setState(null);
 
     const setCard = async () => {
@@ -106,22 +80,32 @@ function HistoryCard({ details }) {
             ? <p>{state.error}</p>
             :
             <React.Fragment>
-              <Link to={`/podcast/${details.pid}`}><p>{state.podcast.title}</p></Link>
-              <Link to={`/podcast/${details.pid}`}><img src={state.episode.image ? state.episode.image : state.podcast.image} alt={`${state.podcast.title}: ${state.episode.title} icon`} /></Link>
-              <p>{state.episode.title}</p>
-              <p>Listen Date: {getDate(details.listenDate * 1000)}</p>
-              <p>Progress: {details.timestamp} (for testing)</p>
-              <p>Episode duration: {state.episode.duration}</p>
+              {/* <Link to={`/podcast/${details.pid}`}><p>{state.podcast.title}</p></Link> */}
+              {/* <Link to={`/podcast/${details.pid}`}><img src={state.episode.image ? state.episode.image : state.podcast.image} alt={`${state.podcast.title}: ${state.episode.title} icon`} /></Link> */}
+              <div>
+                <Link to={`/podcast/${details.pid}`}>
+                  <img src={state.podcast.image ? state.podcast.image : state.episode.image} alt={`${state.podcast.title}: ${state.episode.title} icon`} />
+                </Link>
+                <div id="test">
+                  {getDate(details.listenDate * 1000)}
+                </div>
+              </div>
+              <p id="episode-title-history">{state.episode.title}</p>
+              {/* <p>Progress: {details.timestamp} (for testing)</p> */}
+              {/* <p>Episode duration: {state.episode.duration}</p> */}
               {/* Some kind of progress bar based on state.timestamp.
             Though it seems like the durations in the rss feeds are sometimes wrong */}
-              <ProgressBar max={state.episode.durationSeconds} now={details.timestamp /*|| 0*/} />
+              {state.episode.durationSeconds
+                ? <ProgressBar max={state.episode.durationSeconds} now={details.timestamp /*|| 0*/} />
+                : null
+              }
             </React.Fragment>
           )
           :
           null}
       </div>
 
-      {state
+      {/* {state
         ?
         (state.error
           ? <p>{state.error}</p>
@@ -137,7 +121,7 @@ function HistoryCard({ details }) {
             {state.podcast.title}
           </div>
         )
-        : null}
+        : null} */}
     </React.Fragment>
   );
 }

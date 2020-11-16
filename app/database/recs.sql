@@ -34,7 +34,7 @@ loop
         thumbnail = i.thumbnail;
         id:= i.id;
         select count(*) into subscribers from subscriptions where podcastid=i.id;
-        eps := array(select e.title from episodes e where podcastid=i.id limit 30);
+        eps := array(select e.title from episodes e where podcastid=i.id order by pubdate::timestamp desc limit 30);
         rating = i.rating;
         return next;
 end loop;
@@ -56,7 +56,7 @@ loop
         thumbnail = i.thumbnail;
         id:= i.podcastid;
         subscribers:= i.subscribers;
-        eps := array(select e.title from episodes e where podcastid=i.podcastid limit 30);
+        eps := array(select e.title from episodes e where podcastid=i.podcastid order by pubdate::timestamp DESC limit 30);
         rating = i.rating;
         return next;
     end loop;
@@ -75,13 +75,13 @@ for i in
 		where s.podcastid=pc.podcastid and pc.categoryid=c.id)
 	and p.id not in (select * from subs)
     and p.id not in (select * from rejected)
-	group by p.title, p.id, p.xml, r.rating order by count(p.id) desc limit 20
+	group by p.title, p.id, p.xml, r.rating order by count(p.id)
 loop
     title = i.title;
     thumbnail = i.thumbnail;
 	id:= i.id;
 	select count(*) into subscribers from subscriptions where podcastid=i.id;
-    eps := array(select e.title from episodes e where podcastid=i.id limit 30);
+    eps := array(select e.title from episodes e where podcastid=i.id order by pubdate::timestamp DESC limit 30);
     rating = i.rating;
 	return next;
 end loop;

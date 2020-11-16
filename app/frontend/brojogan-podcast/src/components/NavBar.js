@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import './../css/NavBar.css';
-import { NavLink, withRouter } from 'react-router-dom';
+import { NavLink } from 'react-router-dom'; // withRouter
 import { BiHomeAlt } from 'react-icons/bi';
 import { AiOutlineHistory } from 'react-icons/ai';
 import { FiThumbsUp } from 'react-icons/fi';
@@ -8,6 +7,7 @@ import { MdSubscriptions } from 'react-icons/md';
 import { BsInfoCircle } from 'react-icons/bs';
 import { GiHamburgerMenu } from 'react-icons/gi';
 import { isLoggedIn } from '../authFunctions';
+import './../css/NavBar.css';
 
 function NavBar() {
 

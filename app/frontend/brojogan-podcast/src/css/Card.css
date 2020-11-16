@@ -1,3 +1,33 @@
+#podcast-card-accordion .card-header {
+  background-color:  #2E2B3F;
+  cursor: pointer;
+  width: 100%;
+  height: 70px;
+  padding: 10px 10px 10px 10px;
+}
+
+.card-header .search-page-link {
+/* .card-header .subs-count { */
+  padding: 0.25rem 0.25rem;
+}
+
+/* #card { */
+#podcast-card-accordion .card {
+  border: 1px dotted #66D0EC;
+  border-radius: 10px;
+  margin-bottom: 10px;
+  width: 100%;
+}
+
+.accordion-toggle {
+  color: #06C170;
+  font-weight: bold;
+  font-style: italic;
+  background-color:  #2E2B3F;
+  border: none;
+  width: 100%;
+}
+
 .card button {
     /* display: inline-block; */
     /* border: 1px solid #535353;
@@ -11,7 +41,7 @@
     transition: background 250ms ease-in-out, transform 150ms ease;
 
     margin: 5px 0 5px 10px;
-    width: 90px;
+    min-width: 90px;
     height: 30px;
     background-color: #6E59D6; 
     border-radius: 50px;

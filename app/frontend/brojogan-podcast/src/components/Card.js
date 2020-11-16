@@ -17,7 +17,6 @@ import './../css/Card.css';
 function SubCard({ details: podcast, context }) {
   const [podcastObj, setPodcastObj] = useState(); // the entire parsed XML object, for passing to the Description page
   const [episodes, setEpisodes] = useState(); // episodes for displaying in this card
-  console.log("Podcast:", podcast);
   // podcast object must contain title, pid, rating, image, subscribers
 
   // when you do something like <Item props={state} />, when the state changes,
@@ -26,90 +25,58 @@ function SubCard({ details: podcast, context }) {
 
   // on component load: fetch episodes if they weren't provided to the component
   useEffect(() => {
-    // todo: so subscription endpoint returns title, author, description etc, we should use that?
 
     setEpisodes(null);
     const controller = new AbortController();
-    
-    if (context && context.chunkedEpisodes) { // for Recommendations - the x most recent episodes have been provided (and only their titles), no need to get and parse XML
-      // we don't have the full XML object, so don't set podcastObj
-      setEpisodes(podcast.episodes);
-      console.log("Chunked Episodes podcast:", podcast);
-    } else {
-      // if (!podcast.episodes || podcast.episodes.length === 0) {
 
-      // request is cancellable so when page changes to podB while podA is still fetching, 
-      // podcastObj doesn't get to set to null and then set to podA when the response returns
+    if (context && context.chunkedEpisodes) { 
+      // for Recommendations - the x most recent episodes have been provided (and only their titles), no need to get and parse XML
+      // but since we don't have the full XML object, we don't set podcastObj
+      setEpisodes(podcast.episodes);
+    } else {
       // get xml
       fetchAPI(`/podcasts/${podcast.pid}`, 'get', null, controller.signal)
         .then(data => {
-          console.log(data);
-          if (!data.xml) {
+          if (!data.xml) { // there is an issue with podcast's xml, the server returned xml=null
             setEpisodes(null);
-            setPodcastObj({podcast: null, subscription: data.subscription, rating: data.rating});
+            setPodcastObj({ podcast: null, subscription: data.subscription, rating: data.rating });
           } else {
-            const pod = getPodcastFromXML(data.xml);
-            setEpisodes(pod.episodes);
-            setPodcastObj({podcast: pod, subscription: data.subscription, rating: data.rating});
+            try {
+              const pod = getPodcastFromXML(data.xml);
+              setEpisodes(pod.episodes);
+              setPodcastObj({ podcast: pod, subscription: data.subscription, rating: data.rating });
+            } catch (err) {
+              console.log("Card.js: getPodcastFromXML() errored:", err);
+              setEpisodes(null);
+              setPodcastObj({ podcast: null, subscription: data.subscription, rating: data.rating });
+            }
             // change subscription to subscribed. subscribed: true/false
           }
         })
         .catch(error => {
-          console.log(`Error is ${error}`);
+          console.log(`Card.js fetchAPI failed: Error is ${error}`);
           displayError(error);
         })
     }
-    // this was being used for recommendations
-    /*else { // the xml has already been parsed and episodes are available
-      console.log("podcast PREPARSED:", podcast);
-      setPodcastObj({ podcast: podcast });
-    }*/
 
     return function cleanup() {
       controller.abort();
+      // Abort request so when page changes to podB while podA is still fetching, 
+      // podcastObj doesn't get to set to null and then set to podA when the response returns
       console.log("cleanup card");
     }
 
     // fetch for aborting 
     // https://medium.com/javascript-in-plain-english/an-absolute-guide-to-javascript-http-requests-44c685edfa51
-  
-    // const fetchEpisodes = async () => {
-    //   try {
-    //     console.log(context && context.subscribeButton);
-    //     // request is cancellable so when page changes to podB while podA is still fetching, 
-    //     // podcastObj doesn't get to set to null and then set to podA when the response returns
-    //     // get xml
-    //     const data = await fetchAPI(`/podcasts/${podcast.pid}`, 'get', null, controller.signal);
-    //     console.log(data);
-    //     if (!data.xml) {
-    //       // setPodcastObj({ podcast: null, subscription: data.subscription, rating: data.rating});
-    //       setEpisodes(null);
-    //     } else {
-    //       const pod = getPodcastFromXML(data.xml);
-    //       setEpisodes(pod.episodes);
-    //       // setPodcastObj({ podcast: pod, subscription: data.subscription, rating: data.rating });
-    //       // podcastObj.subscription was being set but I don't know why, it's not used
-    //       // console.log(`Episodes for ${podcast.pid}`);
-    //     }
-    //   } catch (error) {
-    //     console.log(`Error is ${error}`);
-    //     displayError(error);
-    //   }
-    // };
-  
   }, [podcast, context]);
 
   function displayError(msg) {
     console.log('Error loading episodes');
   }
 
-  // function getEpisodeNumber(index) {
-  //   return podcastObj.podcast.episodes.length - index;
-  // }
-  
   function getEpisodeAppendage(index, chunkedEpisodes) {
     if (chunkedEpisodes) {
-      const episodeNum = index+1;
+      const episodeNum = index + 1;
       return `episodeRecent=${episodeNum}`;
     } else {
       const episodeNum = episodes.length - index;
@@ -117,15 +84,17 @@ function SubCard({ details: podcast, context }) {
     }
   }
 
+  // Accordion is a set of cards which can be expanded one at a time by clicking on the header
+  // As card is placed within other JSX, the outside of the Accordion is in the container file ie PodcastCards
   return (
-    <Card /*id="card"*/> {/* multiple elements with same id. has class card by default */}
+    <Card className="card"> {/* has class card by default */}
       <Card.Header className="card-header">
         <Accordion.Toggle className={'accordion-toggle'} as={Card.Header} variant="link" eventKey={podcast.pid}>
           <div className='card-header-div'>
             {/* <img src={(podcastObj && podcastObj.podcast) ? podcastObj.podcast.image : 'https://i.pinimg.com/originals/92/63/04/926304843ea8e8b9bc22c52c755ec34f.gif'} alt={`${podcast.title} icon`} /> */}
             {/* Random loading gif from google, totally dodge */}
-            {/* <img src={podcast.image} alt={`${podcast.title} icon`} /> */} { /* the alt is too log, wraps to next line and screws up the whole component */}
-            <img src={podcast.thumbnail} />
+            { /* the alt is too log, wraps to next line and screws up the whole component */}
+            <img src={podcast.thumbnail} alt=''/> {/* Empty alt for linter */}
             <Link className={'search-page-link'} to={{ pathname: `/podcast/${podcast.pid}`, state: { podcastObj: podcastObj } }}>
               {podcast.title}
             </Link>
@@ -155,6 +124,7 @@ function SubCard({ details: podcast, context }) {
           </div>
         </Accordion.Toggle>
       </Card.Header>
+      
       <Accordion.Collapse className={'accordion-collapse'} eventKey={podcast.pid}>
         <Card.Body className={'card-body'} eventKey={podcast.pid}>
           <div>

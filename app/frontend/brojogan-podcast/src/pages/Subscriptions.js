@@ -6,14 +6,18 @@ import './../css/SearchPage.css';
 
 function Subscriptions() {
   const [podcasts, setPodcasts] = useState();
+  const [error, setError] = useState();
 
   useEffect(() => {
     setPodcasts();
-    fetchAPI(`/self/subscriptions`,'get',null)
+    fetchAPI(`/users/self/subscriptions`,'get',null)
       .then(podcasts => {
           setPodcasts(podcasts);
         }
-      );
+      )
+      .catch((err) => {
+        setError("Error retrieving subscriptions");
+      });
   }, []);
 
   return (
@@ -30,10 +34,13 @@ function Subscriptions() {
               podcasts={podcasts}
               options={{subscribeButton: true}}
             />)
-        } else if (podcasts) {
+        } else if (podcasts) { // podcasts has been set, but it is empty
           return "You aren't subscribed to any podcasts.";
+
+        } else if (error) {
+          return "Error retrieving subscriptions";
         } else {
-          return "Loading...";
+          return <h4>Loading...</h4>;
         }
       })()}
     </div>

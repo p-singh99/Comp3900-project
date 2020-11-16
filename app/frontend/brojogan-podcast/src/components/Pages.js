@@ -19,7 +19,7 @@ function Pages({ itemDetails, context, itemsPerPage, Item, showItemIndex }) {
   // run once on page load. Create pages array and if showItemIndex is set, set the starting page number and position
   // showItemIndex must be the index of the item you want to show in itemDetails
   useEffect(() => {
-    console.log(itemDetails);
+    console.log("Pages itemDetails:", itemDetails);
     console.log(itemsPerPage);
     console.log("showItemIndex:", showItemIndex);
 
@@ -53,8 +53,7 @@ function Pages({ itemDetails, context, itemsPerPage, Item, showItemIndex }) {
     }
     console.assert(numPages === (pgIndex === 0 ? pgNum - 1 : pgNum));
     setPageState({ pages: pages, lastPage: numPages, pageNum: startingPageNum, scrollIndex: startingScroll });
-  }, []);
-  // itemDetails, itemsPerPage, context, Item, showItemIndex 
+  }, [ itemDetails, itemsPerPage, context, Item, showItemIndex ]);
 
   function pageChanged(event) {
     console.log(event.target);
@@ -121,7 +120,7 @@ function Pages({ itemDetails, context, itemsPerPage, Item, showItemIndex }) {
       <React.Fragment>
         <div ref={startRef} className="pages"></div> { /* empty div to scroll to top without affecting child selectors */}
         {pages[pageNum].map((item, index) => {
-          // this onLoad scrolling doesn't work
+          // onLoad scrolling doesn't work
           if (scrollIndex === index) {
             console.log("scrollIndex matches:", scrollIndex, index);
             return <Item details={item} context={context} id="scroll-item" />

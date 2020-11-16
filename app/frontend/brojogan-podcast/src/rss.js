@@ -1,4 +1,4 @@
-// https://podcastfeeds.nbcnews.com/nbc-nightly-news
+// Example podcast: https://podcastfeeds.nbcnews.com/nbc-nightly-news
 
 // function Podcast() {
 //   // set elements which do not require values
@@ -19,6 +19,7 @@ function verifyPodcast(podcast) {
 }
 // todo handle dodgy feeds
 
+// wrap this in a try catch always...
 export function getPodcastFromXML(xmlText) {
   const parser = new DOMParser();
   const xml = parser.parseFromString(xmlText, "text/xml");
@@ -65,7 +66,7 @@ function getDetailsFromChannel(channel) {
               // maybe convert?
               break;
           case "itunes:category":
-              // do
+              // todo
               break;
           case "itunes:explicit": podcast["explicit"] = getExplicitBool(node); break;
           case "itunes:keywords": podcast["keywords"] = node.textContent.split(","); break;
@@ -138,7 +139,6 @@ for (let item of episodeNodes) {
                     // assuming that duration is in hh:mm:ss form
                     episode["duration"] = node.textContent;
                     const smh = episode["duration"].split(":").map(x => parseInt(x, 10)).reverse();
-                    // console.log("SMH TRANSLATION:", smh);
                     let seconds = 0;
                     for (let i in smh) {
                       seconds += smh[i]*(60**i);

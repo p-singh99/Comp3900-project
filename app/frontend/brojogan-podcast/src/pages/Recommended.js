@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import ReactDOM from 'react-dom';
 import { Helmet } from 'react-helmet';
 import { isLoggedIn, fetchAPI } from '../authFunctions';
 import PodcastCards from '../components/PodcastCards';
-import { getPodcastFromXML } from '../rss';
 
 // for Recommended, the backend returns a list of podcasts
 // Each podcast has title, id, image, subscribers, rating and a list of the titles of the last 30 episodes
@@ -14,15 +12,13 @@ import { getPodcastFromXML } from '../rss';
 // this makes the Recommended page display faster but the transition from Recommended to Description page is slower
 // Recommended uses PodcastCards. PodcastCards uses Pages, and passes it Item=Subcard. Pages instantiates lots of SubCards (Card.js).
 function Recommended() {
-  let [body, setBody] = useState(<h2>Loading...</h2>);
+  let [body, setBody] = useState(<h4>Loading...</h4>);
 
   const setupPodcasts = () => {
-    let result = fetchAPI('/self/recommendations', 'get');
+    let result = fetchAPI('/users/self/recommendations', 'get');
     result.then(data => {
       let podcasts = [];
-      console.log(`Result is: ${JSON.stringify(data)}`);
       const recommendations = data.recommendations;
-      console.log("Recommended.js podcasts.recommendations:", data.recommendations);
       for (let p of recommendations) {
         const episodes = p.eps.map(episodeTitle => ({title: episodeTitle}));
         console.log("mapped episodes:", episodes);
@@ -30,13 +26,15 @@ function Recommended() {
         // emulate the format of a podcast obj that Card.js expects, but with only the parts that it actually needs
         podcasts.push({title: p.title, pid: p.id, episodes: episodes, thumbnail: p.thumbnail, subscribers: p.subs, rating: p.rating});
       }
-      console.log("Recommended end of for loop podcasts:", podcasts)
       setBody(<PodcastCards
         heading={'Recommendations'}
         podcasts={podcasts}
         options={{chunkedEpisodes: true}}
       />);
-    })
+    });
+    result.catch(err => {
+      setBody(<h2>Error retrieving recommendations</h2>);
+    });
   }
 
   useEffect(() => {
