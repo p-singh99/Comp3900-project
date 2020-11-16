@@ -49,8 +49,6 @@ export default class Footer extends React.Component {
         console.log("error in playback");
         console.log(err);
       }
-    } else {
-      console.log("not logged in");
     }
   }
 
