@@ -12,8 +12,9 @@ import SubscribeBtn from '../components/SubscribeBtn';
 // import GetAppIcon from '@material-ui/icons/GetApp';
 // import {Icon} from '@material-ui/icons';
 
-// !! what happens if the description is invalid html, will it break the whole page?
+// what happens if the description is invalid html, will it break the whole page?
 // eg the a tag doesn't close
+// the DOMParser parsing should fail, then sanitiseDescription will fail and it won't use the description's html
 
 // CORS bypass
 async function getRSS(id) {
@@ -43,7 +44,6 @@ function Description(props) {
   const [subscribeBtn, setSubscribeBtn] = useState("Subscribe");
   const [userRating, setUserRating] = useState(undefined);
   const [rating, setRating] = useState(null);
-  // const [pendingRating, setPendingRating] = useState(false);
 
   const setPlaying = props.setPlaying;
 
@@ -112,12 +112,11 @@ function Description(props) {
               times = first;
               rating = second;
             } else {
+              // we don't have the podcast object yet, need to fetch and parse xml
               const podcastDetails = first;
               console.log(podcastDetails);
               if (podcastDetails.xml) {
                 podcast = getPodcastFromXML(podcastDetails.xml);
-                // podcast.rating = podcastDetails.rating;
-
                 console.log("Parsed podcast:", podcast);
               } else {
                 podcast = { error: "Error loading podcast" };
@@ -128,9 +127,8 @@ function Description(props) {
               rating = third;
             }
 
-            // we might not have times since its only if we're logged in
+            // user's current time position in each episode - only for logged in users
             if (isLoggedIn()) {
-              // user's current time position in each episode
               console.log("times are: ");
               console.log(times);
               for (let time of times) {
@@ -180,13 +178,6 @@ function Description(props) {
     setPodcast({ error: msg.toString() });
   }
 
-  // function isEmptyObj(obj) {
-  //   for (const i in obj) {
-  //     return false;
-  //   }
-  //   return true;
-  // }
-
   async function ratingChanged(newRating) {
     const podcastID = window.location.pathname.split("/").pop();
     console.log("Rating changed:", newRating);
@@ -194,9 +185,10 @@ function Description(props) {
       await fetchAPI(`/self/ratings/${podcastID}`, 'put', { rating: newRating });
     } catch (err) {
       // show some kind of error
+      // todo
       console.log(err);
     }
-    // could cancel old requests when a new one is made but probably not woth it
+    // could cancel old requests when a new one is made but probably not woth it, it won't save any backend resources since the old request are already sent
   }
 
   // if numReversed, the the number is from most recent episode, in order with the episodes list
@@ -258,7 +250,6 @@ function Description(props) {
                   </React.Fragment>
                   : <div className="no-ratings">No ratings</div>
                 }
-                {/* {console.log("!pendingRating:", !pendingRating)} */}
                 {userRating || userRating === null // don't render until user's rating has been retrieved, so don't have to force re-render later
                   ?
                   <ReactStars classNames="choose-rating"
@@ -275,11 +266,6 @@ function Description(props) {
               {isLoggedIn()
                 ?
                 <SubscribeBtn defaultState={subscribeBtn} podcastID={window.location.pathname.split("/").pop()} />
-                // <form id="subscribe-form" onClick={() => handleClickRequest()}>
-                //   <div id="subscribe-btns">
-                //     <button id="subscribe-btn" type="button">{subscribeBtn}</button>
-                //   </div>
-                // </form>
                 : null}
               {getPodcastDescription(podcast)}
               {podcast.link && <h6><a href={podcast.link} target="_blank" rel="nofollow noopener noreferrer">Podcast website</a></h6>}
@@ -310,19 +296,8 @@ function Description(props) {
   );
 }
 
-function toggleDescription(event) {
-  if (event.target.tagName.toLowerCase() !== "button") {
-    const episode = event.target.closest(".episode"); // traverses element and its parents
-    // console.log(episode);
-    const description = episode.querySelector(".description");
-    // console.log(description);
-    description.classList.toggle("collapsed");
-    description.classList.toggle("expanded");
-    // maybe want to do this fancier using js not css
-  }
-}
-
 //------------------------------------------------------------------------------------
+// Episode component
 
 function getDate(timestamp) {
   let date = new Date(timestamp);
@@ -331,6 +306,7 @@ function getDate(timestamp) {
 }
 
 function downloadEpisode(event) {
+  event.stopPropagation();
   alert(event.target.getAttribute('eid'));
 }
 
@@ -345,20 +321,30 @@ function secondstoTime(seconds) {
 }
 
 function EpisodeDescription({ details: episode, context: { podcast, setPlaying, podcastId }, id }) {
-  let description;
-  // in case the sanitiser fails, don't use innerHTML
-  try {
-    description = <div className="description collapsed"> <p dangerouslySetInnerHTML={{ __html: sanitiseDescription(episode.description) }}></p><p><a href={episode.link} rel="nofollow noopener noreferrer" target="_blank">Episode website</a></p></div>;
-  } catch {
-    description = <div className="description collapsed"><p>{unTagDescription(episode.description)}</p><p><a href={episode.link} rel="nofollow noopener noreferrer" target="_blank">Episode website</a></p></div>;
+  const [expanded, setExpanded] = useState(false);
+
+  useEffect(() => {
+    console.log("Episode description useeffect");
+    setExpanded(false);
+  }, [episode, podcast, setPlaying, podcastId, id])
+
+  function toggleDescription() {
+    setExpanded(!expanded);
+  }
+
+  function getDescription(expanded) {
+    // in case the sanitiser fails, don't use innerHTML
+    try {
+      return <div className={`description ${expanded ? "expanded" : "collapsed"}`}><p dangerouslySetInnerHTML={{ __html: sanitiseDescription(episode.description) }}></p><p><a href={episode.link} rel="nofollow noopener noreferrer" target="_blank">Episode website</a></p></div>;
+    } catch {
+      return <div className={`description ${expanded ? "expanded" : "collapsed"}`}><p>{unTagDescription(episode.description)}</p><p><a href={episode.link} rel="nofollow noopener noreferrer" target="_blank">Episode website</a></p></div>;
+    }
   }
 
   // weird react bug that descriptions stay expanded after changing the page,
   // even though the entire episode div should be re-rendered with a completely new component...
   // I think it must be reacts Virtual DOM diff, it doesn't necessarily change classes I guess
   return (
-    // durationSeconds-5 because sometimes episode durations in the feed are too long
-    // <li className={episode.progress >= episode.durationSeconds - 5 ? "episode finished" : "episode"} id={id} onClick={toggleDescription}>
     <li className={episode.complete ? "episode finished" : "episode"} id={id} onClick={toggleDescription}>
       {/* make this flexbox or grid? */}
       {episode.durationSeconds && episode.progress > 0 &&
@@ -378,6 +364,7 @@ function EpisodeDescription({ details: episode, context: { podcast, setPlaying, 
           console.log(podcast);
           console.log("episode is");
           console.log(episode);
+          event.stopPropagation();
           setPlaying({
             title: episode.title,
             podcastTitle: podcast.title,
@@ -392,20 +379,19 @@ function EpisodeDescription({ details: episode, context: { podcast, setPlaying, 
         <button className="download" eid={episode.guid} onClick={downloadEpisode}>Download</button>
       </div>
       {/* guid won't always work because some of them will contain invalid characters I think ? */}
-      {description}
+      {getDescription(expanded)}
     </li>
   )
 }
 
+//---------------------------------------------------------------------
+// description sanitisation code
+
 // https://mathiasbynens.github.io/rel-noopener/
 // https://css-tricks.com/use-target_blank/
-// maybe use DOMPurify instead, and should try to add rel="nofollow" to links
-// also should set target = _blank on all links
-// could also do that in js - get all links and loop through setting the attributes
-// or could set base target = _blank, and then change it on the ones we control
+// maybe use DOMPurify instead
 // this doesn't really feel secure, this third party script could get bugs or be altered
 // should put the script in local folder
-// !!!!! need to add noopener noreffer to all links, this is a legit current vulnerability
 function sanitiseDescription(description) {
   // https://www.npmjs.com/package/xss
   // https://jsxss.com/en/options.
@@ -417,24 +403,12 @@ function sanitiseDescription(description) {
     // no return, it does default
   }
 
-  // const onIgnoreTagAttr = (tag, name, value, isWhiteAttr) => {
-  //   if (tag === 'a' && name === 'rel') {
-  //     return 'rel=nofollow'; // why does this work? Shouldn't I just return nofollow?
-  //   } else if (tag === 'a' && name === 'target') {
-  //     return 'target=_blank;'
-  //   }
-  //   // no return, it does default ie remove attibute
-  // }
-
   let options = {
     whiteList: {
       a: ['href'], // title
-      // p: [],
-      // strong: []
     },
     stripIgnoreTag: true,
     onTag: onTag,
-    // onIgnoreTagAttr: onIgnoreTagAttr
   };
   description = window.filterXSS(description, options);
 
@@ -452,17 +426,8 @@ function sanitiseDescription(description) {
       console.log("Blocked node:", node);
       throw Error("Sanitisation failed");
     }
-    // if (!["a", "br"].includes(node.nodeName.toLowerCase())) {
-    //   console.log("Blocked node:", node);
-    //   throw Error("Failed sanitisation");
-    // }
+    return dom.querySelector("body").innerHTML;
   }
-  // for (const node of dom.querySelectorAll("a")) {
-  //   node.setAttribute("target", "_blank");
-  //   node.setAttribute("rel", "nofollow noopener noreferrer");
-  // }
-  return dom.querySelector("body").innerHTML;
-  // return description;
 }
 
 // https://stackoverflow.com/questions/1912501/unescape-html-entities-in-javascript
@@ -478,6 +443,5 @@ function unTagDescription(description) {
   description = htmlDecode(description);
   return description;
 }
-
 
 export default Description;

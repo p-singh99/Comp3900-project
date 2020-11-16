@@ -188,7 +188,7 @@ class Podcasts(Resource):
 			description = p[3]
 			pID = p[4]
 			thumbnail = p[5]
-			rating = p[6]
+			rating = f"{p[6]:.1f}"
 			results.append({"subscribers" : subscribers, "title" : title, "author" : author, "description" : description, "pid" : pID, "thumbnail" : thumbnail, "rating" : rating})
 		for c in categories:
 			results.append({"subscribers" : c[4], "title" : c[1], "author" : c[2], "description" : c[3], "pid" : c[0], "thumbnail" : c[5], "rating" : c[6]})
