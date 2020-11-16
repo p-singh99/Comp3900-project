@@ -51,12 +51,11 @@ function Pages({ itemDetails, context, itemsPerPage, Item, showItemIndex }) {
         pgIndex = -1;
       }
     }
-    console.assert(numPages === (pgIndex === 0 ? pgNum - 1 : pgNum));
+    // console.assert(numPages === (pgIndex === 0 ? pgNum - 1 : pgNum));
     setPageState({ pages: pages, lastPage: numPages, pageNum: startingPageNum, scrollIndex: startingScroll });
   }, [ itemDetails, itemsPerPage, context, Item, showItemIndex ]);
 
   function pageChanged(event) {
-    console.log(event.target);
     // React-Bootstrap Pagination is actually pretty bad and makes it awkward to respond to Previous or Next button clicks
     // Maybe should use a different library
     // checking parent as well because if you click directly on the arrow, the event comes on a span, child of the <a>
@@ -69,7 +68,6 @@ function Pages({ itemDetails, context, itemsPerPage, Item, showItemIndex }) {
       pageNum = parseInt(event.target.text, 10);
     }
     if (pageNum) {
-      console.log({ ...pageState, pageNum: pageNum, scrollIndex: null });
       setPageState({ ...pageState, pageNum: pageNum, scrollIndex: null });
       startRef.current.scrollIntoView({ behavior: 'smooth' });
       // this only works sometimes in Firefox...
@@ -78,17 +76,12 @@ function Pages({ itemDetails, context, itemsPerPage, Item, showItemIndex }) {
 
   // runs on page change. update displayed pages and page numbers.
   useEffect(() => {
-    console.log('pageState useeffect');
-    console.log(pageState);
     if (!pageState) {
       return;
     }
+    // there needs to be a way to make big jumps to the middle when there are a lot of pages
 
     const { pages, lastPage, pageNum, scrollIndex } = pageState;
-    console.log(pages);
-    console.log(pageNum);
-
-    // there needs to be a way to make big jumps to the middle when there are a lot of pages
     let paginationMiddleItems;
     if (lastPage <= 7) {
       let pages = [2, 3, 4, 5, 6].filter(x => x < lastPage);
