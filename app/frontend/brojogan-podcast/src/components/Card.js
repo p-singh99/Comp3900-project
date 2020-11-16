@@ -78,31 +78,6 @@ function SubCard({ details: podcast, context }) {
 
     // fetch for aborting 
     // https://medium.com/javascript-in-plain-english/an-absolute-guide-to-javascript-http-requests-44c685edfa51
-
-    // const fetchEpisodes = async () => {
-    //   try {
-    //     console.log(context && context.subscribeButton);
-    //     // request is cancellable so when page changes to podB while podA is still fetching, 
-    //     // podcastObj doesn't get to set to null and then set to podA when the response returns
-    //     // get xml
-    //     const data = await fetchAPI(`/podcasts/${podcast.pid}`, 'get', null, controller.signal);
-    //     console.log(data);
-    //     if (!data.xml) {
-    //       // setPodcastObj({ podcast: null, subscription: data.subscription, rating: data.rating});
-    //       setEpisodes(null);
-    //     } else {
-    //       const pod = getPodcastFromXML(data.xml);
-    //       setEpisodes(pod.episodes);
-    //       // setPodcastObj({ podcast: pod, subscription: data.subscription, rating: data.rating });
-    //       // podcastObj.subscription was being set but I don't know why, it's not used
-    //       // console.log(`Episodes for ${podcast.pid}`);
-    //     }
-    //   } catch (error) {
-    //     console.log(`Error is ${error}`);
-    //     displayError(error);
-    //   }
-    // };
-
   }, [podcast, context]);
 
   function displayError(msg) {
@@ -123,8 +98,10 @@ function SubCard({ details: podcast, context }) {
     }
   }
 
+  // Accordion is a set of cards which can be expanded one at a time by clicking on the header
+  // As card is placed within other JSX, the outside of the Accordion is in the container file ie PodcastCards
   return (
-    <Card /*id="card"*/> {/* multiple elements with same id. has class card by default */}
+    <Card className="card"> {/* has class card by default */}
       <Card.Header className="card-header">
         <Accordion.Toggle className={'accordion-toggle'} as={Card.Header} variant="link" eventKey={podcast.pid}>
           <div className='card-header-div'>
@@ -161,6 +138,7 @@ function SubCard({ details: podcast, context }) {
           </div>
         </Accordion.Toggle>
       </Card.Header>
+      
       <Accordion.Collapse className={'accordion-collapse'} eventKey={podcast.pid}>
         <Card.Body className={'card-body'} eventKey={podcast.pid}>
           <div>
@@ -194,3 +172,28 @@ function SubCard({ details: podcast, context }) {
 }
 
 export default SubCard;
+
+
+    // const fetchEpisodes = async () => {
+    //   try {
+    //     console.log(context && context.subscribeButton);
+    //     // request is cancellable so when page changes to podB while podA is still fetching, 
+    //     // podcastObj doesn't get to set to null and then set to podA when the response returns
+    //     // get xml
+    //     const data = await fetchAPI(`/podcasts/${podcast.pid}`, 'get', null, controller.signal);
+    //     console.log(data);
+    //     if (!data.xml) {
+    //       // setPodcastObj({ podcast: null, subscription: data.subscription, rating: data.rating});
+    //       setEpisodes(null);
+    //     } else {
+    //       const pod = getPodcastFromXML(data.xml);
+    //       setEpisodes(pod.episodes);
+    //       // setPodcastObj({ podcast: pod, subscription: data.subscription, rating: data.rating });
+    //       // podcastObj.subscription was being set but I don't know why, it's not used
+    //       // console.log(`Episodes for ${podcast.pid}`);
+    //     }
+    //   } catch (error) {
+    //     console.log(`Error is ${error}`);
+    //     displayError(error);
+    //   }
+    // };

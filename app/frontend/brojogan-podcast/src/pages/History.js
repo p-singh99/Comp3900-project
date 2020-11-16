@@ -10,6 +10,7 @@ import { getPodcastFromXML } from './../rss';
 import './../css/History.css';
 
 function History() {
+  // it is up to PagesFetch to do the try catch
   async function fetchItems(pgNum, signal) {
     const pageSize = 12;
     const data = await fetchAPI(`/users/self/history/${pgNum}?limit=${pageSize}`, 'get', null, signal);
@@ -20,14 +21,6 @@ function History() {
     } else {
       return { items: data.history };
     }
-
-    // const offset = (pgNum-1)*pageSize;
-    // const data = await fetchAPI(`/self/history?offset=${offset}&limit=${pageSize}`, 'get', null, signal);
-    // try {
-
-    // } catch (err) {
-    //   throw err;
-    // }
   }
 
   return (
@@ -44,7 +37,7 @@ function History() {
   )
 }
 
-// copied from description.js, move to other file
+// same as description.js, but may want to change the format
 function getDate(timestamp) {
   console.log(timestamp, typeof (timestamp));
   let date = new Date(timestamp);
@@ -56,12 +49,12 @@ function getDate(timestamp) {
 // but would have to communicate the state between the card and History function somehow
 function HistoryCard({ details }) {
   const [state, setState] = useState();
-  let controller = new AbortController();
+  // let controller = new AbortController();
 
   useEffect(() => {
     console.log(details);
-    controller.abort();
-    controller = new AbortController();
+    // controller.abort();
+    // controller = new AbortController();
     setState(null);
 
     const setCard = async () => {

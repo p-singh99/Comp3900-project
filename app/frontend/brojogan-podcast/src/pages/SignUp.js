@@ -30,7 +30,7 @@ function displaySignupErrors(errors) {
 function SignUp() {
   const history = useHistory();
 
-  const [usernameHelpStatus, setUsernameStatus] = useState(false);
+  const [usernameHelpStatus, setUsernameStatus] = useState(false); // whether or not to display username help information
   const [passwordHelpStatus, setPasswordStatus] = useState(false);
   const [pendingRequest, setPendingRequest] = useState(false); // used to prevent multiple in-air requests when button is repeatedly clicked.
 
@@ -77,7 +77,7 @@ function SignUp() {
     }
   }
 
-  // display/hide username help and password help displays
+  // display/hide username help and password help information
   useEffect(() => {
     // Check if user clicked help for password field
     if (usernameHelpStatus === false) {
