@@ -51,6 +51,7 @@ export function checkLogin() {
 // give endpoint as eg /podcasts/4
 // sends json. provide body as js object
 // signal: const controller = new AbortController(); fetchAPI(..., controller.signal); controller.abort()
+// this needs try catch around it
 export async function fetchAPI(endpoint, method='get', body=null, signal=null) {
   console.log("fetchAPI:", endpoint);
   let resp, data;

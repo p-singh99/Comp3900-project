@@ -6,6 +6,7 @@ import './../css/SearchPage.css';
 
 function Subscriptions() {
   const [podcasts, setPodcasts] = useState();
+  const [error, setError] = useState();
 
   useEffect(() => {
     setPodcasts();
@@ -13,7 +14,10 @@ function Subscriptions() {
       .then(podcasts => {
           setPodcasts(podcasts);
         }
-      );
+      )
+      .catch((err) => {
+        setError("Error retrieving subscriptions");
+      });
   }, []);
 
   return (
@@ -30,9 +34,11 @@ function Subscriptions() {
               podcasts={podcasts}
               options={{subscribeButton: true}}
             />)
-        } else if (podcasts) {
+        } else if (podcasts) { // podcasts has been set, but it is empty
           return "You aren't subscribed to any podcasts.";
-        } else {
+        } else if (error) {
+          return "Error retrieving subscriptions";
+        } else { // podcasts is still the original null
           return "Loading...";
         }
       })()}

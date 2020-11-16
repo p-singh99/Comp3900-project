@@ -1,6 +1,8 @@
 import React, {useState, useEffect} from 'react';
 import { fetchAPI } from './../authFunctions';
 
+// Used on Description and Subscriptions pages
+// This component does not include styling, only the logic
 function SubscribeBtn({ defaultState, podcastID }) {
     const [subscribeBtn, setSubscribeBtn] = useState(defaultState);
 

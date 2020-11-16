@@ -29,14 +29,15 @@ function SubCard({ details: podcast, context }) {
     setEpisodes(null);
     const controller = new AbortController();
 
-    if (context && context.chunkedEpisodes) { // for Recommendations - the x most recent episodes have been provided (and only their titles), no need to get and parse XML
-      // we don't have the full XML object, so don't set podcastObj
+    if (context && context.chunkedEpisodes) { 
+      // for Recommendations - the x most recent episodes have been provided (and only their titles), no need to get and parse XML
+      // but since we don't have the full XML object, we don't set podcastObj
       setEpisodes(podcast.episodes);
     } else {
       // get xml
       fetchAPI(`/podcasts/${podcast.pid}`, 'get', null, controller.signal)
         .then(data => {
-          if (!data.xml) {
+          if (!data.xml) { // there is an issue with podcast's xml, the server returned xml=null
             setEpisodes(null);
             setPodcastObj({ podcast: null, subscription: data.subscription, rating: data.rating });
           } else {

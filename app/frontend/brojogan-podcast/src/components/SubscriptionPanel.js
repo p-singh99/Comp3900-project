@@ -50,6 +50,9 @@ function SubscriptionPanel() {
           // do nothing
         }
     }});
+    results.catch(err => {
+      setNewEpisodes("Error retrieving podcasts");
+    })
   }
 
   useEffect(() => {

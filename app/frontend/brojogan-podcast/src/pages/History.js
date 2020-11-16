@@ -10,7 +10,7 @@ import { getPodcastFromXML } from './../rss';
 import './../css/History.css';
 
 function History() {
-  // it is up to PagesFetch to do the try catch
+  // it is up to PagesFetch to do the try catch for fetchItems()
   async function fetchItems(pgNum, signal) {
     const pageSize = 12;
     const data = await fetchAPI(`/users/self/history/${pgNum}?limit=${pageSize}`, 'get', null, signal);
