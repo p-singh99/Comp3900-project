@@ -416,6 +416,7 @@ function sanitiseDescription(description) {
       console.log("Blocked node:", node);
       throw Error("Sanitisation failed");
     }
+  }
   return dom.querySelector("body").innerHTML;
   // return description;
 }
