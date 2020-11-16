@@ -6,7 +6,7 @@ import DropDownMenu from './../components/DropDownMenu';
 import { logoutHandler, isLoggedIn, getUsername } from './../authFunctions';
 import { useHistory } from 'react-router-dom';
 import Notifications from './../components/Notifications';
-//import Search from './../components/Search.js';
+// import Search from './../components/Search.js';
 // import Search from './../components/SearchPage.js';
 // import notifications from './../images/notifications.png';
 // import settings from './../images/settings.png';

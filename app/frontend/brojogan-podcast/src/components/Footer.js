@@ -32,6 +32,8 @@ export default class Footer extends React.Component {
     this.pingServer = this.pingServer.bind(this);
   }
 
+  // Send server the progress of the episode mp3
+  // Also sends duration so that backend can track when play has finished
   pingServer(progress, duration) {
     if (isLoggedIn()) {
       if (isNaN(duration)) {

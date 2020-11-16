@@ -1,309 +1,22 @@
 from flask import Flask, jsonify, request, make_response
 from flask_restful import Api, Resource, reqparse
 from flask_cors import CORS, cross_origin
-import psycopg2
-from psycopg2 import pool
-import jwt
-import bcrypt
-import datetime
-from functools import wraps
-import requests
-import feedparser
-import urllib.parse
-import re
 from SemaThreadPool import SemaThreadPool
-import math
-from rss import update_rss
-import threading
-import dbfunctions as df
+import dbfunctions
 
 app = Flask(__name__)
 api = Api(app)
 CORS(app)
+api.init_app(app)
+import os
 
-# In production, we would use a real, locally randomly generated secret key in an environment variable
-app.config['SECRET_KEY'] = 'secret_key'
+conn_pool = None
+if os.environ.get("BROJOGAN_USE_LOCAL") == "1":
+    conn_pool = SemaThreadPool(1,50,dbname="ultracast")
+else:
+    conn_pool = SemaThreadPool(1, 50,\
+             dbname="ultracast", user="brojogan", password="GbB8j6Op", host="polybius.bowdens.me", port=5432)
 
-def create_token(user_id):
-	token = jwt.encode({'user' : user_id, 'exp' : datetime.datetime.utcnow() + datetime.timedelta(hours=24)}, app.config['SECRET_KEY'])
-	return token.decode('UTF-8')
-
-def token_required(f):
-	@wraps(f)
-	def decorated(*args, **kwargs):
-		token = request.headers.get('token')
-		if not token:
-			return {'error' : 'token is missing'}, 401
-		try:
-			# fails if token format is invalid or timstamp expired
-			data = jwt.decode(token, app.config['SECRET_KEY'])
-		except:
-			return {'error' : 'token is invalid'}, 401
-		return f(*args, **kwargs)
-	return decorated
-
-def get_user_id(cur):
-	token = request.headers.get('token')
-	if token:
-		try:
-			data = jwt.decode(token, app.config['SECRET_KEY'])
-			#cur.execute("SELECT id FROM users WHERE username =%s or email = %s", (data['user'], data['user']))
-		except:
-			return None
-		return data['user']
-	return None
-
-# class Unprotected(Resource):
-# 	def get(self):
-# 		return {'message': 'anyone'}, 200
-
-class Protected(Resource):
-	@token_required
-	def get(self):
-		return {'message': 'not anyone'}, 200
-
-class SubscriptionPanel(Resource):
-	def get(self):
-		conn,cur = df.get_conn()
-		uid = get_user_id(cur)
-		print(uid)
-		cur.execute("""SELECT p.title, p.xml, p.id
-		               FROM   podcasts p
-		               FULL OUTER JOIN   subscriptions s
-		               on s.podcastId = p.id
-		               WHERE  s.userID = %s;
-		            """, (uid,))
-		podcasts = cur.fetchall()
-		results = []
-		# s = re.search('<guid.*>(.*)</guid>', podcasts[3][1])
-		# print(s)
-		for p in podcasts:
-			# print(p[1])
-			search = re.search('<guid.*>(.*)</guid>', p[1])
-			print(search)
-			if search:
-				guid = search.group(1)
-				cur.execute("SELECT complete FROM Listens where episodeGuid =%s AND userId = %s;", (guid, uid))
-			title = p[0]
-			xml = p[1]
-			pid = p[2]
-			results.append({"title":title, "xml":xml, "pid":pid, "guid":guid})
-		df.close_conn(conn, cur)
-		return results, 200
-
-class Login(Resource):
-	def post(self):
-		username = request.form.get('username').lower()
-		password = request.form.get('password')
-		conn, cur = df.get_conn()
-		# Check if username exists
-		cur.execute("SELECT username, hashedpassword FROM users WHERE username=%s OR email=%s", (username, username))
-		res = cur.fetchone()
-		if res:
-			# get id for token authentication
-			cur.execute("select id from users where username=%s", (username,))
-			user_id = cur.fetchone()[0]
-			df.close_conn(conn, cur)
-			username = res[0].strip()
-			pw = res[1].strip()
-			pw = pw.encode('UTF-8')
-			password = request.form.get('password')
-			if bcrypt.checkpw(password.encode('UTF-8'), pw):
-				return {'token' : create_token(user_id), 'user': username}, 200
-		df.close_conn(conn, cur)
-		return {"error" : "Login Failed"}, 401
-
-
-class Users(Resource):
-	def post(self):
-		conn, cur = df.get_conn()
-		username = request.form.get('username').lower()
-		email = request.form.get('email').lower()
-		passw = request.form.get('password')
-		pw = passw.encode('UTF-8')
-		hashed = bcrypt.hashpw(pw, bcrypt.gensalt())
-		error = False
-		error_msg = []
-		# check if username exists in database
-		cur.execute("SELECT * FROM users WHERE username=%s",(username,))
-		if cur.fetchone():
-			error = True
-			error_msg.append("Username already exists")
-		# check if email exists in database
-		cur.execute("SELECT * FROM users WHERE email=%s", (email,))
-		if cur.fetchone():
-			error = True
-			error_msg.append("Email already exists")
-		if error:
-			cur.close()
-			return {"error": error_msg}, 409
-		cur.execute("insert into users (username, email, hashedpassword) values (%s, %s, %s)", (username, email, hashed.decode("UTF-8")))
-		conn.commit()
-		# get id for token authentication
-		cur.execute("select id from users where username=%s", (username,))
-		user_id = cur.fetchone()[0]
-		df.close_conn(conn, cur)
-		# return token
-		return {'token' : create_token(user_id), 'user': username}, 201
-
-
-class Podcasts(Resource):
-	def get(self):
-		# todo: try catch this
-		search = request.args.get('search_query')
-		if search is None:
-			return {"error": "Bad Request"}, 400
-		# todo: try catch this
-		conn, cur = df.get_conn()
-		# add search query to db
-		user_id = get_user_id(cur)
-		if user_id:
-			cur.execute("insert into searchqueries (userid, query, searchdate) values (%s, %s, %s)",(user_id, search, datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")))
-		conn.commit()
-		startNum = request.args.get('offset')
-		limitNum = request.args.get('limit')
-
-		cur.execute("""SELECT count(s.podcastid), v.title, v.author, v.description, v.id, v.thumbnail, rv.rating
-	     			FROM   searchvector v
-	     			FULL OUTER JOIN Subscriptions s ON s.podcastId = v.id
-		                LEFT JOIN ratingsview rv ON v.id = rv.id
-	     			WHERE  v.vector @@ plainto_tsquery(%s)
-	     			GROUP BY  (s.podcastid, v.title, v.author, v.description, v.id, v.vector, v.thumbnail, rv.rating)
-				ORDER BY  ts_rank(v.vector, plainto_tsquery(%s)) desc;
-				""",
-				(search,search))
-		podcasts = cur.fetchall()
-		cur.execute("""SELECT DISTINCT p.id, p.title, p.author, p.description, ps.count, p.thumbnail, rv.rating
-		               FROM   podcasts p
-		               LEFT JOIN podcastcategories t
-		                      ON t.podcastid = p.id
-		               LEFT JOIN categories c
-		                      ON t.categoryid = c.id
-		               LEFT JOIN podcastsubscribers ps
-		                      ON ps.id = p.id
-		               LEFT JOIN ratingsview rv
-		                      ON p.id = rv.id
-		               WHERE  to_tsvector(c.name) @@ plainto_tsquery(%s) and p.id not in (select podcastid from search(%s));
-		            """,
-		            (search,search))
-		categories = cur.fetchall()
-		results = []
-		for p in podcasts:
-			subscribers = p[0]
-			title = p[1]
-			author = p[2]
-			description = p[3]
-			pID = p[4]
-			thumbnail = p[5]
-			rating = f"{p[6]:.1f}"
-			results.append({"subscribers" : subscribers, "title" : title, "author" : author, "description" : description, "pid" : pID, "thumbnail" : thumbnail, "rating" : rating})
-		for c in categories:
-			results.append({"subscribers" : c[4], "title" : c[1], "author" : c[2], "description" : c[3], "pid" : c[0], "thumbnail" : c[5], "rating" : f"{c[6]:.1f}"})
-		df.close_conn(conn, cur)
-		return results, 200
-
-
-
-class Settings(Resource):
-	@token_required
-	def get(self):
-		conn, cur = df.get_conn()
-		user_id = get_user_id(cur)
-		cur.execute("SELECT email FROM users WHERE id=%s", (user_id,))
-		email = cur.fetchone()[0]
-		df.close_conn(conn, cur)
-		return {"email" : email}
-
-	@token_required
-	def put(self):
-		data = jwt.decode(request.headers['token'], app.config['SECRET_KEY'])
-		username = data['user']
-		conn, cur = df.get_conn()
-		#get arguments from json request body
-		parser = reqparse.RequestParser(bundle_errors=True)
-		parser.add_argument('oldpassword', type=str, required=True, help="Need old password", location="json")
-		parser.add_argument('newpassword', type=str, location="json")
-		parser.add_argument('newemail', type=str, location="json")
-		args = parser.parse_args()
-		hashedpassword = ""
-		# check current password
-		cur.execute("SELECT hashedpassword FROM users WHERE username=%s", (username))
-		old_pw = cur.fetchone()[0].strip()
-		if bcrypt.checkpw(args["oldpassword"].encode('UTF-8'), old_pw.encode('utf-8')):
-			if args["newpassword"]:
-				if args["oldpassword"] != args["newpassword"]:
-					# change password
-					password = args["newpassword"]
-					password = password.encode('UTF-8')
-					hashedpassword = bcrypt.hashpw(password, bcrypt.gensalt())
-			if args['newemail']:
-				# change email
-				cur.execute("SELECT email FROM users where email=%s", (args['newemail']))
-				if cur.fetchone():
-					cur.execute("SELECT email FROM users where email=%s and username=%s", (args['newemail'], data['user']))
-					if not cur.fetchone():
-						df.close_conn(conn, cur)
-						return {"error": "Email already exists"}, 400
-
-				cur.execute("UPDATE users SET email=%s WHERE username=%s OR email=%s", (args['newemail'], username, username))
-			if hashedpassword:
-				cur.execute("UPDATE users SET hashedpassword=%s WHERE username=%s OR email = %s", (hashedpassword.decode('UTF-8'), username, username))
-			conn.commit()
-			df.close_conn(conn, cur)
-			return {"data" : "success"}, 200
-		df.close_conn(conn,cur)
-		return {"error" : "wrong password"}, 400
-
-class Self(Resource):
-	@token_required
-	def delete(self):
-		conn, cur = df.get_conn()
-		user_id = get_user_id(cur)
-		parser = reqparse.RequestParser(bundle_errors=True)
-		parser.add_argument('password', type=str, required=True, help="Need old password", location="json")
-		args = parser.parse_args()
-		cur.execute("SELECT hashedpassword FROM users WHERE id=%s", (user_id,))
-		old_pw = cur.fetchone()[0].strip()
-		if bcrypt.checkpw(args["password"].encode('UTF-8'), old_pw.encode('utf-8')):
-			# delete from users
-			cur.execute("DELETE FROM users WHERE id=%s", (user_id,))
-			# delete all subscriptions
-			cur.execute("DELETE FROM subscriptions WHERE userId=%s", (user_id,))
-			# delete podcast account
-			cur.execute("DELETE FROM podcastratings WHERE userId=%s", (user_id,))
-			# delete episode ratings
-			cur.execute("DELETE FROM episoderatings WHERE userId=%s", (user_id,))
-			# delete listens
-			cur.execute("DELETE FROM listens WHERE userId=%s", (user_id,))
-			# delete seach queries
-			cur.execute("DELETE FROM searchqueries WHERE userId=%s", (user_id,))
-			# delete rejected recommendations
-			cur.execute("DELETE FROM rejectedrecommendations WHERE userId=%s", (user_id,))
-			conn.commit()
-			df.close_conn(conn,cur)
-			return {"data" : "account deleted"}, 200
-		else:
-			df.close_conn(conn,cur)
-			return {"error" : "wrong password"}, 400
-
-
-class Podcast(Resource):
-	def get(self, id):
-		conn, cur = df.get_conn()
-		uid = get_user_id(cur)
-		# uid = 'or 1=1#'
-		cur.execute("SELECT * FROM subscriptions WHERE userid = %s AND podcastid = %s;", (uid, id))
-		# print(cur.rowcount)
-		flag = False
-		if cur.rowcount != 0:
-			flag = True
-		cur.execute("SELECT xml, id, rssfeed FROM Podcasts WHERE id=(%s)", (id,))
-		res = cur.fetchone()
-		if res is None:
-			return {}, 404
-		xml = res[0]
-		id  = res[1]
-		rssfeed=res[2]
 
 		cur.execute("SELECT count(*) from subscriptions where podcastid=(%s)", (id,))
 		res = cur.fetchone()
@@ -658,8 +371,27 @@ class BestPodcasts(Resource):
 		print("finished")
 		df.close_conn(conn,cur)
 		return {"topSubbed": top_subbed, "topRated": top_rated}, 200
+app.config['SECRET_KEY'] = 'secret_key'
 
-# api.add_resource(Unprotected, "/unprotected")
+from resources.notification import Notification
+from resources.notifications import Notifications
+from resources.bestpodcasts import BestPodcasts
+from resources.history import History
+from resources.listens import Listens
+from resources.login import Login
+from resources.manylistens import ManyListens
+from resources.podcast import Podcast
+from resources.podcasts import Podcasts
+from resources.protected import Protected
+from resources.ratings import Ratings
+from resources.recommendations import Recommendations
+from resources.self import Self
+from resources.settings import Settings
+from resources.subscriptionpanel import SubscriptionPanel
+from resources.subscriptions import Subscriptions
+from resources.users import Users
+from resources.deletesubscription import DeleteSubscription
+
 # auth
 api.add_resource(Protected, "/protected")
 api.add_resource(Login, "/login")
@@ -675,14 +407,15 @@ api.add_resource(Settings, "/users/self/settings")
 api.add_resource(Self, "/users/self")
 api.add_resource(Recommendations, "/users/self/recommendations")
 api.add_resource(Subscriptions, "/users/self/subscriptions")
-api.add_resource(DeleteSubscription, "/users/self/subscriptions/<podcastId>")
 api.add_resource(SubscriptionPanel, "/users/self/subscription-panel")
 api.add_resource(History, "/users/self/history/<int:id>")
 api.add_resource(Notifications, "/users/self/notifications")
+api.add_resource(DeleteSubscription, "/users/self/subscriptions/<podcastId>")
 api.add_resource(Notification, "/users/self/notification/<int:notificationId>")
 api.add_resource(Listens, "/users/self/podcasts/<int:podcastId>/episodes/time")
 api.add_resource(ManyListens, "/users/self/podcasts/<int:podcastId>/time")
 api.add_resource(Ratings, "/users/self/ratings/<int:id>")
+#api.init_app(app)
 
 if __name__ == '__main__':
 	app.run(debug=True)
