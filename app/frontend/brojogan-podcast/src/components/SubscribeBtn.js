@@ -5,9 +5,8 @@ function SubscribeBtn({ defaultState, podcastID }) {
     const [subscribeBtn, setSubscribeBtn] = useState(defaultState);
 
     // should like track if a subscribe/unscubscribe request is already in the air before sending another
+    // for subscribe button
     function subscribeHandler(podcastID) {
-        console.log("entered into subhandler");
-        console.log(podcastID);
         let body = {};
         body.podcastid = podcastID;
         setSubscribeBtn("...");
@@ -15,21 +14,27 @@ function SubscribeBtn({ defaultState, podcastID }) {
             .then(data => {
                 setSubscribeBtn("Unsubscribe");
             })
+            .catch(err => {
+                setSubscribeBtn("Error");
+                console.log(err);
+            });
     }
 
-    // unsubscription button
+    // for unsubscribe button
     function unSubscribeHandler(podcastId) {
-        console.log("entered into Unsubhandler");
-        console.log(podcastID);
         setSubscribeBtn("...");
         fetchAPI(`/users/self/subscriptions/${podcastId}`, 'delete', null)
             .then(data => {
                 setSubscribeBtn("Subscribe");
             })
+            .catch(err => {
+                setSubscribeBtn("Error");
+                console.log(err);
+            });
     }
 
     const handleClickRequest = (event, podcastID) => {
-        event.stopPropagation();
+        event.stopPropagation(); // click doesn't bubble up and trigger Card on click, which expands Card
         if (subscribeBtn === 'Unsubscribe') {
             /** User clicked to unsubscribe */
             unSubscribeHandler(podcastID);
