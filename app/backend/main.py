@@ -391,7 +391,7 @@ class History(Resource):
 			cur.execute("SELECT p.id, p.xml, l.episodeguid, l.listenDate, l.timestamp FROM listens l, podcasts p where l.userid=%s and \
 				p.id = l.podcastid ORDER BY l.listenDate DESC LIMIT %s OFFSET %s", (user_id, limit, offset))
 		eps = cur.fetchmany(limit)
-		print(eps)
+		# print(eps)
 		# change to episodes
 		jsoneps = [{"pid" : ep[0], "xml": ep[1], "episodeguid": ep[2], "listenDate": ep[3].timestamp(), "timestamp": ep[4]} for ep in eps]
 		df.close_conn(conn, cur)
@@ -641,7 +641,7 @@ class BestPodcasts(Resource):
 		top_subbed = []
 		top_rated = []
 		for i in res:
-			cur.execute("select array(select title from episodes where podcastid=%s group by title, pubdate::timestamp order by pubdate::timestamp desc limit 30)", (i[0],))
+			cur.execute("select title from episodes where podcastid=%s group by title, pubdate::timestamp order by pubdate::timestamp desc limit 30", (i[0],))
 			eps = cur.fetchall()
 			top_subbed.append({"id": i[0], "title": i[1], "subs": i[2], "thumbnail": i[3], "rating": f"{i[4]:.1f}", "eps":eps})
 			#print({"id": i[0], "title": i[1], "subs": i[2], "thumbnail": i[3], "rating": f"{i[4]:.1f}", "eps":eps})
@@ -650,7 +650,7 @@ class BestPodcasts(Resource):
 		res = cur.fetchall()
 		# return list of top 10 rated podcasts else empty list if no results
 		for i in res:
-			cur.execute("select array(select title from episodes where podcastid=%s group by title, pubdate::timestamp order by pubdate::timestamp desc limit 30)", (i[0],))
+			cur.execute("select title from episodes where podcastid=%s group by title, pubdate::timestamp order by pubdate::timestamp desc limit 30", (i[0],))
 			eps = cur.fetchall()
 			top_rated.append({"id": i[0], "title": i[1], "subs": i[2], "thumbnail": i[3], "rating": f"{i[4]:.1f}", "eps":eps})
 		# for i in top_rated:

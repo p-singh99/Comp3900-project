@@ -1,0 +1,57 @@
+#new-user-login {
+  width: 100%;
+  height: 550px;
+  min-height: 50%;
+  background-image: url('./../images/podcast-home-image-2.bmp');
+  /* box-shadow: 0px 0px 50px 50px #221F2E inset; */
+  box-shadow: 0px -30px 70px 70px #221F2E inset;
+  position: relative;
+  /* background-size: 25%; */
+  background-position: 100% 30%;
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-blend-mode: multiply;
+  background-color: rgba(34, 31, 46, 1);
+}
+
+#message {
+  display: flex;
+  flex-direction: column;
+  padding-left: 15%;
+  padding-top: 150px;
+  color: #E1BA8B;
+}
+
+#form-homePage {
+  display: flex;
+  flex-direction: row;
+  margin-top: 0px;
+  padding-left: 40px;
+  gap: 50px;
+}
+
+.homePage-btn {
+  border-radius: 5px;
+  margin-top: 20px;
+  padding: 2px 7px 2px 7px;
+  background-color: #6E59D6;
+  border: 1px solid #6E59D6;
+  color: black;
+  font-weight: bold;
+  width: 75px;
+}
+
+#message-1 {
+  font-size: 25px;
+  font-weight: bold;
+}
+
+#message-2 {
+  padding-left: 55px;
+  color: white;
+}
+
+#message-3 {
+  padding-left: 110px;
+  color: white;
+}

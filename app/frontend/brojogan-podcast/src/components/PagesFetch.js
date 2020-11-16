@@ -153,7 +153,7 @@ function PagesFetch({ Item, fetchItems, context }) {
         })
         : (pageState && !pageState.pageChanging && pageState.lastPage === 0
           ? <h1>You have no history</h1>
-          : <h1>Loading...</h1>)}
+          : <h4>Loading...</h4>)}
 
       {pageState && pageState.lastPage > 0
         ? pagination(pageState.pageNum, pageState.lastPage, pageChanged)

@@ -28,9 +28,8 @@
 
 #search-div {
   width: 100%;
-  padding-left: 15%;
-  padding-right: 0%;
-  margin: 15px 0px 0px 0px;
+  padding-left: 15px;
+  padding-right: 15px;
 }
 
 #icons-div {
@@ -40,6 +39,7 @@
 }
 
 #search-input {
+  margin-top: 15px;
   border-radius: 50px;
   width: 50%;
   height: 30px;

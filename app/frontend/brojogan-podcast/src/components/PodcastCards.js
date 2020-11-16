@@ -8,24 +8,29 @@ import Pages from './Pages';
 // options is given to SubCard as context
 function PodcastCards(props) {
 
-  console.log(`Props: ${props.podcasts.pid}`);
+  // console.log(`Props: ${props.podcasts.pid}`);
 
   return (
     <React.Fragment>
-      <h3>
+      <h4>
         {props.heading}
-      </h3>
+      </h4>
       <div /*id="podcast-card-accordion"*/>
         <Accordion id="podcast-card-accordion" defaultActiveKey={null}>
-          <Pages Item={SubCard} itemDetails={props.podcasts} itemsPerPage={10} context={props.options} />
+          {/* {props.usePages == true 
+            ?  */}
+              <Pages Item={SubCard} itemDetails={props.podcasts} itemsPerPage={10} context={props.options} />
+            {/* :  */}
+              {/* <SubCard 
+                pid={String(podcast.pid)} 
+                title={podcast.title} 
+                subscribers={podcast.subscribers}
+                episodes={podcast.episodes}
+                details={podcast}
+              /> */}
+          {/* } */}
         {/* {props.podcasts.map((podcast) => (
-        <SubCard 
-          pid={String(podcast.pid)} 
-          title={podcast.title} 
-          subscribers={podcast.subscribers}
-          episodes={podcast.episodes}
-          details={podcast}
-        />
+        
       ))} */}
         </Accordion>
       </div>
