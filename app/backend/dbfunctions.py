@@ -1,5 +1,5 @@
 from SemaThreadPool import SemaThreadPool
-from app import conn_pool
+from main import conn_pool
 # conn_pool = SemaThreadPool(1, 50,\
 # 	 dbname="ultracast", user="brojogan", password="GbB8j6Op", host="polybius.bowdens.me", port=5432)
 

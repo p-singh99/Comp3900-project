@@ -1,4 +1,4 @@
-from app import conn_pool as pool
+from main import conn_pool as pool
 import requests
 import time
 
