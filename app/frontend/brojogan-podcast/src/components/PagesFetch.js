@@ -46,21 +46,12 @@ function pagination(pageNum, lastPage, onPageChange) {
   )
 }
 
-// the showItemIndex is implemented quite awkwardly
-// to be able to scroll to the item, the Item component will need to accept an id prop
-// and set this id as the id of the element. The only id used will be 'scroll-item'.
-// maybe should use #id thing?
 function PagesFetch({ Item, fetchItems, context }) {
   const [pageState, setPageState] = useState();
   const [error, setError] = useState();
-  // const scrollItemRef = useRef(null);
   // const startRef = useRef(null);
-  let controller = new AbortController(); // not sure if okay to initialise here
 
   async function getPage(pgNum) {
-    console.log("getPage pageState:", pageState);
-    console.log("pages[pgNum]:", pageState.pages[pgNum]);
-
     let page = pageState.pages[pgNum];
     let pages = [...pageState.pages]; // slow copying?
     if (!page) { // fetching hasn't been started
@@ -68,7 +59,6 @@ function PagesFetch({ Item, fetchItems, context }) {
     }
     try {
       page = await Promise.resolve(page); // now page is the actual page object, which next time will Promise.resolve() to itself
-      console.log("resolved page:", page);
     } catch (err) {
       setError(err.toString());
       // todo
@@ -93,8 +83,7 @@ function PagesFetch({ Item, fetchItems, context }) {
         }
         pages[1] = page;
         console.log("pages:", pages);
-        console.log(pages, numPages, 1);
-        setPageState({ pages: pages, lastPage: numPages, pageNum: 1, pageChanging: false }, () => console.log("callback"));
+        setPageState({ pages: pages, lastPage: numPages, pageNum: 1, pageChanging: false });
         setError(null);
       } catch (err) {
         setError(err.toString());
@@ -102,19 +91,15 @@ function PagesFetch({ Item, fetchItems, context }) {
       }
     }
 
-    console.log("pagesFetch useeffect");
     getPage1();
   }, [fetchItems]);
 
   // when page state has finished changing, prefetch the next page
   useEffect(() => {
     const prefetchPage = (pgNum) => {
-      console.log("prefetch pageState:", pageState);
       if (!pageState.pages[pgNum]) {
         console.log("Prefetching pg", pgNum);
         let pages = [...pageState.pages];
-        console.log(pages);
-        console.log(typeof (pages));
         pages[pgNum] = fetchItems(pgNum).then(({ items }) => items); // pages[pgNum] is now a promise
         setPageState({ ...pageState, pages: pages });
       } else {
@@ -129,10 +114,9 @@ function PagesFetch({ Item, fetchItems, context }) {
     }
   }, [pageState]) // ofc linter wants fetchItems in this dependency array but its a bit weird
 
+  // handler for page changed in page number zone
   function pageChanged(event) {
     console.log(event.target);
-    controller.abort(); // abort in-air requests from previous page
-    controller = new AbortController();
     // checking parent as well because if you click directly on the arrow, the event comes on a span, child of the <a>
     let pageNum = undefined;
     if (event.target.id === "prev" || event.target.parentElement.id === "prev") {

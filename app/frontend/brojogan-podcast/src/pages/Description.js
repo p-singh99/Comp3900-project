@@ -382,7 +382,7 @@ function EpisodeDescription({ details: episode, context: { podcast, setPlaying, 
             progress: episode.progress ? episode.progress : 0.0
           });
         }}>Play</button>
-        <button className="download" eid={episode.guid} onClick={downloadEpisode}>Download</button>
+        {/* <button className="download" eid={episode.guid} onClick={downloadEpisode}>Download</button> */}
       </div>
       {/* guid won't always work because some of them will contain invalid characters I think ? */}
       {getDescription(expanded)}

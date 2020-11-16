@@ -94,7 +94,10 @@ function HistoryCard({ details }) {
               <p>Episode duration: {state.episode.duration}</p>
               {/* Some kind of progress bar based on state.timestamp.
             Though it seems like the durations in the rss feeds are sometimes wrong */}
-              <ProgressBar max={state.episode.durationSeconds} now={details.timestamp /*|| 0*/} />
+              {state.episode.durationSeconds
+                ? <ProgressBar max={state.episode.durationSeconds} now={details.timestamp /*|| 0*/} />
+                : null
+              }
             </React.Fragment>
           )
           :
