@@ -21,7 +21,7 @@ app = Flask(__name__)
 api = Api(app)
 CORS(app)
 
-#CHANGE SECRET KEY
+# In production, we would make a real, randomised secret key and store it in an environment variable
 app.config['SECRET_KEY'] = 'secret_key'
 
 def create_token(user_id):
