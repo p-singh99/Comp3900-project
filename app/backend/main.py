@@ -309,11 +309,8 @@ class Podcast(Resource):
 			rating = f"{res[0]:.1f}"
 		print(rating)
 		df.close_conn(conn,cur)
-		print("creating thread {}".format(datetime.datetime.now()))
 		thread = threading.Thread(target=update_rss, args=(rssfeed, df.conn_pool), daemon=True)
-		print("starting thread {}".format(datetime.datetime.now()))
 		thread.start()
-		print("returning from thread {}".format(datetime.datetime.now()))
 		return {"xml": xml, "id": id, "subscription": flag, "subscribers": subscribers, "rating": rating}, 200
 
 class Subscriptions(Resource):
@@ -436,18 +433,24 @@ class Listens(Resource):
 		if duration is None:
 			df.close_conn(conn,cur)
 			return {"error": "duration is not included"}, 400
-		complete = timestamp >= 0.95 * duration
+		# calculate if the episode is complete. we consider complete as being 95% of the way though the podcast
+		# sometimes if the front end can't get the duration it sends it as -1. 
+		# 	(I think because it sends a request before the metadata has loaded, which shouldn't happen)
+		# If the duration is less than 0 we'll treat it as not complete
+		complete = (timestamp >= 0.95 * duration) if duration >= 0 else False
 		
-		try:
-			cur.execute("""
-				update episodes 
-				set duration=%s
-				where guid=%s and podcastId=%s
-			""",
-			(duration, episodeGuid, podcastId))
-		except Exception as e:
-			df.close_conn(conn,cur)
-			return {"error": "Failed to update episodes, probably because the episode does not exist:\n{}".format(str(e))}, 400
+		# if the duration is greater than 0 we'll try to update the episode to include the duration
+		if (duration > 0):
+			try:
+				cur.execute("""
+					update episodes 
+					set duration=%s
+					where guid=%s and podcastId=%s
+				""",
+				(duration, episodeGuid, podcastId))
+			except Exception as e:
+				df.close_conn(conn,cur)
+				return {"error": "Failed to update episodes, probably because the episode does not exist:\n{}".format(str(e))}, 400
 
 		cur.execute("""
 			INSERT INTO listens (userId, podcastId, episodeGuid, listenDate, timestamp, complete)
@@ -509,11 +512,8 @@ class Notifications(Resource):
 		if results:
 			subscribedPodcasts = [x[0] for x in results]
 		for sp in subscribedPodcasts:
-			print("creating thread {}".format(datetime.datetime.now()))
 			thread = threading.Thread(target=update_rss, args=(sp, df.conn_pool), daemon=True)
-			print("starting thread {}".format(datetime.datetime.now()))
 			thread.start()
-			print("thread returned {}".format(datetime.datetime.now()))
 
 		cur.execute("""
 		select p.title, p.id, e.title, e.created, e.guid, u.status, u.id from
